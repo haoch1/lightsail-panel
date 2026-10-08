@@ -1,0 +1,42 @@
+name: Docker CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image and run project checks
+        run: docker build --tag lightsail-panel:ci .
+      - name: Verify container startup and HTTP endpoints
+        run: |
+          docker run --detach --name panel-test \
+            --publish 127.0.0.1:4180:4180 \
+            --security-opt no-new-privileges:true --cap-drop ALL \
+            lightsail-panel:ci
+          curl --fail --silent --show-error --retry 20 --retry-delay 2 \
+            --retry-connrefused http://127.0.0.1:4180/api/health > health.json
+          python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
+          curl --fail --silent http://127.0.0.1:4180/api/auth > auth.json
+          python3 -c 'import json; d=json.load(open("auth.json")); assert d["initialized"] is False and d["authenticated"] is False'
+          curl --fail --silent http://127.0.0.1:4180/lightsail | grep -q 'id="root"'
+          test "$(docker inspect --format '{{.Config.User}}' panel-test)" = node
+      - name: Container logs
+        if: always()
+        run: docker logs panel-test || true
+      - name: Stop test container
+        if: always()
+        run: docker rm --force panel-test || true

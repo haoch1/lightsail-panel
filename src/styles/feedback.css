@@ -1,0 +1,168 @@
+.mono {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.code-input {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 13px;
+}
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+.danger-text {
+  color: var(--red) !important;
+}
+.inline-icon {
+  display: inline;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.state {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 99px;
+  line-height: 1.3;
+  font-weight: 500;
+  white-space: nowrap;
+  font-size: 11px;
+  padding: 4px 9px;
+  gap: 6px;
+}
+.state i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.state.green {
+  background: var(--success-soft);
+  color: var(--success);
+}
+.state.gray {
+  background: var(--subtle);
+  color: var(--muted);
+}
+.state.amber {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.state.red {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--muted);
+  min-height: 180px;
+}
+.empty strong {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+.empty p {
+  font-size: 13px;
+  max-width: 500px;
+}
+.empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  background: var(--subtle);
+  border: 1px solid var(--border);
+  margin-bottom: 3px;
+}
+.error-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+  padding: 11px 13px;
+  line-height: 1.6;
+  margin: 12px 0;
+  word-break: break-word;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.error-box button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  border: 1px solid var(--border);
+  background: var(--subtle);
+  color: var(--muted);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.75;
+  border-radius: 6px;
+  margin: 14px 0 18px;
+}
+.notice svg {
+  margin-top: 2px;
+}
+.danger-notice {
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.loading-state {
+  min-height: 170px;
+  color: var(--muted);
+}
+.notice > :not(svg) {
+  min-width: 0;
+}
+@keyframes refresh-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}

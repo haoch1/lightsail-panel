@@ -1,0 +1,49 @@
+#panel-startup {
+  box-sizing: border-box;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  font-family: system-ui, "Microsoft YaHei", sans-serif;
+  color: #202020;
+  background: #fafafa;
+}
+#panel-startup .startup-card {
+  box-sizing: border-box;
+  width: min(100%, 440px);
+  padding: 32px;
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+  background: #fff;
+}
+#panel-startup h1 {
+  margin: 0 0 24px;
+  font-size: 22px;
+}
+#panel-startup p {
+  line-height: 1.7;
+  font-size: 14px;
+}
+#panel-startup #startup-help {
+  color: #737373;
+  font-size: 12px;
+}
+#panel-startup a {
+  display: inline-block;
+  margin-top: 12px;
+  color: #202020;
+}
+:root[data-theme="dark"] #panel-startup {
+  background: #141414;
+  color: #ededed;
+}
+:root[data-theme="dark"] #panel-startup .startup-card {
+  background: #1d1d1d;
+  border-color: #383838;
+}
+:root[data-theme="dark"] #panel-startup #startup-help {
+  color: #a1a1a1;
+}
+:root[data-theme="dark"] #panel-startup a {
+  color: #ededed;
+}

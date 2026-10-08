@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>Lightsail 面板 · 自托管控制台</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="/startup.css" />
+    <script src="/startup.js" defer></script>
+  </head>
+  <body>
+    <div id="root">
+      <div id="panel-startup" role="status">
+        <div class="startup-card">
+          <h1>Lightsail Panel</h1>
+          <p id="startup-message">正在加载面板…</p>
+          <p id="startup-help">首次打开可能需要几秒钟。</p>
+          <a id="startup-retry" href="">重新加载页面</a>
+          <noscript><p>浏览器需要启用 JavaScript 才能使用面板。</p></noscript>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

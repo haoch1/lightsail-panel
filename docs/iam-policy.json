@@ -1,0 +1,37 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LightsailPanel",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity",
+        "lightsail:GetRegions",
+        "lightsail:GetBlueprints",
+        "lightsail:GetBundles",
+        "lightsail:GetInstances",
+        "lightsail:GetInstance",
+        "lightsail:GetInstanceMetricData",
+        "lightsail:GetInstancePortStates",
+        "lightsail:GetStaticIps",
+        "lightsail:GetStaticIp",
+        "lightsail:GetOperation",
+        "lightsail:CreateInstances",
+        "lightsail:TagResource",
+        "lightsail:StartInstance",
+        "lightsail:StopInstance",
+        "lightsail:RebootInstance",
+        "lightsail:DeleteInstance",
+        "lightsail:SetIpAddressType",
+        "lightsail:AllocateStaticIp",
+        "lightsail:AttachStaticIp",
+        "lightsail:DetachStaticIp",
+        "lightsail:ReleaseStaticIp",
+        "lightsail:OpenInstancePublicPorts",
+        "lightsail:CloseInstancePublicPorts",
+        "lightsail:DownloadDefaultKeyPair"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

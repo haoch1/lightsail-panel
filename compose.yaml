@@ -1,0 +1,22 @@
+name: lightsail-panel
+
+services:
+  panel:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${PANEL_BIND:-127.0.0.1}:${PANEL_PORT:-8080}:4180"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4180
+      DATA_DIR: /app/data
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+    volumes:
+      - panel-data:/app/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  panel-data:

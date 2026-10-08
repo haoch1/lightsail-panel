@@ -1,0 +1,17 @@
+node_modules
+dist
+data
+.env
+.env.*
+!.env.example
+.git
+backups
+docs/RESEARCH.md
+docs/VALIDATION*.md
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.pem
+*.key
+*.log

@@ -1,0 +1,349 @@
+@media (min-width: 1500px) {
+  .instance-table td {
+    height: 76px;
+  }
+  .workspace main {
+    padding-top: 25px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  *::before {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (max-width: 1150px) {
+  .topbar {
+    padding: 0 18px;
+  }
+  .workspace main {
+    padding: 22px 20px;
+  }
+  .toolbar-filters {
+    width: 100%;
+  }
+  .search {
+    flex: 1;
+    max-width: 340px;
+  }
+  .info-columns {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 1100px) {
+  .topbar {
+    padding: 0 20px;
+  }
+  .workspace main {
+    padding: 24px 20px 40px;
+  }
+  .region-select {
+    width: 248px;
+  }
+}
+@media (max-width: 1000px) {
+}
+@media (max-width: 760px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.18s ease;
+    width: 232px;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .sidebar-mask {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: #0006;
+    z-index: 29;
+  }
+  .workspace {
+    margin-left: 0;
+  }
+  .mobile-menu {
+    display: flex;
+  }
+  .topbar {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    min-height: 104px;
+    height: auto;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .topbar > .mobile-menu {
+    grid-row: 1 / 3;
+  }
+  .top-control {
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+  }
+  .top-label {
+    width: 52px;
+    flex: 0 0 52px;
+  }
+  .topbar > .top-control {
+    grid-column: 2;
+  }
+  .top-right {
+    grid-column: 2;
+    gap: 6px;
+    min-width: 0;
+  }
+  .account-control {
+    flex: 1;
+  }
+  .custom-select.account-select {
+    max-width: none;
+    width: 100%;
+  }
+  .account-select select {
+    max-width: 74px;
+  }
+  .top-right > .text-link {
+    display: none;
+  }
+  .demo-bar {
+    gap: 5px;
+    height: 31px;
+    font-size: 11px;
+    padding: 7px 16px;
+  }
+  .demo-bar a {
+    font-size: 11px;
+  }
+  .workspace main {
+    padding: 22px 16px 38px;
+  }
+  .page-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .page-heading h1 {
+    font-size: 24px;
+  }
+  .page-heading > button {
+    font-size: 14px;
+    padding: 8px;
+  }
+  .page-heading p {
+    font-size: 13px;
+  }
+  .toolbar {
+    gap: 10px;
+  }
+  .toolbar-actions {
+    gap: 6px;
+  }
+  .toolbar-actions .button {
+    font-size: 14px;
+    padding: 9px 12px;
+  }
+  .toolbar-filters {
+    gap: 7px;
+  }
+  .toolbar-filters .search {
+    width: 160px;
+  }
+  .search {
+    max-width: unset;
+    width: 100%;
+  }
+  .table-caption {
+    font-size: 12px;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+  .table-footer {
+    flex-direction: column;
+    gap: 5px;
+  }
+  .table-wrap td {
+    font-size: 13px;
+    padding: 14px 12px;
+  }
+  .table-wrap th {
+    padding: 12px;
+  }
+  .table-wrap table {
+    font-size: 12px;
+  }
+  .table-wrap .empty {
+    min-width: 310px;
+  }
+  .table-wrap .instance-table {
+    min-width: 900px;
+  }
+  .info-columns {
+    gap: 14px;
+  }
+  .modal-backdrop {
+    padding: 12px;
+  }
+  .modal {
+    max-height: calc(100dvh - 24px);
+    width: 510px;
+    padding: 22px 18px;
+    border-radius: 10px;
+  }
+  .modal-head {
+    margin-bottom: 18px;
+  }
+  .modal-head h2 {
+    font-size: 18px;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .form-panel {
+    margin: 18px 0;
+    padding: 20px;
+  }
+  .form-panel h2 {
+    font-size: 17px;
+  }
+  .form-panel p {
+    font-size: 12px;
+  }
+  .form-panel > .form-grid .field:last-child {
+    margin-bottom: 0;
+  }
+  .check-label {
+    flex-wrap: nowrap;
+  }
+  .check-label code {
+    margin-left: 23px;
+  }
+  .launch-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .launch-footer .button {
+    align-self: flex-end;
+  }
+  .inline-toolbar {
+    gap: 8px;
+  }
+  .inline-toolbar > select {
+    max-width: 100%;
+  }
+  .chart-heading {
+    align-items: flex-start;
+  }
+  .chart-heading span {
+    max-width: 50%;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .chart-panel {
+    padding: 12px 8px;
+    margin-top: 14px;
+  }
+  .periods .button {
+    padding: 8px;
+    font-size: 14px;
+  }
+  .details > div {
+    font-size: 13px;
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
+  .details .copy-text {
+    font-size: 12px;
+  }
+  .toasts {
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    max-width: none;
+  }
+  .auth-wrap {
+    padding: 20px;
+  }
+  .auth-card {
+    padding: 25px 22px;
+    width: 100%;
+    max-width: 410px;
+  }
+  .notice {
+    padding: 11px 12px;
+    font-size: 13px;
+  }
+  .topbar > .mobile-menu {
+    display: flex;
+  }
+  .region-select {
+    width: 100%;
+  }
+  .topbar .select-trigger {
+    padding: 7px 10px;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .account-manager-button {
+    width: 32px;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .account-manager-button span {
+    display: none;
+  }
+  .field input {
+    font-size: 16px;
+  }
+  .field textarea {
+    font-size: 16px;
+  }
+  .field .select-trigger {
+    font-size: 16px;
+  }
+  .section-heading {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .modal-actions {
+    flex-wrap: wrap;
+  }
+  .panel {
+    padding: 20px;
+  }
+  .chart-heading > span {
+    max-width: 60%;
+  }
+  .instance-actions-column {
+    width: 106px;
+    min-width: 106px;
+  }
+}
+@media (max-width: 600px) {
+  :root {
+    --stat-size: 21px;
+  }
+  .traffic-overview > div {
+    padding: 16px 12px;
+  }
+  .traffic-overview strong {
+    font-size: var(--stat-size);
+  }
+}
