@@ -19,6 +19,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
       - name: Build image and run project checks
         run: docker build --tag lightsail-panel:ci .
       - name: Verify container startup and HTTP endpoints
@@ -27,7 +29,7 @@ jobs:
             --publish 127.0.0.1:4180:4180 \
             --security-opt no-new-privileges:true --cap-drop ALL \
             lightsail-panel:ci
-          curl --fail --silent --show-error --retry 20 --retry-delay 2 \
+          curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
             --retry-connrefused http://127.0.0.1:4180/api/health > health.json
           python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
           curl --fail --silent http://127.0.0.1:4180/api/auth > auth.json
