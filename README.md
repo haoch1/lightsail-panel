@@ -24,37 +24,43 @@ Lightsail Panel 是面向 Amazon Lightsail 的自托管管理面板，提供中�
 
 ## Docker 部署
 
+官方镜像发布至 [GitHub Container Registry（GHCR）](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel)：`ghcr.io/haoch1/lightsail-panel:latest`。支持 `linux/amd64` 与 `linux/arm64`，Docker 根据服务器架构选择对应镜像。服务器仅需拉取镜像并启动容器，无需安装 Node.js、pnpm 或执行源码构建。
+
 ### 1. 准备环境
 
-服务器需要安装 Docker Engine、Docker Compose v2 和 Git，并能够访问 GitHub、容器镜像仓库以及 AWS API。
+服务器需要安装 Docker Engine、Docker Compose v2 和 curl，并能够访问 GitHub、GHCR 以及 AWS API。公开镜像可直接拉取，无需登录 GitHub。
 
 ```bash
 docker --version
 docker compose version
-git --version
+curl --version
 ```
 
-### 2. 获取代码并配置
+### 2. 下载部署配置
 
 ```bash
-git clone https://github.com/haoch1/lightsail-panel.git
+mkdir -p lightsail-panel
 cd lightsail-panel
+curl -fsSLo compose.yaml https://raw.githubusercontent.com/haoch1/lightsail-panel/main/compose.yaml
+curl -fsSLo .env.example https://raw.githubusercontent.com/haoch1/lightsail-panel/main/.env.example
 cp .env.example .env
 ```
 
 默认配置将面板发布至服务器本机的 `127.0.0.1:8090`。需要更换端口时，修改 `.env` 中的 `PANEL_PORT`。使用 HTTPS 反向代理时，同时设置 `PUBLIC_ORIGIN`。
 
 ```dotenv
+PANEL_IMAGE=ghcr.io/haoch1/lightsail-panel:latest
 PANEL_BIND=127.0.0.1
 PANEL_PORT=8090
 # 使用反向代理时填写浏览器访问的完整来源，不包含路径或末尾斜杠。
 # PUBLIC_ORIGIN=https://panel.example.com
 ```
 
-### 3. 构建并启动
+### 3. 拉取镜像并启动
 
 ```bash
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 docker compose ps
 curl -fsS http://127.0.0.1:8090/api/health
 ```
@@ -65,7 +71,7 @@ curl -fsS http://127.0.0.1:8090/api/health
 { "ok": true, "version": "1.6.0", "service": "lightsail" }
 ```
 
-构建过程依次执行依赖安装、类型检查、自动化测试和前端构建。运行容器使用非 root 用户，默认启用 `no-new-privileges` 并移除 Linux capabilities。
+镜像在 GitHub Actions 中完成依赖安装、类型检查、自动化测试、前端构建及两种架构的容器启动验证后发布。运行容器使用非 root 用户，默认启用 `no-new-privileges` 并移除 Linux capabilities。
 
 在服务器本机访问 `http://127.0.0.1:8090`。从另一台计算机连接时，可使用 SSH 本地端口转发：
 
@@ -144,12 +150,13 @@ sudo systemctl reload nginx
 
 ## 配置参数
 
-| 变量             | 默认值      | 说明                                                                    |
-| ---------------- | ----------- | ----------------------------------------------------------------------- |
-| `PANEL_BIND`     | `127.0.0.1` | Compose 在宿主机绑定的地址                                              |
-| `PANEL_PORT`     | `8090`      | Compose 在宿主机发布的端口                                              |
-| `PUBLIC_ORIGIN`  | 空          | 浏览器访问来源；HTTPS 反向代理时设置                                    |
-| `ENCRYPTION_KEY` | 自动生成    | 可选的 32 字节 Base64 加密密钥；未配置时写入数据卷中的 `encryption.key` |
+| 变量             | 默认值                                  | 说明                                                                    |
+| ---------------- | --------------------------------------- | ----------------------------------------------------------------------- |
+| `PANEL_IMAGE`    | `ghcr.io/haoch1/lightsail-panel:latest` | 要部署的镜像；支持版本标签、提交标签或 `@sha256:...` 摘要               |
+| `PANEL_BIND`     | `127.0.0.1`                             | Compose 在宿主机绑定的地址                                              |
+| `PANEL_PORT`     | `8090`                                  | Compose 在宿主机发布的端口                                              |
+| `PUBLIC_ORIGIN`  | 空                                      | 浏览器访问来源；HTTPS 反向代理时设置                                    |
+| `ENCRYPTION_KEY` | 自动生成                                | 可选的 32 字节 Base64 加密密钥；未配置时写入数据卷中的 `encryption.key` |
 
 容器内部固定使用 `HOST=0.0.0.0`、`PORT=4180`、`DATA_DIR=/app/data`。Compose 项目名为 `lightsail-panel`，持久化卷名为 `lightsail-panel_panel-data`。
 
@@ -188,9 +195,19 @@ docker compose up -d
 升级前备份数据，再执行：
 
 ```bash
-git pull --ff-only
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 docker compose ps
+```
+
+`latest` 在 `main` 分支构建与测试成功后更新。每次发布同时提供 `sha-<完整提交 SHA>` 标签；推送 `vX.Y.Z` Git 标签时，额外发布 `vX.Y.Z` 与 `X.Y.Z` 镜像标签。需要固定版本或回滚时，在 [镜像页面](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel) 选择已发布的标签或摘要，修改 `.env` 中的 `PANEL_IMAGE`，然后重新执行上述命令。重新创建容器不会删除持久化数据卷。
+
+从此前的源码构建部署迁移时，在原项目目录执行以下命令；保留现有 `.env` 和数据卷：
+
+```bash
+git pull --ff-only
+docker compose pull
+docker compose up -d
 ```
 
 常用维护命令：
@@ -207,6 +224,7 @@ docker compose down
 | 问题                        | 处理方法                                                                                         |
 | --------------------------- | ------------------------------------------------------------------------------------------------ |
 | 浏览器无法访问              | 确认容器正常运行、宿主机端口未被占用，以及端口转发或反向代理配置正确。默认端口仅监听服务器本机。 |
+| 无法拉取镜像                | 确认服务器能够连接 `ghcr.io`，并核对 `PANEL_IMAGE` 中的仓库地址和标签。默认公开镜像不需要登录。  |
 | 请求来源不被允许            | 检查 `PUBLIC_ORIGIN` 是否与浏览器访问来源完全一致，修改后执行 `docker compose up -d`。           |
 | AWS 身份验证失败            | 检查两项密钥是否来自同一 IAM 用户、访问密钥是否启用，以及服务器是否能够访问 AWS STS。            |
 | 查询或操作提示 AccessDenied | 将当前 [IAM 策略](docs/iam-policy.json) 附加至对应用户，并核对组织策略、权限边界和显式拒绝规则。 |
@@ -243,7 +261,14 @@ pnpm test
 pnpm build
 ```
 
-GitHub Actions 执行 Docker 镜像构建、自动化检查以及容器启动验证。代码结构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+需要自行构建镜像时，在源码目录执行：
+
+```bash
+docker build -t lightsail-panel:local .
+PANEL_IMAGE=lightsail-panel:local docker compose up -d --pull never
+```
+
+GitHub Actions 在 amd64 与 arm64 原生 runner 上分别构建并验证 Docker 镜像，全部通过后发布多架构镜像至 GHCR；Pull Request 仅执行构建与测试，不发布镜像。发布后还会通过 Compose 拉取镜像并验证启动。代码结构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ## 许可证
 

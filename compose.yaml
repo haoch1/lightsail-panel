@@ -2,7 +2,7 @@ name: lightsail-panel
 
 services:
   panel:
-    build: .
+    image: ${PANEL_IMAGE:-ghcr.io/haoch1/lightsail-panel:latest}
     restart: unless-stopped
     ports:
       - "${PANEL_BIND:-127.0.0.1}:${PANEL_PORT:-8090}:4180"

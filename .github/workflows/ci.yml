@@ -3,6 +3,7 @@ name: Docker CI
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -13,32 +14,105 @@ concurrency:
   group: docker-ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
 jobs:
   docker:
-    runs-on: ubuntu-24.04
+    name: Build and test (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
       - name: Validate Compose configuration
         run: docker compose config --quiet
       - name: Build image and run project checks
-        run: docker build --tag lightsail-panel:ci .
+        run: |
+          docker build \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --tag "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}" .
       - name: Verify container startup and HTTP endpoints
         run: |
           docker run --detach --name panel-test \
-            --publish 127.0.0.1:4180:4180 \
+            --publish 127.0.0.1:8090:4180 \
             --security-opt no-new-privileges:true --cap-drop ALL \
-            lightsail-panel:ci
+            "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}"
           curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
-            --retry-connrefused http://127.0.0.1:4180/api/health > health.json
+            --retry-connrefused http://127.0.0.1:8090/api/health > health.json
           python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
-          curl --fail --silent http://127.0.0.1:4180/api/auth > auth.json
+          curl --fail --silent http://127.0.0.1:8090/api/auth > auth.json
           python3 -c 'import json; d=json.load(open("auth.json")); assert d["initialized"] is False and d["authenticated"] is False'
-          curl --fail --silent http://127.0.0.1:4180/lightsail | grep -q 'id="root"'
+          curl --fail --silent http://127.0.0.1:8090/lightsail | grep -q 'id="root"'
           test "$(docker inspect --format '{{.Config.User}}' panel-test)" = node
+          test "$(docker inspect --format '{{.Architecture}}' "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}")" = "${{ matrix.arch }}"
+      - name: Publish tested platform image
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}"
       - name: Container logs
         if: always()
         run: docker logs panel-test || true
       - name: Stop test container
         if: always()
         run: docker rm --force panel-test || true
+
+  publish:
+    name: Publish multi-platform image
+    needs: docker
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish image tags
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          tags=("sha-${GITHUB_SHA}")
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            tags+=(latest)
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            tags+=("$GITHUB_REF_NAME" "${GITHUB_REF_NAME#v}")
+          fi
+          for tag in "${tags[@]}"; do
+            docker manifest create "${IMAGE_NAME}:${tag}" \
+              "${IMAGE_NAME}:sha-${GITHUB_SHA}-amd64" \
+              "${IMAGE_NAME}:sha-${GITHUB_SHA}-arm64"
+            docker manifest push "${IMAGE_NAME}:${tag}"
+          done
+          docker manifest inspect "${IMAGE_NAME}:sha-${GITHUB_SHA}" > manifest.json
+          python3 -c 'import json; platforms={m["platform"]["architecture"] for m in json.load(open("manifest.json"))["manifests"]}; assert platforms == {"amd64", "arm64"}'
+      - name: Verify deployment from the registry
+        env:
+          PANEL_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          PANEL_PORT: 8090
+        run: |
+          docker compose pull
+          docker compose up -d
+          curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
+            --retry-connrefused http://127.0.0.1:8090/api/health > health.json
+          python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
+      - name: Deployment logs
+        if: always()
+        run: docker compose logs || true
+      - name: Stop deployment
+        if: always()
+        run: docker compose down --volumes || true
