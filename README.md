@@ -42,11 +42,11 @@ cd lightsail-panel
 cp .env.example .env
 ```
 
-默认配置将面板发布至服务器本机的 `127.0.0.1:8080`。需要更换端口时，修改 `.env` 中的 `PANEL_PORT`。使用 HTTPS 反向代理时，同时设置 `PUBLIC_ORIGIN`。
+默认配置将面板发布至服务器本机的 `127.0.0.1:8090`。需要更换端口时，修改 `.env` 中的 `PANEL_PORT`。使用 HTTPS 反向代理时，同时设置 `PUBLIC_ORIGIN`。
 
 ```dotenv
 PANEL_BIND=127.0.0.1
-PANEL_PORT=8080
+PANEL_PORT=8090
 # 使用反向代理时填写浏览器访问的完整来源，不包含路径或末尾斜杠。
 # PUBLIC_ORIGIN=https://panel.example.com
 ```
@@ -56,7 +56,7 @@ PANEL_PORT=8080
 ```bash
 docker compose up -d --build
 docker compose ps
-curl -fsS http://127.0.0.1:8080/api/health
+curl -fsS http://127.0.0.1:8090/api/health
 ```
 
 健康检查返回示例：
@@ -67,13 +67,13 @@ curl -fsS http://127.0.0.1:8080/api/health
 
 构建过程依次执行依赖安装、类型检查、自动化测试和前端构建。运行容器使用非 root 用户，默认启用 `no-new-privileges` 并移除 Linux capabilities。
 
-在服务器本机访问 `http://127.0.0.1:8080`。从另一台计算机连接时，可使用 SSH 本地端口转发：
+在服务器本机访问 `http://127.0.0.1:8090`。从另一台计算机连接时，可使用 SSH 本地端口转发：
 
 ```bash
-ssh -N -L 8080:127.0.0.1:8080 user@server
+ssh -N -L 8090:127.0.0.1:8090 user@server
 ```
 
-随后在本地浏览器访问 `http://127.0.0.1:8080`。长期远程访问建议使用下文的 HTTPS 反向代理。
+随后在本地浏览器访问 `http://127.0.0.1:8090`。长期远程访问建议使用下文的 HTTPS 反向代理。
 
 ### 4. 初始化管理员
 
@@ -124,7 +124,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/panel.example.com/privkey.pem;
 
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8090;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -147,7 +147,7 @@ sudo systemctl reload nginx
 | 变量             | 默认值      | 说明                                                                    |
 | ---------------- | ----------- | ----------------------------------------------------------------------- |
 | `PANEL_BIND`     | `127.0.0.1` | Compose 在宿主机绑定的地址                                              |
-| `PANEL_PORT`     | `8080`      | Compose 在宿主机发布的端口                                              |
+| `PANEL_PORT`     | `8090`      | Compose 在宿主机发布的端口                                              |
 | `PUBLIC_ORIGIN`  | 空          | 浏览器访问来源；HTTPS 反向代理时设置                                    |
 | `ENCRYPTION_KEY` | 自动生成    | 可选的 32 字节 Base64 加密密钥；未配置时写入数据卷中的 `encryption.key` |
 
