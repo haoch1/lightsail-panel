@@ -1,4 +1,5 @@
 import type {
+  AllocateStaticIpCommandInput,
   AttachStaticIpCommandInput,
   CloseInstancePublicPortsCommandInput,
   CreateInstancesCommandInput,
@@ -10,11 +11,27 @@ import type {
   GetOperationCommandInput,
   GetRegionsCommandInput,
   OpenInstancePublicPortsCommandInput,
+  PutInstancePublicPortsCommandInput,
   ReleaseStaticIpCommandInput,
   SetIpAddressTypeCommandInput,
 } from "@aws-sdk/client-lightsail";
 import type { AssumeRoleCommandInput } from "@aws-sdk/client-sts";
 export const contracts = [
+  {
+    staticIpName: "panel-created-instance",
+  } satisfies AllocateStaticIpCommandInput,
+  {
+    instanceName: "my-lightsail",
+    portInfos: [
+      {
+        protocol: "tcp",
+        fromPort: 22,
+        toPort: 22,
+        cidrs: ["0.0.0.0/0"],
+        ipv6Cidrs: ["::/0"],
+      },
+    ],
+  } satisfies PutInstancePublicPortsCommandInput,
   {} satisfies DownloadDefaultKeyPairCommandInput,
   {
     instanceName: "my-instance",

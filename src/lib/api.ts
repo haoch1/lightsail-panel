@@ -1,4 +1,15 @@
 import { resourceCache } from "./resource-cache";
+import { matchesUpdate, mutationUpdate } from "../../shared/resource-update";
+function changed(path: string, body: unknown) {
+  const update = mutationUpdate(path, body);
+  if (update) {
+    resourceCache.invalidate((key) => matchesUpdate(key, update));
+    window.dispatchEvent(
+      new CustomEvent("panel:resources-updated", { detail: update }),
+    );
+  } else resourceCache.clear();
+  window.dispatchEvent(new Event("panel:mutation"));
+}
 let csrf = "";
 let demo = new URLSearchParams(location.search).get("demo") === "1";
 function restoreSession(identity: string) {
@@ -55,7 +66,7 @@ export async function api<T = any>(
   ) {
     const { demoApi } = await import("../demo");
     const data = await demoApi(path, body, method);
-    if (requestMethod !== "GET") resourceCache.clear();
+    if (requestMethod !== "GET") changed(path, body);
     return data;
   }
   let result: Response;
@@ -71,6 +82,9 @@ export async function api<T = any>(
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
   } catch (error) {
+    // The server may have accepted a mutation before the response was lost.
+    if (requestMethod !== "GET" && mutationUpdate(path, body))
+      changed(path, body);
     if (
       error instanceof Error &&
       (error.name === "TimeoutError" || error.name === "AbortError")
@@ -90,6 +104,8 @@ export async function api<T = any>(
     .json()
     .catch(() => ({ error: "服务器返回了无效响应" }));
   if (!result.ok) {
+    if (requestMethod !== "GET" && mutationUpdate(path, body))
+      changed(path, body);
     if (result.status === 401 && !path.startsWith("/login")) {
       csrf = "";
       resourceCache.clear();
@@ -97,6 +113,6 @@ export async function api<T = any>(
     }
     throw new Error(data.error || `HTTP ${result.status}`);
   }
-  if (requestMethod !== "GET") resourceCache.clear();
+  if (requestMethod !== "GET") changed(path, body);
   return data;
 }

@@ -43,6 +43,7 @@ import {
   when,
 } from "../../components/ui";
 import Select from "../../components/ui/Select";
+import LaunchNetworkStatus from "../launch/LaunchNetworkStatus";
 import { api } from "../../lib/api";
 import { whole } from "../../lib/format";
 import { memoryLabel } from "../../lib/bundle";
@@ -169,9 +170,8 @@ export default function Instances() {
         confirm,
         acceptBundleUpdate,
       });
-      toast(r.notice || "操作已提交，刷新查看实例状态");
+      toast(r.notice || "操作已提交，正在跟踪实例状态");
       setDialog(null);
-      refresh();
     } catch (e) {
       toast((e as Error).message, "error");
     } finally {
@@ -222,6 +222,7 @@ export default function Instances() {
             <SearchInput value={search} onChange={setSearch} />
             <Select
               aria-label="实例状态"
+              menuClassName="instance-status-menu"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
@@ -242,6 +243,7 @@ export default function Instances() {
           </span>
         </div>
         <ScanNotices scan={data} />
+        <LaunchNetworkStatus />
         <div className="table-wrap">
           <table className="instance-table">
             <thead>
@@ -317,7 +319,16 @@ export default function Instances() {
                     <InstanceRate usage={usage.values[instanceKey(i)]} />
                   </td>
                   <td>
-                    <MonthlyTraffic usage={usage.values[instanceKey(i)]} />
+                    <button
+                      type="button"
+                      className="traffic-link"
+                      aria-label={i.name + " 本月流量"}
+                      onClick={() =>
+                        setDialog({ kind: "traffic", instance: i })
+                      }
+                    >
+                      <MonthlyTraffic usage={usage.values[instanceKey(i)]} />
+                    </button>
                   </td>
                   <td>
                     <InstanceAddresses instance={i} toast={toast} />
@@ -391,7 +402,7 @@ export default function Instances() {
         {data?.at && (
           <div className="table-footer">
             <span>上次刷新 {when(data.at)}</span>
-            <span>每 5 分钟自动更新 · 状态以 AWS 返回结果为准</span>
+            <span>空闲每 5 分钟同步 · 操作后自动跟踪状态</span>
           </div>
         )}
       </>
@@ -602,7 +613,6 @@ export default function Instances() {
                 setBusy(false);
                 setBulk(null);
                 setSelected([]);
-                refresh();
               }}
             >
               确认{actionNames[bulk]}

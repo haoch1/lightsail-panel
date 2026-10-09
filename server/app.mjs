@@ -12,6 +12,8 @@ import { registerMonitoring } from "./http/monitoring.mjs";
 import { registerNetworking } from "./http/networking.mjs";
 import { registerSsh } from "./http/ssh.mjs";
 import { ReadCache } from "./read-cache.mjs";
+import { LaunchNetworkQueue } from "./launch-network.mjs";
+import { matchesUpdate, mutationUpdate } from "../shared/resource-update.ts";
 
 export function createApp(
   store,
@@ -141,12 +143,15 @@ export function createApp(
     res.json({ ok: true });
   });
 
-  // Every successful mutation invalidates resource snapshots, including account changes.
+  // Resource mutations invalidate their own scope; account changes invalidate all snapshots.
   app.use("/api", (req, res, next) => {
-    if (!["GET", "HEAD", "OPTIONS"].includes(req.method))
+    if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+      const update = mutationUpdate(req.path, req.body);
       res.on("finish", () => {
-        if (res.statusCode < 400) reads.clear();
+        if (update) reads.invalidate((path) => matchesUpdate(path, update));
+        else if (res.statusCode < 400) reads.clear();
       });
+    }
     next();
   });
 
@@ -156,6 +161,16 @@ export function createApp(
     read: reads.read.bind(reads),
     ...routeContext(store),
   };
+  const launchNetwork = new LaunchNetworkQueue(store, gateway, (job) =>
+    reads.invalidate((path) =>
+      matchesUpdate(path, {
+        ...job,
+        resources: job.resources || ["instances", "static-ips", "ports"],
+      }),
+    ),
+  );
+  services.launchNetwork = launchNetwork;
+  launchNetwork.start();
   registerAccounts(app, services);
   registerInstances(app, services);
   registerSsh(app, services);

@@ -13,6 +13,7 @@ import {
 import { api, query } from "../../lib/api";
 import PortRuleEditor from "./PortRuleEditor";
 import { applicationLabel, portLabel } from "./presets";
+import LaunchNetworkStatus from "../launch/LaunchNetworkStatus";
 export default function Ports({ instance }: { instance: Instance }) {
   const panel = usePanel(),
     target = targetOf(instance),
@@ -36,7 +37,6 @@ export default function Ports({ instance }: { instance: Instance }) {
       panel.toast(result.notice || "防火墙规则已提交");
       setAdd(false);
       setRemove(null);
-      data.refresh();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -65,6 +65,7 @@ export default function Ports({ instance }: { instance: Instance }) {
         规则控制 Lightsail 实例的公网访问；实例内部的系统防火墙需单独配置。
       </div>
       {data.error && <ErrorBox message={data.error} retry={data.refresh} />}
+      <LaunchNetworkStatus resource="ports" instance={instance} />
       <div className="table-wrap">
         <table>
           <thead>

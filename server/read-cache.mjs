@@ -50,4 +50,8 @@ export class ReadCache {
   clear() {
     this.entries.clear();
   }
+  invalidate(matches) {
+    for (const key of this.entries.keys())
+      if (matches(key)) this.entries.delete(key);
+  }
 }

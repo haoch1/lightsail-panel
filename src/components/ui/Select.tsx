@@ -327,7 +327,10 @@ export default function Select({
             role="listbox"
             aria-label={props["aria-label"] || "选项"}
             className={"select-menu " + menuClassName}
-            style={position}
+            style={{
+              ...position,
+              visibility: position.width ? "visible" : "hidden",
+            }}
           >
             {options.map((option, index) => {
               const heading = option.group !== priorGroup && option.group;

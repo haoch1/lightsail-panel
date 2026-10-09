@@ -28,6 +28,7 @@
         "lightsail:DetachStaticIp",
         "lightsail:ReleaseStaticIp",
         "lightsail:OpenInstancePublicPorts",
+        "lightsail:PutInstancePublicPorts",
         "lightsail:CloseInstancePublicPorts",
         "lightsail:DownloadDefaultKeyPair"
       ],

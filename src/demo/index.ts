@@ -3,6 +3,7 @@ import type {
   Account,
   AuditEntry,
   Instance,
+  LaunchNetworkJob,
   PortInfo,
   StaticIp,
 } from "../../shared/types";
@@ -88,6 +89,7 @@ let instances: Instance[] = [
   },
 ];
 const instanceKey = (i: Instance) => [i.accountId, i.region, i.id].join(":");
+const networkJobs: LaunchNetworkJob[] = [];
 let addresses: (StaticIp & { accountId: string; region: string })[] = [
   {
     name: "panel-tokyo",
@@ -236,8 +238,14 @@ export async function demoApi(
       ...demoCatalog,
       zones: regions.find((r) => r.id === q.get("region"))?.zones || [],
     };
+  if (p === "/launch/network") return { items: networkJobs };
   if (p === "/launch") {
+    const previous = networkJobs.find((job) => job.id === body.token);
+    if (previous) return { ok: true, networkJob: previous };
+    if (body.allocateStaticIp && body.ipAddressType === "ipv6")
+      throw Error("仅 IPv6 实例不能分配静态 IPv4");
     const a = accounts.find((a) => a.id === body.accountId);
+    const created: LaunchNetworkJob["instances"] = [];
     for (let n = 0; n < body.count; n++) {
       const name = body.count === 1 ? body.name : body.name + "-" + (n + 1);
       if (
@@ -269,12 +277,42 @@ export async function demoApi(
         cpu: demoCatalog.types.find((b) => b.id === body.instanceType)?.cpu,
         memory: demoCatalog.types.find((b) => b.id === body.instanceType)
           ?.memory,
-        staticIp: false,
+        staticIp: !!body.allocateStaticIp,
         createdAt: new Date().toISOString(),
       });
+      const instance = instances[instances.length - 1];
+      if (body.firewall)
+        rules.set(
+          instanceKey(instance),
+          body.firewall.map((rule: PortInfo) => ({ ...rule })),
+        );
+      const staticIpName = body.allocateStaticIp
+        ? `panel-${body.token}-${n + 1}`
+        : undefined;
+      if (staticIpName)
+        addresses.push({
+          name: staticIpName,
+          ipAddress: instance.publicIp!,
+          isAttached: true,
+          attachedTo: name,
+          accountId: body.accountId,
+          region: body.region,
+        });
+      created.push({ name, stage: "done", staticIpName });
     }
     audit("launch", body.name);
-    return { ok: true };
+    const networkJob: LaunchNetworkJob | undefined =
+      body.firewall || body.allocateStaticIp
+        ? {
+            id: body.token,
+            accountId: body.accountId,
+            region: body.region,
+            status: "success",
+            instances: created,
+          }
+        : undefined;
+    if (networkJob) networkJobs.push(networkJob);
+    return { ok: true, networkJob, notice: "演示实例已创建" };
   }
   if (p === "/traffic") {
     const now = new Date(),

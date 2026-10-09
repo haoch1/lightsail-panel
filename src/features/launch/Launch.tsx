@@ -2,7 +2,7 @@ import { compareImages } from "../../../shared/images";
 import { regionLabel } from "../../../shared/regions";
 import { ArrowLeft, Rocket } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Catalog } from "../../../shared/types";
+import type { Catalog, PortInfo } from "../../../shared/types";
 import { useApi, usePanel } from "../../app/context";
 import {
   Busy,
@@ -19,6 +19,7 @@ import BundlePicker from "./BundlePicker";
 import { creationRegionError } from "../../lib/region-access";
 import { DefaultKeyDownload } from "../ssh/SshKey";
 import { defaultStartupScript } from "./default-script";
+import LaunchNetworkOptions from "./LaunchNetworkOptions";
 export default function Launch() {
   const panel = usePanel();
   const [accountId, setAccount] = useState(
@@ -39,6 +40,16 @@ export default function Launch() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [network, setNetwork] = useState("dualstack");
+  const [firewall, setFirewall] = useState<PortInfo[] | undefined>();
+  const [allocateStaticIp, setAllocateStaticIp] = useState(false);
+  const priorNetwork = useRef(network);
+  useEffect(() => {
+    if (priorNetwork.current !== network) {
+      setFirewall((rules) => (rules === undefined ? undefined : []));
+      if (network === "ipv6") setAllocateStaticIp(false);
+      priorNetwork.current = network;
+    }
+  }, [network]);
   const [chosenZone, setZone] = useState("");
   const zones = catalog.data?.zones || [];
   const zone = zones.includes(chosenZone) ? chosenZone : zones[0] || "";
@@ -79,6 +90,8 @@ export default function Launch() {
     userData,
     ipAddressType: network,
     zone,
+    firewall,
+    allocateStaticIp,
   };
   async function create() {
     setBusy(true);
@@ -87,8 +100,14 @@ export default function Launch() {
     if (submission.current.fingerprint !== fingerprint)
       submission.current = { fingerprint, token: crypto.randomUUID() };
     try {
-      await api("/launch", { ...body, token: submission.current.token });
-      panel.toast(panel.demo ? "演示实例已添加" : "Lightsail 创建请求已提交");
+      const result = await api("/launch", {
+        ...body,
+        token: submission.current.token,
+      });
+      panel.toast(
+        result.notice ||
+          (panel.demo ? "演示实例已添加" : "Lightsail 创建请求已提交"),
+      );
       panel.setScope(accountId, region);
       panel.navigate("/lightsail");
     } catch (e) {
@@ -135,6 +154,10 @@ export default function Launch() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            if (firewall && !firewall.length) {
+              setError("请添加至少一条防火墙规则，或取消创建后设置防火墙");
+              return;
+            }
             if (userData.includes("root:你的密码")) {
               setError(
                 "请将启动脚本中的“你的密码”替换为自己的密码，或清空脚本。",
@@ -336,6 +359,13 @@ export default function Launch() {
               </Field>
             </div>
           </section>
+          <LaunchNetworkOptions
+            network={network}
+            firewall={firewall}
+            setFirewall={setFirewall}
+            allocateStaticIp={allocateStaticIp}
+            setAllocateStaticIp={setAllocateStaticIp}
+          />
           <section className="form-panel">
             <h2>SSH 密钥</h2>
             <p>默认 SSH 密钥</p>
@@ -404,6 +434,7 @@ export default function Launch() {
                 !!catalog.error ||
                 !selectedImage ||
                 !zone ||
+                (!!firewall && !firewall.length) ||
                 !types.some((type) => type.id === instanceType)
               }
             >
@@ -460,6 +491,27 @@ export default function Launch() {
             <div>
               <dt>SSH 密钥</dt>
               <dd>Lightsail 默认密钥</dd>
+            </div>
+            <div>
+              <dt>防火墙</dt>
+              <dd>
+                {firewall
+                  ? firewall
+                      .map(
+                        (rule) =>
+                          `${rule.protocol.toUpperCase()} ${rule.fromPort === rule.toPort ? rule.fromPort : `${rule.fromPort}–${rule.toPort}`} · ${[...(rule.cidrs || []), ...(rule.ipv6Cidrs || [])].join(", ")}`,
+                      )
+                      .map((label, i) => <div key={i}>{label}</div>)
+                  : "AWS 默认规则"}
+              </dd>
+            </div>
+            <div>
+              <dt>静态 IP</dt>
+              <dd>
+                {allocateStaticIp
+                  ? `自动分配并绑定 ${count} 个静态 IPv4`
+                  : "不分配"}
+              </dd>
             </div>
             <div>
               <dt>启动脚本</dt>

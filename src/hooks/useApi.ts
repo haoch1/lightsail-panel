@@ -5,6 +5,7 @@ import { nextSnapshot } from "../lib/api-snapshot";
 import type { ApiSnapshot } from "../lib/api-snapshot";
 import { isResourcePath, refreshPath } from "../../shared/refresh-policy";
 import { useAutoRefresh } from "./useAutoRefresh";
+import { matchesUpdate } from "../../shared/resource-update";
 
 export function useApi<T>(
   path: string | null,
@@ -20,6 +21,14 @@ export function useApi<T>(
   const [revision, revise] = useState({ version: 0, manual: false });
   const { version } = revision;
   const previous = useRef({ path, version });
+  useEffect(() => {
+    const updated = (event: Event) => {
+      if (path && matchesUpdate(path, (event as CustomEvent).detail))
+        revise((r) => ({ version: r.version + 1, manual: false }));
+    };
+    window.addEventListener("panel:resources-updated", updated);
+    return () => window.removeEventListener("panel:resources-updated", updated);
+  }, [path]);
   const refresh = useCallback(
     () => revise((r) => ({ version: r.version + 1, manual: true })),
     [],

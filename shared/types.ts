@@ -112,6 +112,20 @@ export interface PortInfo {
   ipv6Cidrs?: string[];
   cidrListAliases?: string[];
 }
+export interface LaunchNetworkJob {
+  id: string;
+  accountId: string;
+  region: string;
+  action?: string;
+  resources?: string[];
+  status: "pending" | "success" | "failed";
+  instances: {
+    name: string;
+    stage: string;
+    detail?: string;
+    staticIpName?: string;
+  }[];
+}
 export interface AuditEntry {
   id: string | number;
   at: string;

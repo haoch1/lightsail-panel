@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 export class Store {
+  onClose = new Set();
   constructor(dir) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     const keyPath = join(dir, "encryption.key");
@@ -31,6 +32,9 @@ export class Store {
       CREATE TABLE IF NOT EXISTS accounts(id TEXT PRIMARY KEY,meta TEXT NOT NULL,secret TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(hash TEXT PRIMARY KEY,csrf TEXT NOT NULL,expires INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY,body TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS launch_network(id TEXT PRIMARY KEY,body TEXT NOT NULL);
+      CREATE INDEX IF NOT EXISTS launch_network_status ON launch_network(json_extract(body, '$.status'));
+      CREATE INDEX IF NOT EXISTS launch_network_at ON launch_network(json_extract(body, '$.at'));
       CREATE TABLE IF NOT EXISTS audit(id TEXT PRIMARY KEY,at TEXT NOT NULL,account TEXT,action TEXT NOT NULL,target TEXT,status TEXT NOT NULL,detail TEXT);`);
     // Preserve old records for upgrades; the scheduler and its API are removed.
     this.db.exec(
@@ -166,7 +170,42 @@ export class Store {
       .prepare("SELECT * FROM audit ORDER BY at DESC LIMIT 200")
       .all();
   }
+  saveLaunchNetwork(job) {
+    this.db
+      .prepare("INSERT OR REPLACE INTO launch_network VALUES(?,?)")
+      .run(job.id, JSON.stringify(job));
+  }
+  launchNetwork(id) {
+    const row = this.db
+      .prepare("SELECT body FROM launch_network WHERE id=?")
+      .get(id);
+    return row ? JSON.parse(row.body) : null;
+  }
+  latestInstanceJob(accountId, region, name) {
+    const row = this.db
+      .prepare(
+        `SELECT body FROM launch_network
+      WHERE json_extract(body, '$.accountId')=? AND json_extract(body, '$.region')=?
+      AND (json_extract(body, '$.action')='launch' OR json_extract(body, '$.resource')='instances')
+      AND EXISTS (SELECT 1 FROM json_each(body, '$.instances') WHERE json_extract(value, '$.name')=?)
+      ORDER BY json_extract(body, '$.at') DESC LIMIT 1`,
+      )
+      .get(accountId, region, name);
+    return row ? JSON.parse(row.body) : null;
+  }
+  launchNetworks({ pendingOnly = false, recentSince } = {}) {
+    const query = pendingOnly
+      ? "SELECT body FROM launch_network WHERE json_extract(body, '$.status')='pending'"
+      : recentSince !== undefined
+        ? "SELECT body FROM launch_network WHERE json_extract(body, '$.status')='pending' OR json_extract(body, '$.at')>?"
+        : "SELECT body FROM launch_network";
+    return this.db
+      .prepare(query)
+      .all(...(pendingOnly || recentSince === undefined ? [] : [recentSince]))
+      .map((r) => JSON.parse(r.body));
+  }
   close() {
+    for (const stop of this.onClose) stop();
     this.db.close();
   }
 }

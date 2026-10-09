@@ -269,7 +269,7 @@ test("attached static IPs cannot be released or silently replaced on an occupied
   assert.ok(!calls.includes("AttachStaticIp"));
 });
 
-test("Lightsail port rules preserve IPv6 input and poll the singular operation result", async (t) => {
+test("Lightsail port rules preserve IPv6 input and return operation IDs for background tracking", async (t) => {
   const { store } = fixture(t),
     account = store.saveAccount(
       { name: "test", region: "us-east-1" },
@@ -296,10 +296,15 @@ test("Lightsail port rules preserve IPv6 input and poll the singular operation r
       ipv6Cidrs: ["2001:db8::/64"],
     },
   });
-  await g.updatePorts(input);
+  const result = await g.updatePorts(input);
   assert.deepEqual(calls[0].p.portInfo.ipv6Cidrs, ["2001:db8::/64"]);
   assert.equal(calls[0].p.instanceName, "my-server");
-  assert.deepEqual(calls[1].p, { operationId: "op" });
+  assert.equal(
+    calls.length,
+    1,
+    "submission must not block on AWS operation polling",
+  );
+  assert.deepEqual(result.operations, [{ id: "op" }]);
   assert.throws(
     () =>
       V.publicPorts.parse({

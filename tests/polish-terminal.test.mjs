@@ -66,18 +66,13 @@ test("static IP allocation uses the selected account and region instead of accou
     calls.push({ accountId: account.id, service, region, command, input });
     return { operations: [{ id: "allocate-operation" }] };
   };
-  gateway.waitLightsail = async (account, region, operations) => {
-    assert.equal(account.id, selected.id);
-    assert.equal(region, "ap-southeast-1");
-    assert.equal(operations[0].id, "allocate-operation");
-    return true;
-  };
-  await gateway.staticIpOperation({
+  const result = await gateway.staticIpOperation({
     accountId: selected.id,
     region: "ap-southeast-1",
     name: "chosen-singapore-ip",
     action: "allocate",
   });
+  assert.deepEqual(result.operations, [{ id: "allocate-operation" }]);
   assert.deepEqual(calls, [
     {
       accountId: selected.id,

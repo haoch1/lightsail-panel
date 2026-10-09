@@ -5,6 +5,7 @@ import { cachedResourceScan, loadResourceScan } from "../lib/resource-scan";
 import type { ResourceScope, ScanSource } from "../lib/resource-scan";
 import { resourceCache } from "../lib/resource-cache";
 import { useAutoRefresh } from "./useAutoRefresh";
+import { matchesUpdate } from "../../shared/resource-update";
 
 export function useResourceScan<T>(
   scope: ResourceScope,
@@ -28,6 +29,21 @@ export function useResourceScan<T>(
   const [revision, revise] = useState({ version: 0, manual: false });
   const { version } = revision;
   const previous = useRef({ scopeKey, version });
+  useEffect(() => {
+    const updated = (event: Event) => {
+      const change = (event as CustomEvent).detail;
+      if (
+        accounts.some(
+          (account) =>
+            (accountId === "all" || account.id === accountId) &&
+            matchesUpdate(source.path(account.id, region), change),
+        )
+      )
+        revise((r) => ({ version: r.version + 1, manual: false }));
+    };
+    window.addEventListener("panel:resources-updated", updated);
+    return () => window.removeEventListener("panel:resources-updated", updated);
+  }, [scopeKey, source]);
   const refresh = useCallback(
     () => revise((r) => ({ version: r.version + 1, manual: true })),
     [],

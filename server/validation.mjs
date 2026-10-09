@@ -60,10 +60,59 @@ export const launch = z
     keyName: z.enum(["", "LightsailDefaultKeyPair"]).optional(),
     zone: z.string().optional(),
     ipAddressType: z.enum(["dualstack", "ipv4", "ipv6"]).default("dualstack"),
+    firewall: z
+      .array(z.lazy(() => publicPorts.shape.portInfo))
+      .min(1)
+      .max(60)
+      .optional(),
+    allocateStaticIp: z.boolean().default(false),
     userData: z.string().max(16000).default(""),
     token: z.string().uuid(),
   })
   .superRefine((v, ctx) => {
+    if (v.allocateStaticIp && v.ipAddressType === "ipv6")
+      ctx.addIssue({
+        code: "custom",
+        message: "仅 IPv6 实例不能分配静态 IPv4",
+        path: ["allocateStaticIp"],
+      });
+    for (const [index, portInfo] of (v.firewall || []).entries()) {
+      const checked = publicPorts.safeParse({
+        accountId: v.accountId,
+        region: v.region,
+        service: v.service,
+        id: v.name,
+        portInfo,
+      });
+      if (!checked.success)
+        for (const issue of checked.error.issues)
+          ctx.addIssue({
+            ...issue,
+            path: [
+              "firewall",
+              index,
+              ...issue.path.filter((p) => p !== "portInfo"),
+            ],
+          });
+      if (
+        (v.ipAddressType === "ipv6" || portInfo.protocol === "icmpv6") &&
+        portInfo.cidrs?.length
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "此规则只能使用 IPv6 来源",
+          path: ["firewall", index],
+        });
+      if (
+        (v.ipAddressType === "ipv4" || portInfo.protocol === "icmp") &&
+        portInfo.ipv6Cidrs?.length
+      )
+        ctx.addIssue({
+          code: "custom",
+          message: "此规则只能使用 IPv4 来源",
+          path: ["firewall", index],
+        });
+    }
     if (v.userData.includes("root:你的密码"))
       ctx.addIssue({
         code: "custom",

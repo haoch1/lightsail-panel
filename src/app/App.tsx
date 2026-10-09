@@ -31,6 +31,7 @@ import StaticIps from "../features/networking/StaticIps";
 import { api, isDemo, setCsrf } from "../lib/api";
 import { PanelContext, useApi } from "./context";
 import { ThemeControl } from "./theme";
+import { useResourceUpdates } from "../hooks/useResourceUpdates";
 const nav = [
   { path: "/lightsail", label: "Lightsail 实例", icon: Cloud },
   { path: "/lightsail/launch", label: "创建实例", icon: Rocket },
@@ -59,6 +60,7 @@ export default function App() {
     { id: number; message: string; type: string }[]
   >([]);
   const [authError, setAuthError] = useState("");
+  useResourceUpdates(!!auth?.authenticated, demo);
   const toast: ToastFn = (message, type = "success") => {
     const id = Date.now() + Math.random();
     setNotices((n) => [...n.slice(-3), { id, message, type }]);

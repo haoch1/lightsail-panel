@@ -19,6 +19,7 @@ import {
 import Select from "../../components/ui/Select";
 import { api } from "../../lib/api";
 import AllocateStaticIp from "./AllocateStaticIp";
+import LaunchNetworkStatus from "../launch/LaunchNetworkStatus";
 export default function StaticIps() {
   const panel = usePanel();
   const { accountId, region, accounts } = panel;
@@ -59,8 +60,6 @@ export default function StaticIps() {
       });
       panel.toast(result.notice || "静态 IP 操作已提交");
       setDialog(null);
-      data.refresh();
-      instances.refresh();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -109,6 +108,7 @@ export default function StaticIps() {
         </div>
       </div>
       <ScanNotices scan={data.data} />
+      <LaunchNetworkStatus resource="static-ips" />
       <div className="table-wrap">
         <table>
           <thead>
@@ -178,8 +178,6 @@ export default function StaticIps() {
           onDone={(accountId, region) => {
             panel.setScope(accountId, region);
             setDialog(null);
-            data.refresh();
-            instances.refresh();
           }}
         />
       )}

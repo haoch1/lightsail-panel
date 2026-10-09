@@ -145,6 +145,13 @@ export class ResourceCache {
     this.failures.clear();
     this.persist();
   }
+  invalidate(matches: (key: string) => boolean) {
+    for (const key of this.entries.keys())
+      if (matches(key)) this.entries.delete(key);
+    for (const key of this.failures.keys())
+      if (matches(key)) this.failures.delete(key);
+    this.persist();
+  }
 }
 
 export const resourceCache = new ResourceCache(AUTO_REFRESH_MS);

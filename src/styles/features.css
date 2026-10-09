@@ -368,3 +368,36 @@
   justify-content: center;
   animation: refresh-turn 1s cubic-bezier(0.38, 0.08, 0.24, 1) 1;
 }
+.launch-network-options .field-help {
+  margin: 8px 0 14px;
+}
+.launch-network-options .table-wrap {
+  margin: 12px 0;
+}
+.launch-static-ip {
+  margin-top: 24px;
+}
+.launch-network-status {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.traffic-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.traffic-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.traffic-link:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+  border-radius: 3px;
+}

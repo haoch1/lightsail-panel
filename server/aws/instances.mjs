@@ -115,15 +115,10 @@ export async function perform(gateway, input) {
           acceptBundleUpdate: changesBundle,
         },
       );
-      const complete = await gateway.waitLightsail(
-        account,
-        region,
-        result.operations || [],
-      );
       return {
-        notice: complete
-          ? "IPv6 设置已提交，请刷新查看网络地址。"
-          : "网络设置仍在更新，请稍后刷新。",
+        operations:
+          result.operations || (result.operation ? [result.operation] : []),
+        notice: "IPv6 设置已提交，正在跟踪网络地址更新",
       };
     }
     const command = {
@@ -143,6 +138,8 @@ export async function perform(gateway, input) {
 
 export async function launch(gateway, input) {
   if (input.service !== "lightsail") throw error("此面板仅支持 Lightsail");
+  if (input.allocateStaticIp && input.ipAddressType === "ipv6")
+    throw error("仅 IPv6 实例不能分配静态 IPv4");
   if (input.keyName && input.keyName !== "LightsailDefaultKeyPair")
     throw error("仅支持默认 SSH 密钥");
   const account = gateway.store.account(input.accountId),

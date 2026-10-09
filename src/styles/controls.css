@@ -308,6 +308,19 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+.instance-status-menu {
+  scrollbar-gutter: stable;
+}
+.instance-status-menu .select-option {
+  font-size: 13px;
+  gap: 8px;
+}
+.instance-status-menu .select-option > span {
+  white-space: nowrap;
+}
+.instance-status-menu .select-option > svg {
+  flex-shrink: 0;
+}
 .select-option[data-active="true"] {
   background: var(--subtle);
 }

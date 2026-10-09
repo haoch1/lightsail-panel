@@ -169,15 +169,10 @@ export async function staticIpOperation(gateway, input) {
     staticIpName: name,
     ...(action === "attach" ? { instanceName: input.instanceName } : {}),
   });
-  const complete = await gateway.waitLightsail(
-    account,
-    region,
-    result.operations || (result.operation ? [result.operation] : []),
-  );
   return {
-    notice: complete
-      ? "操作已提交，请刷新静态 IP 列表"
-      : "操作仍在进行，请稍后刷新或在 Lightsail 控制台检查。",
+    operations:
+      result.operations || (result.operation ? [result.operation] : []),
+    notice: "静态 IP 操作已提交，正在跟踪资源状态",
   };
 }
 
@@ -203,12 +198,9 @@ export async function updatePorts(gateway, input) {
     input.close ? "CloseInstancePublicPorts" : "OpenInstancePublicPorts",
     { instanceName: input.id, portInfo: input.portInfo },
   );
-  const complete = await gateway.waitLightsail(
-    account,
-    input.region,
-    result.operations || (result.operation ? [result.operation] : []),
-  );
   return {
-    notice: complete ? "端口规则已更新" : "端口规则仍在更新，请稍后刷新。",
+    operations:
+      result.operations || (result.operation ? [result.operation] : []),
+    notice: "端口规则已提交，正在跟踪更新结果",
   };
 }

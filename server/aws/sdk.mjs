@@ -29,6 +29,7 @@ export const usedCommands = {
     "GetInstanceMetricData",
     "GetInstancePortStates",
     "OpenInstancePublicPorts",
+    "PutInstancePublicPorts",
     "CloseInstancePublicPorts",
   ],
   sts: ["GetCallerIdentity", "AssumeRole"],
