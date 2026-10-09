@@ -18,7 +18,6 @@ Lightsail Panel 是面向 Amazon Lightsail 的自托管管理面板，提供中�
 - [数据备份与恢复](#数据备份与恢复)
 - [更新与维护](#更新与维护)
 - [常见问题](#常见问题)
-- [使用说明](#使用说明)
 - [开发与验证](#开发与验证)
 
 ## 功能
@@ -34,17 +33,13 @@ Lightsail Panel 是面向 Amazon Lightsail 的自托管管理面板，提供中�
 | 账户管理 | Access Key ID 与 Secret Access Key 身份验证、加密保存、重新验证和移除                                                                       |
 | 操作日志 | 记录资源操作、执行结果与错误信息                                                                                                            |
 
-区域范围与账户筛选独立设置，默认显示全部区域和全部账户。资源查询采用 5 分钟缓存，支持到期自动更新和手动刷新；缓存有效期内刷新网页不触发重复扫描。操作提交后单独跟踪目标资源，完成时自动更新对应账户与区域。
-
 ## Docker 部署
 
-官方镜像发布至 [GitHub Container Registry（GHCR）](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel)：`ghcr.io/haoch1/lightsail-panel:latest`。支持 `linux/amd64` 与 `linux/arm64`，Docker 根据服务器架构选择对应镜像。服务器仅需拉取镜像并启动容器，无需安装 Node.js、pnpm 或执行源码构建。
+预构建镜像：[`ghcr.io/haoch1/lightsail-panel:latest`](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel)，支持 `linux/amd64` 和 `linux/arm64`。Docker 自动选择对应架构，服务器无需安装构建工具。
 
 ### 1. 准备环境
 
-服务器需要安装 Docker Engine、Docker Compose v2 和 curl，并能够访问 GitHub、GHCR 以及 AWS API。公开镜像可直接拉取，无需登录 GitHub。
-
-Docker 安装方式见 [Docker Engine 官方安装文档](https://docs.docker.com/engine/install/)。以下命令在 Linux 服务器的终端中执行。当前用户需要具备运行 Docker 的权限；未配置权限时，在 Docker 命令前添加 `sudo`。
+在 Linux 服务器上安装 [Docker Engine](https://docs.docker.com/engine/install/)、Docker Compose v2 和 curl，并确保能够访问 GitHub、GHCR 和 AWS API。当前用户没有 Docker 权限时，在 Docker 命令前添加 `sudo`；拉取公开镜像无需登录。
 
 ```bash
 docker --version
@@ -62,9 +57,7 @@ curl -fsSLo .env.example https://raw.githubusercontent.com/haoch1/lightsail-pane
 cp .env.example .env
 ```
 
-默认配置将面板发布至服务器本机的 `127.0.0.1:8090`。需要更换端口时，修改 `.env` 中的 `PANEL_PORT`。使用 HTTPS 反向代理时，同时设置 `PUBLIC_ORIGIN`。
-
-使用 `nano .env` 或其他文本编辑器修改配置；`.env.example` 是模板，Compose 实际读取的是同目录的 `.env`。AWS Access Key 在面板中添加，无需写入该文件。
+使用 `nano .env` 编辑实际配置。默认访问地址为 `127.0.0.1:8090`；宿主机端口由 `PANEL_PORT` 指定。AWS Access Key 在面板中添加，无需写入此文件。
 
 ```dotenv
 PANEL_IMAGE=ghcr.io/haoch1/lightsail-panel:latest
@@ -89,31 +82,23 @@ curl -fsS http://127.0.0.1:8090/api/health
 { "ok": true, "version": "1.6.0", "service": "lightsail" }
 ```
 
-镜像在 GitHub Actions 中完成依赖安装、类型检查、自动化测试、前端构建及两种架构的容器启动验证后发布。运行容器使用非 root 用户，默认启用 `no-new-privileges` 并移除 Linux capabilities。
-
-在服务器本机访问 `http://127.0.0.1:8090`。从另一台计算机连接时，可使用 SSH 本地端口转发：
+远程连接可使用 SSH 端口转发：
 
 ```bash
 ssh -N -L 8090:127.0.0.1:8090 user@server
 ```
 
-随后在本地浏览器访问 `http://127.0.0.1:8090`。长期远程访问建议使用下文的 HTTPS 反向代理。
+随后访问 `http://127.0.0.1:8090`。长期远程访问可配置下文的 HTTPS 反向代理。
 
-需要直接通过服务器 IP 访问时，将 `.env` 的 `PANEL_BIND` 改为 `0.0.0.0`，执行 `docker compose up -d`，并在服务器防火墙及云平台安全规则中允许指定来源访问 TCP `8090`。访问地址为 `http://服务器IP:8090`；通过公网管理 AWS 凭证应使用 HTTPS。默认端口映射为 `8090:8090`；修改宿主机端口不会改变容器内部的 `8090` 端口。
+直接通过服务器 IP 访问时，将 `PANEL_BIND` 改为 `0.0.0.0`，执行 `docker compose up -d`，并在防火墙中允许指定来源访问宿主机端口。公网访问应使用 HTTPS。
 
 ### 4. 初始化管理员
 
-首次访问时设置管理员密码，长度至少为 12 个字符。应用不包含预设管理员密码。
-
-登录后，点击顶部的 **AWS 账户管理**，进入账户管理界面。主题切换位于侧栏底部，支持浅色、暗色和跟随系统。
-
-### 5. 配置 IAM 并添加 AWS 账户
-
-按照下一节完成 IAM 权限和 Access Key 配置，再通过顶部 **AWS 账户管理 → 添加 AWS 账户** 接入面板。已有专用 IAM 用户时，可直接执行策略配置和密钥创建步骤。
+首次访问时设置管理员密码，至少 12 个字符。登录后按下一节添加 AWS 账户。
 
 ## 获取 Access Key 与配置 IAM
 
-面板使用一对 **Access Key ID** 与 **Secret Access Key** 调用 AWS API，不使用 AWS 控制台登录密码。新账户表单接收长期 Access Key，不提供需要 Session Token 的临时凭证输入。推荐为本面板创建专用 IAM 用户，并仅附加本项目提供的权限策略。
+面板使用 **Access Key ID** 与 **Secret Access Key** 调用 AWS API。推荐创建专用 IAM 用户，附加本项目的统一权限策略。
 
 ### 方式一：专用 IAM 用户（推荐）
 
@@ -124,8 +109,6 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 3. 填写用户名，例如 `lightsail-panel`。该用户仅供面板调用 API，无需开启 AWS Management Console 登录权限。
 4. 完成用户创建。若已有专用用户，打开该用户的详情页。
 
-IAM 用户、控制台访问和权限配置的关系见 [AWS 创建 IAM 用户说明](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html)。
-
 #### 2. 创建并附加统一权限策略
 
 1. 打开 **Policies（策略）→ Create policy（创建策略）**。
@@ -135,7 +118,7 @@ IAM 用户、控制台访问和权限配置的关系见 [AWS 创建 IAM 用户�
 5. 返回 **Users → lightsail-panel → Permissions（权限）**。
 6. 选择 **Add permissions（添加权限）→ Attach policies directly（直接附加策略）**，搜索并勾选 `LightsailPanelPolicy`，完成添加。
 
-只需这一份策略。它覆盖面板的实例、静态 IP、防火墙、流量查询和默认密钥下载，不授予账单、快照与备份管理权限；详细说明见 [权限文档](docs/PERMISSIONS.md)。自定义策略编辑流程见 [AWS JSON 策略编辑器说明](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_create-console.html)。
+此策略覆盖面板全部功能，不授予账单、快照和备份管理权限，详见 [权限文档](docs/PERMISSIONS.md)。
 
 #### 3. 创建 Access Key
 
@@ -143,15 +126,13 @@ IAM 用户、控制台访问和权限配置的关系见 [AWS 创建 IAM 用户�
 2. 找到 **Access keys（访问密钥）**，点击 **Create access key（创建访问密钥）**。
 3. 在用途页面选择 **Other（其他）**，继续下一步。可填写用途描述 `Lightsail Panel`。
 4. 创建后保存 **Access Key ID** 与 **Secret Access Key**，或下载 CSV。
-5. 保存完成后关闭页面。Secret Access Key 只在创建时显示；遗失后应创建新密钥，而不是尝试找回。
+5. 妥善保存密钥。Secret Access Key 仅在创建时显示，遗失后需创建新密钥。
 
-每个 IAM 用户最多拥有两对 Access Key，创建入口不可用时需处理现有密钥。步骤及密钥启用、停用说明见 [AWS Access Key 管理文档](https://docs.aws.amazon.com/IAM/latest/UserGuide/access-key-self-managed.html)。
+每个 IAM 用户最多拥有两对 Access Key，管理方法见 [AWS 文档](https://docs.aws.amazon.com/IAM/latest/UserGuide/access-key-self-managed.html)。
 
 ### 方式二：Root user 的 Access Key（补充说明）
 
-[Access Key 获取图文教程](https://www.hidandelion.com.cn/how-to-get-aws-access-key-for-slauncher-pro/) 介绍了此路径。Root user 密钥具备账户级权限，不能通过给 IAM 用户附加本项目策略来限制它；[AWS 官方建议避免创建 Root user Access Key](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user_manage_add-key.html)。通常应采用上面的 IAM 用户方式。
-
-需要了解该入口时，可按以下顺序操作：
+[图文教程](https://www.hidandelion.com.cn/how-to-get-aws-access-key-for-slauncher-pro/) 使用此方式，无需附加 IAM 用户策略。Root user 密钥具备账户级权限，[AWS 建议避免创建](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_root-user_manage_add-key.html)。
 
 1. 在 AWS 登录页面选择 **Root user**，使用 AWS 账户邮箱和密码登录，按提示完成 MFA。
 2. 点击控制台右上角账户名称或账户编号，选择 **Security credentials（安全凭证）**。
@@ -159,69 +140,64 @@ IAM 用户、控制台访问和权限配置的关系见 [AWS 创建 IAM 用户�
 4. 阅读 **Alternatives to root user access keys** 页面中的说明；决定继续时，勾选确认项并创建。
 5. 在 **Retrieve access key** 页面保存 Access Key ID 与 Secret Access Key，或下载 CSV。
 
-该方法无需创建 IAM 用户或附加 IAM 用户策略。日常使用建议采用专用 IAM 用户及统一权限策略。
-
 ### 将凭证添加到面板
 
 1. 登录 Lightsail Panel，点击右上角 **AWS 账户管理**。
 2. 选择 **添加 AWS 账户**，填写以下三项：
 
-   | 字段              | 内容                                              |
-   | ----------------- | ------------------------------------------------- |
-   | 账户名称          | 面板中的显示名称，例如 `生产环境`；由用户自行填写 |
-   | Access Key ID     | 与 Secret Access Key 配对的访问密钥标识           |
-   | Secret Access Key | 创建访问密钥时保存的密钥内容                      |
+   | 字段              | 内容                                    |
+   | ----------------- | --------------------------------------- |
+   | 账户名称          | 面板中的显示名称，例如 `生产环境`       |
+   | Access Key ID     | 与 Secret Access Key 配对的访问密钥标识 |
+   | Secret Access Key | 创建访问密钥时保存的密钥内容            |
 
 3. 点击 **验证并保存**。应用通过 `STS GetCallerIdentity` 验证身份，成功后加密保存凭证。
-4. 返回实例列表，选择全部账户、全部区域，或指定账户与区域查询资源。身份验证成功仅表示凭证有效，资源操作仍取决于 IAM 权限、区域状态与配额。
 
-添加账户无需选择默认区域。实例创建和静态 IP 分配时，需要分别选择目标区域。AWS API 请求由面板服务器直接发送。
+添加账户无需选择默认区域。身份验证成功表示凭证有效，资源操作仍受 IAM 权限、区域状态和配额限制。
 
-密钥和下载的 CSV 不应写入 README、Compose、Git 仓库或操作日志。面板从数据库读取加密凭证；备份时须同时保留其加密密钥。移除面板账户只删除本地保存的凭证，不会停用 AWS 中的 Access Key，也不会删除云资源。需要撤销访问时，在 AWS 对应用户的 **Security credentials → Access keys** 中停用或删除该密钥。
+密钥和 CSV 不应提交至 Git 仓库。移除面板账户不会停用 AWS Access Key 或删除云资源；撤销访问需在 AWS **Security credentials → Access keys** 中停用或删除密钥。
 
 ## 面板使用流程
 
 ### 查询与管理实例
 
-顶部 **区域范围** 和 **账户** 默认显示 **全部区域** 与 **全部账户**，仅在手动选择时改变筛选范围。创建实例、分配静态 IP 及其他资源操作不会修改顶部选择。实例列表可按名称、IP 和状态筛选，展示规格、套餐价格、本月流量和网络地址。将鼠标移至本月流量可查看上行与下行数据；点击流量数值打开该实例的流量统计弹窗，与右侧操作菜单中的入口相同。
+顶部 **区域范围** 和 **账户** 默认显示 **全部区域** 与 **全部账户**，筛选范围仅随手动选择改变。实例列表支持名称、IP 和状态筛选；右侧 **操作** 菜单提供资源管理入口，列表复选框用于批量操作。
 
-实例右侧 **操作** 菜单提供启动、停止、重启、网络配置、实例详情和删除等入口。停止与重启会中断实例服务；删除实例不可恢复。批量操作通过列表复选框选择目标后执行。
+价格为 AWS 套餐月价，停止实例后仍会继续计费。停止与重启会中断服务，删除实例不可恢复。
 
-资源列表采用两种同步方式：
+刷新方式：
 
-- **日常同步：** 缓存有效期为 5 分钟。页面可见时按缓存到期时间更新，隐藏时暂停日常刷新，恢复可见后补齐已过期数据。缓存仍有效时，刷新网页或切换页面会复用数据。
-- **操作状态跟踪：** 创建、启动、停止、重启、删除、IPv6、静态 IP 和端口变更后，只查询目标资源的操作进度及实际状态。首分钟约每 5 秒检查，之后约每 15 秒检查；并发受限，完成后停止。对应资源列表自动更新，其他账户、区域、套餐目录和流量缓存继续复用。
-- **手动刷新：** 点击页面的 **刷新**，主动重新查询当前筛选范围，适用于需要立即核对 AWS 控制台外部变更的情况。
+- **自动同步：** 5 分钟缓存到期后更新；页面隐藏时暂停。刷新网页或切换页面复用有效缓存。
+- **操作跟踪：** 资源变更后仅查询目标状态，首分钟约每 5 秒、之后约每 15 秒检查，完成后更新列表并停止跟踪。
+- **手动刷新：** 立即重新查询当前筛选范围。
 
-进度跟踪保存在服务器中，页面刷新或面板重启后继续。前端查询进度读取本地记录，不触发全区域扫描；超过 10 分钟仍未完成时停止该次跟踪并提示核对，手动刷新可重新核对状态并恢复跟踪。扫描发现处于过渡状态的实例时，也会加入目标状态跟踪。
+跟踪进度持久化保存，刷新页面或重启面板后继续，不触发全区域扫描。超过 10 分钟仍未完成时提示核对，可手动刷新重新检查。
 
 ### 创建实例
 
 1. 点击 **创建实例** 或实例列表中的 **启动新实例**。
-2. 选择目标 AWS 账户与区域；区域按列表第一项作为初始选择，创建页的选择不会修改顶部查询范围。
+2. 选择目标 AWS 账户与区域，区域初始选择为列表第一项。
 3. 在 **选择网络类型** 中选择 **双堆栈** 或 **仅限 IPv6**。双堆栈提供公网 IPv4 与 IPv6；仅 IPv6 不提供公网 IPv4，访问端需要支持 IPv6。
-4. 选择系统镜像与通用型套餐。Debian 排在镜像列表前方；套餐展示内存、vCPU、SSD、每月流量与月价，以当前区域 AWS 目录为准。
+4. 选择系统镜像与通用型套餐。Debian 排在首位，套餐参数以当前区域 AWS 目录为准。
 5. 填写实例名称、数量及可用区。批量创建会在名称后追加 `-1`、`-2` 等后缀；可用区以 AWS 返回的有效列表为准。
 6. 按需配置下文的防火墙与静态 IP。保持未勾选时使用 AWS 默认防火墙，且不自动分配静态 IP。
-7. 使用默认 SSH 密钥。需要从外部 SSH 客户端连接时，可下载该账户、该区域的默认 `.pem` 私钥并妥善保管。
+7. 使用默认 SSH 密钥，需要 SSH 连接时下载该账户、区域的 `.pem` 私钥。私钥不保存至应用数据库或日志。
 8. 检查启动脚本。默认脚本中的密码占位符必须替换；不需要启动脚本时，清空输入框。
 9. 点击创建，在确认窗口核对账户、区域、镜像、套餐、数量及网络配置，再提交。
 
 ### 创建时配置防火墙与静态 IP
 
-**防火墙：** 勾选 **创建后设置防火墙**，初始开放所有协议及端口，来源为所选网络类型支持的全部公网 IPv4 / IPv6。需要限制访问时，删除该规则，再添加指定协议、端口范围及 CIDR 来源。添加更宽的规则会移除被其完全覆盖的规则，已被覆盖的规则不会重复添加。提交时列出的规则会替换 AWS 默认公网规则。
+**防火墙：** 勾选 **创建后设置防火墙**，初始开放所有协议、端口及公网来源。需要限制访问时，删除初始规则，再添加协议、端口和 CIDR。较宽规则会移除被其完全覆盖的规则；提交后替换 AWS 默认公网规则。
 
-**静态 IP：** 勾选 **自动分配并绑定静态 IPv4**，实例就绪后为每台实例分配并绑定一个同区域地址。仅 IPv6 实例禁用此选项。分配受 AWS 静态 IP 配额限制；地址自动命名，完成后可在静态 IP 页面查看。
+**静态 IP：** 勾选 **自动分配并绑定静态 IPv4**，实例就绪后为每台实例绑定一个同区域地址。仅 IPv6 实例禁用此选项；分配受区域配额限制。
 
-AWS `CreateInstances` 本身没有这两个配置参数，面板在实例就绪后调用 `PutInstancePublicPorts`、`AllocateStaticIp` 和 `AttachStaticIp`。进度保存在服务器数据库中，刷新页面或重启面板后继续处理；前端每 5 秒读取本地进度，不会因此重新扫描全部区域。接口依据见 [权限文档](docs/PERMISSIONS.md)。
-
-网络配置失败时，已创建的实例继续保留，列表提示具体失败项目。请更新权限或核对配额，然后在防火墙、静态 IP 页面完成配置，避免重新提交创建相同实例。处理超过 10 分钟会停止自动尝试并提示核对；无法确认绑定结果的静态 IP 会保留并标明名称。
+网络配置失败时保留实例，并提示失败项目；修正权限或配额后，在对应页面完成配置，无需重新创建。无法确认绑定结果的静态 IP 会保留并标明名称。
 
 ### 静态 IP、防火墙与流量
 
-- **静态 IP：** 列表支持全部账户、全部区域；分配时选择具体账户和区域。绑定目标须在相同账户与区域且具备 IPv4 网络。已绑定地址先解绑，再释放；释放后无法保证再次取得同一地址。
+- **静态 IP：** 分配时选择具体账户和区域，绑定目标须在同一账户、区域且支持 IPv4。已绑定地址先解绑再释放；未绑定地址可能产生费用，释放后不保证再次取得同一地址。
 - **防火墙：** 选择实例，查看当前规则，再新增或关闭允许来源、协议和端口。这里管理 Lightsail 公网防火墙，实例操作系统内的防火墙须在服务器中另外配置。
-- **流量统计：** 选择实例和时间范围，查看入站、出站、合计与每日汇总。今日从浏览器本地零点开始；近 7 天和近 30 天按包含今日的自然日计算，各范围使用同一日期边界。
+- **流量统计：** 悬停实例列表的本月流量可查看上行与下行，点击数值打开统计弹窗。支持本月、今日、近 7 天和近 30 天，均从浏览器本地日期零点起算，包含今日，截至最近完成的整点。指标来自 `NetworkIn` / `NetworkOut`，涵盖全部网卡，不能直接作为计费流量；缺失数据保持未知。
 - **操作日志：** 查看创建、启停、网络配置等操作的时间、目标和执行结果，用于定位权限或 API 错误。
 
 ## HTTPS 反向代理
@@ -284,26 +260,7 @@ sudo systemctl reload nginx
 
 容器内部固定使用 `HOST=0.0.0.0`、`PORT=8090`、`DATA_DIR=/app/data`。宿主机端口通过 `PANEL_PORT` 自定义，例如 `PANEL_PORT=9000` 对应 `9000:8090`。
 
-运行标识统一如下：
-
-| 项目                                           | 名称或命令                      |
-| ---------------------------------------------- | ------------------------------- |
-| Compose 项目、服务、Docker 容器与容器 hostname | `lightsail-panel`               |
-| npm 包与容器内启动命令                         | `lightsail-panel`               |
-| Docker 默认启动命令（CMD）                     | `["lightsail-panel"]`           |
-| 容器内健康检查                                 | `lightsail-panel --healthcheck` |
-| Linux 主进程与线程名称                         | `lightsail-panel`               |
-| 持久化数据卷                                   | `lightsail-panel-data`          |
-
-容器内启动命令直接运行 Node.js 服务，服务作为 PID 1 接收停止信号。Linux 使用 `ps`、`top` 或 `htop` 查看时显示 `lightsail-panel`；运行期间新增的线程名称在 30 秒内同步，此过程仅访问本地 `/proc`，不调用 AWS API。
-
-可在宿主机验证名称和启动命令：
-
-```bash
-docker inspect --format '{{.Name}} {{json .Config.Cmd}}' lightsail-panel
-docker top lightsail-panel -eo pid,comm,args
-docker exec lightsail-panel sh -c 'cat /proc/1/comm; cat /proc/1/task/*/comm'
-```
+Compose 项目、服务、容器、启动命令和 Linux 进程、线程名称统一为 `lightsail-panel`；数据卷为 `lightsail-panel-data`。实现说明见 [架构文档](docs/ARCHITECTURE.md)。
 
 ## 数据备份与恢复
 
@@ -345,7 +302,7 @@ docker compose up -d
 docker compose ps
 ```
 
-`latest` 在 `main` 分支构建与测试成功后更新。也可在 [镜像页面](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel) 获取已发布镜像的标签或摘要，通过 `.env` 中的 `PANEL_IMAGE` 指定镜像后重新执行上述命令。重新创建容器不会删除持久化数据卷。
+`latest` 在 `main` 分支构建与测试通过后更新；固定镜像时，在 `PANEL_IMAGE` 中指定 [标签或摘要](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel)。
 
 常用维护命令：
 
@@ -368,7 +325,6 @@ docker compose down
 | 创建区域不可用              | 在 AWS 中确认目标区域已启用、Lightsail 可用且配额充足。                                          |
 | 保存凭证无法解密            | 恢复与数据库匹配的 `encryption.key` 或 `ENCRYPTION_KEY`。                                        |
 | 页面资源加载失败            | 刷新页面以加载最新构建资源，并确认反向代理未长期缓存 HTML。                                      |
-| Secret Access Key 遗失      | AWS 不再展示已创建的 Secret Access Key；创建新密钥并添加到面板，验证后停用旧密钥。               |
 | 身份验证成功但没有实例      | 核对该凭证所属账户、查询范围及 Lightsail 查询权限；确认资源为 Lightsail 实例。                   |
 | 创建后防火墙设置失败        | 更新统一策略，确认包含 `lightsail:PutInstancePublicPorts`，再在防火墙页面设置规则。              |
 | 静态 IP 分配或绑定失败      | 检查目标区域配额、IPv4 支持及 IAM 权限；根据网络配置提示核对已保留的地址。                       |
@@ -384,16 +340,6 @@ docker compose logs --tail=100 lightsail-panel
 ```
 
 端口改为其他值时同步修改健康检查地址。提交问题反馈时，提供镜像标签、服务器架构、操作步骤和去除敏感信息的错误文本。
-
-## 使用说明
-
-- 实例价格为 AWS 套餐月价，不代表实时账单。停止实例后，AWS 仍可能继续收取套餐费用。
-- 流量来源为 Lightsail 的 `NetworkIn` 与 `NetworkOut`，采用 `Sum / Bytes`，截至最近完成的整点。所有时间范围从浏览器本地日期零点起算；近 7 天与近 30 天均包含今日。
-- 流量涵盖全部网卡，不能直接作为 AWS 收费出站流量或套餐剩余额度。指标缺失与接口失败保持未知，不填充虚构数值。
-- 创建实例仅使用默认 SSH 密钥，支持下载 `.pem` 私钥。默认密钥按账户与区域管理，私钥不保存至应用数据库或日志。
-- 启动脚本在实例创建时执行。默认脚本包含密码占位符，提交前应替换为实际配置或清空脚本。
-- 未绑定的静态 IP 可能产生 AWS 费用。释放地址后，不保证能够再次获取相同地址。
-- 演示入口为 `/lightsail?demo=1`，使用浏览器内存中的示例数据，不调用 AWS API。
 
 ## 开发与验证
 
@@ -421,7 +367,9 @@ docker build -t lightsail-panel:local .
 PANEL_IMAGE=lightsail-panel:local docker compose up -d --pull never
 ```
 
-GitHub Actions 在 amd64 与 arm64 原生 runner 上分别构建并验证 Docker 镜像，全部通过后发布多架构镜像至 GHCR；Pull Request 仅执行构建与测试，不发布镜像。验证内容包括健康检查、HTTP 响应、非 root 运行、实际启动命令、PID 1 及线程名称、停止信号处理。发布后还会通过 Compose 拉取镜像，检查容器名称与数据卷挂载。代码结构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+GitHub Actions 在 amd64 和 arm64 原生 runner 上完成构建、测试、容器启动及 Compose 部署验证后发布镜像；Pull Request 仅验证。容器以非 root 用户运行，启用 `no-new-privileges` 并移除 Linux capabilities。
+
+演示入口为 `/lightsail?demo=1`，使用浏览器内存数据，不调用 AWS API。
 
 ## 许可证
 
