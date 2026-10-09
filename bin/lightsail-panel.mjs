@@ -7,7 +7,7 @@ if (args.length === 0) {
 } else if (args.length === 1 && args[0] === "--healthcheck") {
   const stopIdentity = startRuntimeIdentity();
   try {
-    const port = Number(process.env.PORT || 4180);
+    const port = Number(process.env.PORT || 8090);
     const response = await fetch(`http://127.0.0.1:${port}/api/health`, {
       signal: AbortSignal.timeout(4000),
     });

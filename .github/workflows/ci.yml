@@ -45,7 +45,7 @@ jobs:
       - name: Verify container startup and HTTP endpoints
         run: |
           docker run --detach --name lightsail-panel-test --hostname lightsail-panel \
-            --publish 127.0.0.1:8090:4180 \
+            --publish 127.0.0.1:8090:8090 \
             --security-opt no-new-privileges:true --cap-drop ALL \
             "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}"
           curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
@@ -55,6 +55,8 @@ jobs:
           python3 -c 'import json; d=json.load(open("auth.json")); assert d["initialized"] is False and d["authenticated"] is False'
           curl --fail --silent http://127.0.0.1:8090/lightsail | grep -q 'id="root"'
           test "$(docker inspect --format '{{.Config.User}}' lightsail-panel-test)" = node
+          test "$(docker exec lightsail-panel-test printenv PORT)" = 8090
+          test "$(docker inspect --format '{{json .Config.ExposedPorts}}' lightsail-panel-test)" = '{"8090/tcp":{}}'
           test "$(docker inspect --format '{{json .Config.Cmd}}' lightsail-panel-test)" = '["lightsail-panel"]'
           test "$(docker inspect --format '{{.Path}}' lightsail-panel-test)" = lightsail-panel
           test "$(docker exec lightsail-panel-test hostname)" = lightsail-panel
@@ -124,7 +126,7 @@ jobs:
           PANEL_PORT: 8090
         run: |
           docker compose config --format json > compose.json
-          python3 -c 'import json; d=json.load(open("compose.json")); assert list(d["services"]) == ["lightsail-panel"]; assert d["services"]["lightsail-panel"]["container_name"] == "lightsail-panel"; assert d["volumes"]["lightsail-panel-data"]["name"] == "lightsail-panel-data"'
+          python3 -c 'import json; d=json.load(open("compose.json")); s=d["services"]["lightsail-panel"]; assert list(d["services"]) == ["lightsail-panel"]; assert s["container_name"] == "lightsail-panel"; assert s["environment"]["PORT"] == "8090"; assert s["ports"][0]["target"] == 8090; assert s["ports"][0]["published"] == "8090"; assert d["volumes"]["lightsail-panel-data"]["name"] == "lightsail-panel-data"'
           docker compose pull
           docker compose up -d
           curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
@@ -134,6 +136,17 @@ jobs:
           test "$(docker inspect --format '{{.Path}}' lightsail-panel)" = lightsail-panel
           test "$(docker exec lightsail-panel hostname)" = lightsail-panel
           test "$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/app/data"}}{{.Name}}{{end}}{{end}}' lightsail-panel)" = lightsail-panel-data
+          docker exec lightsail-panel lightsail-panel --healthcheck
+      - name: Verify custom host port
+        env:
+          PANEL_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          PANEL_PORT: 18090
+        run: |
+          docker compose up -d
+          curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
+            --retry-connrefused http://127.0.0.1:18090/api/health > health.json
+          python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
+          test "$(docker exec lightsail-panel printenv PORT)" = 8090
           docker exec lightsail-panel lightsail-panel --healthcheck
       - name: Deployment logs
         if: always()

@@ -10,7 +10,7 @@ const store = new Store(resolve(process.env.DATA_DIR || "data"));
 const gateway = new AwsGateway(store);
 const app = createApp(store, gateway);
 const host = process.env.HOST || "127.0.0.1";
-const port = Number(process.env.PORT || 4180);
+const port = Number(process.env.PORT || 8090);
 const server = app.listen(port, host, () =>
   console.log(`lightsail-panel: http://${host}:${port}`),
 );

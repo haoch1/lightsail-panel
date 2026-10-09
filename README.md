@@ -99,7 +99,7 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 
 随后在本地浏览器访问 `http://127.0.0.1:8090`。长期远程访问建议使用下文的 HTTPS 反向代理。
 
-需要直接通过服务器 IP 访问时，将 `.env` 的 `PANEL_BIND` 改为 `0.0.0.0`，执行 `docker compose up -d`，并在服务器防火墙及云平台安全规则中允许指定来源访问 TCP `8090`。访问地址为 `http://服务器IP:8090`；通过公网管理 AWS 凭证应使用 HTTPS。修改宿主机端口不会改变容器内部的 `4180` 端口。
+需要直接通过服务器 IP 访问时，将 `.env` 的 `PANEL_BIND` 改为 `0.0.0.0`，执行 `docker compose up -d`，并在服务器防火墙及云平台安全规则中允许指定来源访问 TCP `8090`。访问地址为 `http://服务器IP:8090`；通过公网管理 AWS 凭证应使用 HTTPS。默认端口映射为 `8090:8090`；修改宿主机端口不会改变容器内部的 `8090` 端口。
 
 ### 4. 初始化管理员
 
@@ -282,7 +282,7 @@ sudo systemctl reload nginx
 | `PUBLIC_ORIGIN`  | 空                                      | 浏览器访问来源；HTTPS 反向代理时设置                                    |
 | `ENCRYPTION_KEY` | 自动生成                                | 可选的 32 字节 Base64 加密密钥；未配置时写入数据卷中的 `encryption.key` |
 
-容器内部固定使用 `HOST=0.0.0.0`、`PORT=4180`、`DATA_DIR=/app/data`。宿主机端口仍通过 `PANEL_PORT` 自定义。
+容器内部固定使用 `HOST=0.0.0.0`、`PORT=8090`、`DATA_DIR=/app/data`。宿主机端口通过 `PANEL_PORT` 自定义，例如 `PANEL_PORT=9000` 对应 `9000:8090`。
 
 运行标识统一如下：
 
@@ -406,7 +406,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-开发界面为 `http://127.0.0.1:4173`，API 为 `http://127.0.0.1:4180`。
+开发界面为 `http://127.0.0.1:4173`，API 为 `http://127.0.0.1:8090`。
 
 ```bash
 pnpm check

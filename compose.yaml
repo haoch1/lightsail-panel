@@ -7,10 +7,10 @@ services:
     hostname: lightsail-panel
     restart: unless-stopped
     ports:
-      - "${PANEL_BIND:-127.0.0.1}:${PANEL_PORT:-8090}:4180"
+      - "${PANEL_BIND:-127.0.0.1}:${PANEL_PORT:-8090}:8090"
     environment:
       HOST: 0.0.0.0
-      PORT: 4180
+      PORT: 8090
       DATA_DIR: /app/data
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
