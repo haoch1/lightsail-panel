@@ -301,9 +301,10 @@
     gap: 6px;
     font-size: 13px;
   }
-  .account-manager-button {
-    width: 32px;
+  .button.account-manager-button {
+    width: 36px;
     padding: 0;
+    gap: 0;
     flex-shrink: 0;
   }
   .account-manager-button span {

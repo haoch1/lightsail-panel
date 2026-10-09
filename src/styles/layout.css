@@ -88,10 +88,12 @@
   gap: 11px;
   flex-shrink: 0;
 }
-.account-manager-button {
+.button.account-manager-button {
   height: 36px;
   min-height: 36px;
   font-size: 13px;
+  gap: 8px;
+  padding: 8px 14px;
 }
 .top-right > .text-link {
   white-space: nowrap;

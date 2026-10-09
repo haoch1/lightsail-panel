@@ -246,11 +246,11 @@ export default function App() {
                 </Select>
               </div>
               <button
-                className="button small account-manager-button"
-                aria-label="AWS账户管理"
+                className="button account-manager-button"
+                aria-label="AWS 账户管理"
                 onClick={() => setManageAccounts(true)}
               >
-                <UsersRound size={15} /> <span>AWS账户管理</span>
+                <UsersRound size={16} /> <span>AWS 账户管理</span>
               </button>
               {demo ? (
                 <a className="text-link" href="/">
