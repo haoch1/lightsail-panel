@@ -83,13 +83,6 @@ export default function StaticIps() {
           <p>管理 Lightsail 静态公网地址与实例绑定</p>
         </div>
       </div>
-      <div className="notice">
-        当前范围：
-        {accountId === "all"
-          ? "全部账户"
-          : accounts.find((a) => a.id === accountId)?.name}{" "}
-        · {region === "all" ? "全部区域" : regionLabel(region)}。
-      </div>
       <div className="toolbar">
         <div className="toolbar-actions">
           <RefreshButton
@@ -164,7 +157,7 @@ export default function StaticIps() {
             description={
               accounts.length
                 ? "可以为 Lightsail 实例分配一个固定公网地址。"
-                : "通过顶部账户旁的“管理”添加并验证账户。"
+                : "通过顶部的“AWS账户管理”添加并验证账户。"
             }
           />
         )}
@@ -175,10 +168,7 @@ export default function StaticIps() {
       {dialog?.action === "allocate" && (
         <AllocateStaticIp
           onClose={() => setDialog(null)}
-          onDone={(accountId, region) => {
-            panel.setScope(accountId, region);
-            setDialog(null);
-          }}
+          onDone={() => setDialog(null)}
         />
       )}
       {dialog && dialog.action !== "allocate" && (

@@ -108,7 +108,6 @@ export default function Launch() {
         result.notice ||
           (panel.demo ? "演示实例已添加" : "Lightsail 创建请求已提交"),
       );
-      panel.setScope(accountId, region);
       panel.navigate("/lightsail");
     } catch (e) {
       setError(creationRegionError(region, (e as Error).message));

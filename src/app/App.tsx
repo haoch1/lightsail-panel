@@ -152,10 +152,6 @@ export default function App() {
         navigate,
         refreshAccounts: accountData.refresh,
         openAccounts: () => setManageAccounts(true),
-        setScope: (a, r) => {
-          setAccountId(a);
-          setRegion(r);
-        },
         demo,
       }}
     >
@@ -251,10 +247,10 @@ export default function App() {
               </div>
               <button
                 className="button small account-manager-button"
-                aria-label="管理 AWS 账户"
+                aria-label="AWS账户管理"
                 onClick={() => setManageAccounts(true)}
               >
-                <UsersRound size={15} /> <span>管理</span>
+                <UsersRound size={15} /> <span>AWS账户管理</span>
               </button>
               {demo ? (
                 <a className="text-link" href="/">

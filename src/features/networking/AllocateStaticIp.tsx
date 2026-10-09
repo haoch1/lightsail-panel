@@ -11,7 +11,7 @@ export default function AllocateStaticIp({
   onDone,
 }: {
   onClose: () => void;
-  onDone: (accountId: string, region: string) => void;
+  onDone: () => void;
 }) {
   const panel = usePanel();
   const initialAccount = panel.accountId === "all" ? "" : panel.accountId;
@@ -39,7 +39,7 @@ export default function AllocateStaticIp({
         action: "allocate",
       });
       panel.toast(result.notice || "静态 IP 分配已提交");
-      onDone(accountId, region);
+      onDone();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -115,8 +115,7 @@ export default function AllocateStaticIp({
           />
         </Field>
         <div className="notice">
-          静态 IP 属于所选账户和区域，只能绑定同一区域的 Lightsail
-          实例。分配后，列表将切换到此范围。
+          静态 IP 属于所选账户和区域，只能绑定同一区域的 Lightsail 实例。
         </div>
         {error && <ErrorBox message={error} />}
         <div className="modal-actions">

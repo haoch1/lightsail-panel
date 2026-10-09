@@ -10,7 +10,6 @@ export interface Panel {
   navigate: (path: string) => void;
   refreshAccounts: () => void;
   openAccounts: () => void;
-  setScope: (accountId: string, region: string) => void;
   demo: boolean;
 }
 export const PanelContext = createContext<Panel>(null!);
