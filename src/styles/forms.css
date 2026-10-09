@@ -52,7 +52,7 @@
   min-height: 22px;
   cursor: pointer;
   gap: 9px;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: nowrap;
   font-size: 14px;
 }
@@ -106,7 +106,7 @@
   margin-bottom: 0;
 }
 .check-label input {
-  margin: 0;
+  margin: 5px 0 0;
 }
 .source-options {
   display: flex;
@@ -117,8 +117,8 @@
 }
 .source-options .check-label {
   margin: 0;
-  min-height: 20px;
-  line-height: 20px;
+  min-height: 22px;
+  line-height: 22px;
 }
 .source-options .check-label span {
   font: inherit;

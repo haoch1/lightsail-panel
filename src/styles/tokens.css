@@ -203,12 +203,16 @@ textarea:focus {
   outline: 0;
   box-shadow: none;
 }
-input[type="checkbox"] {
+input[type="checkbox"],
+.square-choice {
+  appearance: none;
   display: block;
   vertical-align: middle;
   margin: 0;
   cursor: pointer;
-  border-radius: 4px;
+  border: 1px solid var(--muted);
+  border-radius: 3px;
+  background: var(--surface);
   width: 14px;
   height: 14px;
   min-width: 14px;
@@ -216,8 +220,30 @@ input[type="checkbox"] {
   max-width: 14px;
   max-height: 14px;
   padding: 0;
-  accent-color: var(--accent);
   flex-shrink: 0;
+  position: relative;
+}
+input[type="checkbox"]:checked,
+.square-choice:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+input[type="checkbox"]:checked::after,
+.square-choice:checked::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 4px;
+  left: 2px;
+  top: 3px;
+  border-left: 1.5px solid var(--surface);
+  border-bottom: 1.5px solid var(--surface);
+  transform: rotate(-45deg);
+}
+input[type="checkbox"]:disabled,
+.square-choice:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 .numeric,
 .amount-column {
@@ -243,7 +269,7 @@ textarea:disabled {
   background: var(--subtle);
   color: var(--muted);
 }
-input:read-only {
+input:read-only:not([type="checkbox"]):not([type="radio"]) {
   background: var(--subtle);
   color: var(--muted);
 }

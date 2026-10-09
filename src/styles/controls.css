@@ -308,9 +308,6 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.instance-status-menu {
-  scrollbar-gutter: stable;
-}
 .instance-status-menu .select-option {
   font-size: 13px;
   gap: 8px;

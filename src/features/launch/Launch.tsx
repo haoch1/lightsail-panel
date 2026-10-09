@@ -254,6 +254,7 @@ export default function Launch() {
               <label className="network-option">
                 <input
                   type="radio"
+                  className="square-choice"
                   name="network-type"
                   value="dualstack"
                   checked={network === "dualstack"}
@@ -272,6 +273,7 @@ export default function Launch() {
               <label className="network-option">
                 <input
                   type="radio"
+                  className="square-choice"
                   name="network-type"
                   value="ipv6"
                   checked={network === "ipv6"}

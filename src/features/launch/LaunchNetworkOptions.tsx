@@ -4,6 +4,7 @@ import type { Instance, PortInfo } from "../../../shared/types";
 import { Checkbox } from "../../components/ui";
 import PortRuleEditor from "../firewall/PortRuleEditor";
 import { portLabel } from "../firewall/presets";
+import { addLaunchFirewallRule, defaultLaunchFirewall } from "./firewall-rules";
 
 export default function LaunchNetworkOptions({
   network,
@@ -38,24 +39,14 @@ export default function LaunchNetworkOptions({
         checked={firewall !== undefined}
         onChange={(e) =>
           setFirewall(
-            e.target.checked
-              ? [
-                  {
-                    protocol: "tcp",
-                    fromPort: 22,
-                    toPort: 22,
-                    ...(network !== "ipv6" ? { cidrs: ["0.0.0.0/0"] } : {}),
-                    ...(network !== "ipv4" ? { ipv6Cidrs: ["::/0"] } : {}),
-                  },
-                ]
-              : undefined,
+            e.target.checked ? defaultLaunchFirewall(network) : undefined,
           )
         }
       >
         创建后设置防火墙
       </Checkbox>
       <p className="field-help">
-        未勾选时使用 AWS 默认规则；勾选后仅开放下列规则，包括 IPv4 和 IPv6。
+        未勾选时使用 AWS 默认规则；勾选后默认开放所有协议，可按需调整下列规则。
       </p>
       {firewall !== undefined && (
         <>
@@ -137,7 +128,7 @@ export default function LaunchNetworkOptions({
           error=""
           onClose={() => setEditing(false)}
           onSubmit={(rule) => {
-            setFirewall([...(firewall || []), rule]);
+            setFirewall(addLaunchFirewallRule(firewall || [], rule));
             setEditing(false);
           }}
         />

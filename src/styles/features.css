@@ -222,20 +222,14 @@
 .network-option {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 9px;
   cursor: pointer;
 }
 .network-option + .network-option {
   margin-top: 16px;
 }
 .network-option input[type="radio"] {
-  width: 16px;
-  height: 16px;
-  min-height: 0;
-  flex: 0 0 16px;
-  padding: 0;
-  margin: 3px 0 0;
-  accent-color: var(--accent);
+  margin: 5px 0 0;
 }
 .network-title {
   display: flex;
