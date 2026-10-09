@@ -60,7 +60,8 @@ jobs:
           docker exec lightsail-panel-test sh -ec '
             test "$(cat /proc/1/comm)" = lightsail-panel
             test "$(tr "\000" "\n" < /proc/1/cmdline | head -n 1)" = lightsail-panel
-            for attempt in 1 2 3 4 5; do
+            # The first HTTP/static-file request can create libuv workers after startup.
+            for attempt in $(seq 1 35); do
               names=$(cat /proc/1/task/*/comm | sort -u)
               if [ "$names" = lightsail-panel ]; then exit 0; fi
               sleep 1
