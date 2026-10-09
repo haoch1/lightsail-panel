@@ -124,13 +124,7 @@ jobs:
           PANEL_PORT: 8090
         run: |
           docker compose config --format json > compose.json
-          python3 -c 'import json; d=json.load(open("compose.json")); assert list(d["services"]) == ["lightsail-panel"]; assert d["services"]["lightsail-panel"]["container_name"] == "lightsail-panel"; assert d["volumes"]["panel-data"]["name"] == "lightsail-panel_panel-data"'
-          docker volume create \
-            --label com.docker.compose.project=lightsail-panel \
-            --label com.docker.compose.volume=panel-data lightsail-panel_panel-data
-          docker run --rm --user root --entrypoint sh \
-            -v lightsail-panel_panel-data:/app/data "$PANEL_IMAGE" \
-            -c 'printf retained > /app/data/upgrade-check; chown -R node:node /app/data'
+          python3 -c 'import json; d=json.load(open("compose.json")); assert list(d["services"]) == ["lightsail-panel"]; assert d["services"]["lightsail-panel"]["container_name"] == "lightsail-panel"; assert d["volumes"]["lightsail-panel-data"]["name"] == "lightsail-panel-data"'
           docker compose pull
           docker compose up -d
           curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
@@ -139,7 +133,7 @@ jobs:
           test "$(docker inspect --format '{{.Name}}' lightsail-panel)" = /lightsail-panel
           test "$(docker inspect --format '{{.Path}}' lightsail-panel)" = lightsail-panel
           test "$(docker exec lightsail-panel hostname)" = lightsail-panel
-          test "$(docker exec lightsail-panel cat /app/data/upgrade-check)" = retained
+          test "$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/app/data"}}{{.Name}}{{end}}{{end}}' lightsail-panel)" = lightsail-panel-data
           docker exec lightsail-panel lightsail-panel --healthcheck
       - name: Deployment logs
         if: always()

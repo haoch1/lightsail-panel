@@ -10,10 +10,14 @@ function fixture(t) {
   const root = resolve("../aws-panel-reference");
   mkdirSync(root, { recursive: true });
   const dir = mkdtempSync(join(root, "instance-tools-test-"));
-  let store = new Store(dir);
+  const store = new Store(dir);
   const account = store.saveAccount(
     { name: "test", region: "us-east-1" },
-    { authType: "default" },
+    {
+      authType: "keys",
+      accessKeyId: "test-key",
+      secretAccessKey: "test-secret",
+    },
   );
   t.after(() => {
     store.close();
@@ -24,11 +28,6 @@ function fixture(t) {
     store,
     account,
     g: new AwsGateway(store),
-    reopen: () => {
-      store.close();
-      store = new Store(dir);
-      return store;
-    },
   };
 }
 test("traffic windows start at calendar midnight and finish at the completed hour", () => {
@@ -154,26 +153,17 @@ test("traffic routes validate ranges and removed connection, monitoring and cust
   assert.equal((await request("/ssh/sessions", { id: "unused" })).status, 404);
   assert.equal((await request("/ssh/keys", { action: "create" })).status, 404);
 });
-test("upgrades deactivate all historical scheduled tasks and retain their records", (t) => {
+test("fresh databases contain only current resource, session and audit tables", (t) => {
   const f = fixture(t);
-  for (const service of ["lightsail", "ec2"])
-    f.store.db.prepare("INSERT INTO tasks VALUES(?,?)").run(
-      service,
-      JSON.stringify({
-        id: service,
-        enabled: true,
-        service,
-        resourceId: "retained",
-      }),
-    );
-  const upgraded = f.reopen();
-  const records = upgraded.db
-    .prepare("SELECT body FROM tasks")
+  const tables = f.store.db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
     .all()
-    .map((r) => JSON.parse(r.body));
-  assert.equal(records.length, 2);
-  assert.ok(
-    records.every((r) => r.enabled === false && r.resourceId === "retained"),
-  );
-  assert.equal(typeof upgraded.saveTask, "undefined");
+    .map((r) => r.name);
+  assert.deepEqual(tables, [
+    "accounts",
+    "audit",
+    "config",
+    "launch_network",
+    "sessions",
+  ]);
 });

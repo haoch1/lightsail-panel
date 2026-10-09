@@ -32,5 +32,5 @@ export const usedCommands = {
     "PutInstancePublicPorts",
     "CloseInstancePublicPorts",
   ],
-  sts: ["GetCallerIdentity", "AssumeRole"],
+  sts: ["GetCallerIdentity"],
 };

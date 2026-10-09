@@ -15,7 +15,7 @@ import type {
   ReleaseStaticIpCommandInput,
   SetIpAddressTypeCommandInput,
 } from "@aws-sdk/client-lightsail";
-import type { AssumeRoleCommandInput } from "@aws-sdk/client-sts";
+import type { GetCallerIdentityCommandInput } from "@aws-sdk/client-sts";
 export const contracts = [
   {
     staticIpName: "panel-created-instance",
@@ -86,10 +86,7 @@ export const contracts = [
       cidrs: ["198.51.100.1/32"],
     },
   } satisfies CloseInstancePublicPortsCommandInput,
-  {
-    RoleArn: "arn:aws:iam::123456789012:role/Panel",
-    RoleSessionName: "lightsail-panel",
-  } satisfies AssumeRoleCommandInput,
+  {} satisfies GetCallerIdentityCommandInput,
   {
     resourceType: "Instance",
     resourceName: "my-lightsail",

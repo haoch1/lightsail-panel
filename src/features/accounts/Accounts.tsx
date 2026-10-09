@@ -99,9 +99,7 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
                   <td className="numeric">{account.awsAccountId}</td>
                   <td>
                     <KeyRound size={12} className="inline-icon" />
-                    {account.authType === "default"
-                      ? "旧凭证配置"
-                      : account.keyHint}
+                    {account.keyHint}
                   </td>
                   <td>
                     <div className="row-actions">

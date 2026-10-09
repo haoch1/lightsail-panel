@@ -4,23 +4,23 @@ Lightsail Panel 采用浏览器前端与同源 HTTP API。React 负责资源展�
 
 ## 目录结构
 
-| 目录                | 职责                                               |
-| ------------------- | -------------------------------------------------- |
-| `src/app`           | 路由、导航、主题、账户与区域上下文                 |
-| `src/features`      | 账户、实例、创建、静态 IP、防火墙、流量与操作日志  |
-| `src/components/ui` | 表单、下拉选择、弹窗、按钮和状态反馈               |
-| `src/hooks`         | 资源读取、实例扫描、流量查询与自动更新             |
-| `src/lib`           | API 请求、缓存、资源目标、菜单定位和数值格式       |
-| `src/styles`        | 主题、布局、控件、业务样式与响应式规则             |
-| `src/demo`          | 在浏览器内运行的示例数据和操作                     |
-| `shared`            | 类型、区域标签、镜像排序、刷新策略和流量计算       |
-| `server/http`       | HTTP 路由、参数校验与操作审计                      |
-| `server/aws`        | SDK 客户端、传输、目录、实例、网络、默认密钥与指标 |
-| `server/store.mjs`  | SQLite、账户凭证加密、会话与日志持久化             |
-| `bin/lightsail-panel.mjs` | 统一启动入口与容器健康检查 |
-| `server/runtime-identity.mjs` | 进程标题与 Linux 线程名称同步 |
-| `tests`             | 请求安全、SDK 输入、资源处理、数据计算与缓存验证   |
-| `.github/workflows` | Docker 构建与容器运行检查                          |
+| 目录                          | 职责                                               |
+| ----------------------------- | -------------------------------------------------- |
+| `src/app`                     | 路由、导航、主题、账户与区域上下文                 |
+| `src/features`                | 账户、实例、创建、静态 IP、防火墙、流量与操作日志  |
+| `src/components/ui`           | 表单、下拉选择、弹窗、按钮和状态反馈               |
+| `src/hooks`                   | 资源读取、实例扫描、流量查询与自动更新             |
+| `src/lib`                     | API 请求、缓存、资源目标、菜单定位和数值格式       |
+| `src/styles`                  | 主题、布局、控件、业务样式与响应式规则             |
+| `src/demo`                    | 在浏览器内运行的示例数据和操作                     |
+| `shared`                      | 类型、区域标签、镜像排序、刷新策略和流量计算       |
+| `server/http`                 | HTTP 路由、参数校验与操作审计                      |
+| `server/aws`                  | SDK 客户端、传输、目录、实例、网络、默认密钥与指标 |
+| `server/store.mjs`            | SQLite、账户凭证加密、会话与日志持久化             |
+| `bin/lightsail-panel.mjs`     | 统一启动入口与容器健康检查                         |
+| `server/runtime-identity.mjs` | 进程标题与 Linux 线程名称同步                      |
+| `tests`                       | 请求安全、SDK 输入、资源处理、数据计算与缓存验证   |
+| `.github/workflows`           | Docker 构建与容器运行检查                          |
 
 ## 请求路径
 
@@ -60,10 +60,10 @@ npm 包名、Compose 项目及服务、Docker 容器、容器 hostname 和启动
 
 `server/runtime-identity.mjs` 设置 `process.title`，并在 Linux 上将同一进程各线程的 `/proc/self/task/<tid>/comm` 统一为 `lightsail-panel`。启动时立即处理已有线程，1 秒后补齐启动期间创建的线程，此后每 30 秒仅修改新增或名称不同的线程。定时器使用 `unref`，停止服务时清理；不依赖 root 或额外 capabilities，不涉及网络请求。受限环境中无法访问 `/proc` 时仅记录一次警告，业务服务继续运行。
 
-Compose 中的数据卷标识保留 `panel-data`，物理卷名显式固定为旧版 `lightsail-panel_panel-data`。卷标签与实际卷名均兼容旧部署，使服务与容器更名后仍挂载同一份账户数据与密钥。
+Compose 数据卷标识与实际卷名均为 `lightsail-panel-data`，挂载到 `/app/data`。
 
 ## 扩展与验证
 
 新增功能应依次定义共享类型、请求校验、AWS 方法、HTTP 路由和前端模块。新的 AWS 命令需要同步更新 IAM 策略与具有业务意义的模拟测试。
 
-验证命令为 `pnpm check`、`pnpm test` 与 `pnpm build`。运行标识测试通过独立子进程验证标题、已有与后续创建的线程及健康检查退出码，避免改名测试执行器。Docker CI 在两种架构上额外验证实际启动命令、PID 1 与线程名称、健康检查、首次初始化状态、前端资源响应、非 root 用户及 SIGTERM 正常退出；Compose 发布验证覆盖容器名称与旧数据卷复用。
+验证命令为 `pnpm check`、`pnpm test` 与 `pnpm build`。运行标识测试通过独立子进程验证标题、已有与后续创建的线程及健康检查退出码，避免改名测试执行器。Docker CI 在两种架构上额外验证实际启动命令、PID 1 与线程名称、健康检查、首次初始化状态、前端资源响应、非 root 用户及 SIGTERM 正常退出；Compose 发布验证覆盖容器名称与数据卷挂载。

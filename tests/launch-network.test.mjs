@@ -33,7 +33,11 @@ function fixture(t) {
   let store = new Store(dir);
   const account = store.saveAccount(
     { name: "test", region: "us-east-1" },
-    { authType: "default" },
+    {
+      authType: "keys",
+      accessKeyId: "test-key",
+      secretAccessKey: "test-secret",
+    },
   );
   const gateway = new AwsGateway(store);
   const input = launch.parse({

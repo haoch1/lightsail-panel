@@ -15,12 +15,11 @@ services:
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
     volumes:
-      - panel-data:/app/data
+      - lightsail-panel-data:/app/data
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
 volumes:
-  panel-data:
-    # Keep the existing physical volume so upgrades retain accounts and keys.
-    name: lightsail-panel_panel-data
+  lightsail-panel-data:
+    name: lightsail-panel-data

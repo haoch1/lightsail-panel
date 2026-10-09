@@ -116,7 +116,11 @@ test("Lightsail rotation restores the previous binding if new attachment fails",
   const { store } = fixture(t);
   const a = store.saveAccount(
     { name: "test", region: "us-east-1" },
-    { authType: "default" },
+    {
+      authType: "keys",
+      accessKeyId: "test-key",
+      secretAccessKey: "test-secret",
+    },
   );
   const g = new AwsGateway(store),
     calls = [];
@@ -178,7 +182,11 @@ test("Lightsail creation validates platform and availability zone before AWS sub
   const { store } = fixture(t),
     account = store.saveAccount(
       { name: "test", region: "us-east-1" },
-      { authType: "default" },
+      {
+        authType: "keys",
+        accessKeyId: "test-key",
+        secretAccessKey: "test-secret",
+      },
     ),
     g = new AwsGateway(store),
     calls = [];
@@ -222,7 +230,11 @@ test("attached static IPs cannot be released or silently replaced on an occupied
   const { store } = fixture(t),
     account = store.saveAccount(
       { name: "test", region: "us-east-1" },
-      { authType: "default" },
+      {
+        authType: "keys",
+        accessKeyId: "test-key",
+        secretAccessKey: "test-secret",
+      },
     ),
     g = new AwsGateway(store),
     calls = [];
@@ -273,7 +285,11 @@ test("Lightsail port rules preserve IPv6 input and return operation IDs for back
   const { store } = fixture(t),
     account = store.saveAccount(
       { name: "test", region: "us-east-1" },
-      { authType: "default" },
+      {
+        authType: "keys",
+        accessKeyId: "test-key",
+        secretAccessKey: "test-secret",
+      },
     ),
     g = new AwsGateway(store),
     calls = [];
@@ -327,7 +343,7 @@ test("Lightsail port rules preserve IPv6 input and return operation IDs for back
     /端口范围/,
   );
 });
-test("new accounts require access keys and always use direct API connections", () => {
+test("accounts require access keys and always use direct API connections", () => {
   assert.throws(() =>
     V.account.parse({ name: "a", authType: "keys", region: "us-east-1" }),
   );
@@ -339,14 +355,39 @@ test("new accounts require access keys and always use direct API connections", (
   );
   const parsed = V.account.parse({
     name: "a",
-    authType: "keys",
-    region: "us-east-1",
     accessKeyId: "AKIAEXAMPLE",
     secretAccessKey: "example-secret",
-    proxy: "socks5h://localhost:1080",
   });
   assert.equal(parsed.authType, "keys");
-  assert.equal("proxy" in parsed, false);
+  assert.equal(parsed.region, "us-east-1");
+  const options = new AwsGateway({}).options(
+    { credentials: parsed },
+    "ap-south-1",
+  );
+  assert.equal(options.region, "ap-south-1");
+  assert.deepEqual(options.credentials, {
+    accessKeyId: "AKIAEXAMPLE",
+    secretAccessKey: "example-secret",
+  });
+  assert.deepEqual(usedCommands.sts, ["GetCallerIdentity"]);
+  for (const extra of [
+    { authType: "keys" },
+    { region: "ap-southeast-1" },
+    { sessionToken: "token" },
+    { roleArn: "arn:aws:iam::123456789012:role/Test" },
+    { externalId: "external" },
+    { proxy: "socks5h://localhost:1080" },
+  ]) {
+    assert.equal(
+      V.account.safeParse({
+        name: "a",
+        accessKeyId: "AKIAEXAMPLE",
+        secretAccessKey: "example-secret",
+        ...extra,
+      }).success,
+      false,
+    );
+  }
 });
 
 test("HTML is never cached and missing versioned scripts are not replaced by HTML", async (t) => {

@@ -12,21 +12,16 @@ export class AwsGateway {
   constructor(store) {
     this.store = store;
     this.clients = new Map();
-    this.roles = new Map();
     this.regionCache = new Map();
     this.locks = new Set();
   }
   invalidate() {
     for (const { client } of this.clients.values()) client.destroy();
     this.clients.clear();
-    this.roles.clear();
     this.regionCache.clear();
   }
   options(...args) {
     return transport.options(this, ...args);
-  }
-  credentials(...args) {
-    return transport.credentials(this, ...args);
   }
   client(...args) {
     return transport.client(this, ...args);

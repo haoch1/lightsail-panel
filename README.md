@@ -137,8 +137,6 @@ IAM 用户、控制台访问和权限配置的关系见 [AWS 创建 IAM 用户�
 
 只需这一份策略。它覆盖面板的实例、静态 IP、防火墙、流量查询和默认密钥下载，不授予账单、快照与备份管理权限；详细说明见 [权限文档](docs/PERMISSIONS.md)。自定义策略编辑流程见 [AWS JSON 策略编辑器说明](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_create-console.html)。
 
-已有旧版策略时，更新其 JSON 为仓库当前版本。创建时设置防火墙需要新增的 `lightsail:PutInstancePublicPorts` 权限；仅重新创建 Access Key 不会更新用户权限。
-
 #### 3. 创建 Access Key
 
 1. 在该 IAM 用户详情页选择 **Security credentials（安全凭证）**。
@@ -161,7 +159,7 @@ IAM 用户、控制台访问和权限配置的关系见 [AWS 创建 IAM 用户�
 4. 阅读 **Alternatives to root user access keys** 页面中的说明；决定继续时，勾选确认项并创建。
 5. 在 **Retrieve access key** 页面保存 Access Key ID 与 Secret Access Key，或下载 CSV。
 
-该方法无需创建 IAM 用户或附加 IAM 用户策略。若已持有 Root user 密钥，建议先将面板迁移到专用 IAM 用户并验证资源访问，再停用旧密钥。
+该方法无需创建 IAM 用户或附加 IAM 用户策略。日常使用建议采用专用 IAM 用户及统一权限策略。
 
 ### 将凭证添加到面板
 
@@ -288,16 +286,16 @@ sudo systemctl reload nginx
 
 运行标识统一如下：
 
-| 项目 | 名称或命令 |
-| --- | --- |
-| Compose 项目、服务、Docker 容器与容器 hostname | `lightsail-panel` |
-| npm 包与容器内启动命令 | `lightsail-panel` |
-| Docker 默认启动命令（CMD） | `["lightsail-panel"]` |
-| 容器内健康检查 | `lightsail-panel --healthcheck` |
-| Linux 主进程与线程名称 | `lightsail-panel` |
-| 持久化数据卷（兼容旧部署） | `lightsail-panel_panel-data` |
+| 项目                                           | 名称或命令                      |
+| ---------------------------------------------- | ------------------------------- |
+| Compose 项目、服务、Docker 容器与容器 hostname | `lightsail-panel`               |
+| npm 包与容器内启动命令                         | `lightsail-panel`               |
+| Docker 默认启动命令（CMD）                     | `["lightsail-panel"]`           |
+| 容器内健康检查                                 | `lightsail-panel --healthcheck` |
+| Linux 主进程与线程名称                         | `lightsail-panel`               |
+| 持久化数据卷                                   | `lightsail-panel-data`          |
 
-实际数据卷名继续使用 `lightsail-panel_panel-data`，确保旧部署的数据库与加密密钥保持可用。容器内启动命令直接运行 Node.js 服务，服务作为 PID 1 接收停止信号。Linux 使用 `ps`、`top` 或 `htop` 查看时显示 `lightsail-panel`；运行期间新增的线程名称在 30 秒内同步，此过程仅访问本地 `/proc`，不调用 AWS API。
+容器内启动命令直接运行 Node.js 服务，服务作为 PID 1 接收停止信号。Linux 使用 `ps`、`top` 或 `htop` 查看时显示 `lightsail-panel`；运行期间新增的线程名称在 30 秒内同步，此过程仅访问本地 `/proc`，不调用 AWS API。
 
 可在宿主机验证名称和启动命令：
 
@@ -317,9 +315,9 @@ docker exec lightsail-panel sh -c 'cat /proc/1/comm; cat /proc/1/task/*/comm'
 mkdir -p backups
 docker compose stop lightsail-panel
 docker run --rm \
-  -v lightsail-panel_panel-data:/data:ro \
+  -v lightsail-panel-data:/data:ro \
   -v "$PWD/backups:/backup" \
-  alpine:3.22 tar -czf /backup/panel-data.tar.gz -C /data .
+  alpine:3.22 tar -czf /backup/lightsail-panel-data.tar.gz -C /data .
 docker compose start lightsail-panel
 ```
 
@@ -327,11 +325,11 @@ docker compose start lightsail-panel
 
 ```bash
 docker compose stop lightsail-panel
-docker volume create lightsail-panel_panel-data
+docker volume create lightsail-panel-data
 docker run --rm \
-  -v lightsail-panel_panel-data:/data \
+  -v lightsail-panel-data:/data \
   -v "$PWD/backups:/backup:ro" \
-  alpine:3.22 sh -c 'tar -xzf /backup/panel-data.tar.gz -C /data && chown -R 1000:1000 /data'
+  alpine:3.22 sh -c 'tar -xzf /backup/lightsail-panel-data.tar.gz -C /data && chown -R 1000:1000 /data'
 docker compose up -d
 ```
 
@@ -347,26 +345,7 @@ docker compose up -d
 docker compose ps
 ```
 
-`latest` 在 `main` 分支构建与测试成功后更新。每次发布同时提供 `sha-<完整提交 SHA>` 标签；推送 `vX.Y.Z` Git 标签时，额外发布 `vX.Y.Z` 与 `X.Y.Z` 镜像标签。需要固定版本或回滚时，在 [镜像页面](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel) 选择已发布的标签或摘要，修改 `.env` 中的 `PANEL_IMAGE`，然后重新执行上述命令。重新创建容器不会删除持久化数据卷。
-
-旧配置中的服务名为 `panel`，容器名由 Compose 自动生成。首次升级到统一名称时，在原部署目录完成备份后执行以下命令。停止旧容器后再更新配置，可以避免两个容器争用宿主机端口；现有 `.env` 与数据卷继续保留：
-
-```bash
-docker compose down --remove-orphans
-curl -fsSLo compose.yaml https://raw.githubusercontent.com/haoch1/lightsail-panel/main/compose.yaml
-docker compose pull
-docker compose up -d
-docker compose ps
-```
-
-从此前的源码构建部署迁移时，在原项目目录执行以下命令；保留现有 `.env` 和数据卷：
-
-```bash
-docker compose down --remove-orphans
-git pull --ff-only
-docker compose pull
-docker compose up -d
-```
+`latest` 在 `main` 分支构建与测试成功后更新。也可在 [镜像页面](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel) 获取已发布镜像的标签或摘要，通过 `.env` 中的 `PANEL_IMAGE` 指定镜像后重新执行上述命令。重新创建容器不会删除持久化数据卷。
 
 常用维护命令：
 
@@ -442,7 +421,7 @@ docker build -t lightsail-panel:local .
 PANEL_IMAGE=lightsail-panel:local docker compose up -d --pull never
 ```
 
-GitHub Actions 在 amd64 与 arm64 原生 runner 上分别构建并验证 Docker 镜像，全部通过后发布多架构镜像至 GHCR；Pull Request 仅执行构建与测试，不发布镜像。验证内容包括健康检查、HTTP 响应、非 root 运行、实际启动命令、PID 1 及线程名称、停止信号处理。发布后还会通过 Compose 拉取镜像，检查容器名称与现有数据卷复用。代码结构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+GitHub Actions 在 amd64 与 arm64 原生 runner 上分别构建并验证 Docker 镜像，全部通过后发布多架构镜像至 GHCR；Pull Request 仅执行构建与测试，不发布镜像。验证内容包括健康检查、HTTP 响应、非 root 运行、实际启动命令、PID 1 及线程名称、停止信号处理。发布后还会通过 Compose 拉取镜像，检查容器名称与数据卷挂载。代码结构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ## 许可证
 

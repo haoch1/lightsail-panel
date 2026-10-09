@@ -11,26 +11,11 @@ export const target = z.object({
 export const account = z
   .object({
     name: z.string().min(1).max(80),
-    // New forms omit region. Keep the SDK endpoint internal and accept legacy clients.
-    region: region.default("us-east-1"),
-    authType: z.literal("keys").default("keys"),
-    accessKeyId: z.string().max(128).optional(),
-    secretAccessKey: z.string().max(256).optional(),
-    sessionToken: z.string().max(8192).optional(),
-    roleArn: z
-      .string()
-      .regex(/^arn:aws(?:-cn|-us-gov)?:iam::\d{12}:role\/.+/)
-      .or(z.literal(""))
-      .optional(),
-    externalId: z.string().max(256).optional(),
+    accessKeyId: z.string().min(1).max(128),
+    secretAccessKey: z.string().min(1).max(256),
   })
-  .superRefine((v, ctx) => {
-    if (v.authType === "keys" && (!v.accessKeyId || !v.secretAccessKey))
-      ctx.addIssue({
-        code: "custom",
-        message: "请输入 Access Key ID 和 Secret Access Key",
-      });
-  });
+  .strict()
+  .transform((v) => ({ ...v, authType: "keys", region: "us-east-1" }));
 export const action = target.extend({
   action: z.enum([
     "start",

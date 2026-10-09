@@ -31,15 +31,10 @@ export class Store {
       CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS accounts(id TEXT PRIMARY KEY,meta TEXT NOT NULL,secret TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(hash TEXT PRIMARY KEY,csrf TEXT NOT NULL,expires INTEGER NOT NULL);
-      CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY,body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS launch_network(id TEXT PRIMARY KEY,body TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS launch_network_status ON launch_network(json_extract(body, '$.status'));
       CREATE INDEX IF NOT EXISTS launch_network_at ON launch_network(json_extract(body, '$.at'));
       CREATE TABLE IF NOT EXISTS audit(id TEXT PRIMARY KEY,at TEXT NOT NULL,account TEXT,action TEXT NOT NULL,target TEXT,status TEXT NOT NULL,detail TEXT);`);
-    // Preserve old records for upgrades; the scheduler and its API are removed.
-    this.db.exec(
-      "UPDATE tasks SET body=json_set(body, '$.enabled', json('false')) WHERE json_valid(body)",
-    );
   }
   config(key, value) {
     if (value !== undefined)

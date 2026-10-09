@@ -28,7 +28,11 @@ function fixture(t) {
   const store = new Store(directory);
   const account = store.saveAccount(
     { name: "test", region: target.region },
-    { authType: "default" },
+    {
+      authType: "keys",
+      accessKeyId: "test-key",
+      secretAccessKey: "test-secret",
+    },
   );
   const credentials = store.createSession(),
     owner = store.session(credentials.token);
@@ -59,7 +63,11 @@ test("static IP allocation uses the selected account and region instead of accou
   const { store, gateway } = fixture(t);
   const selected = store.saveAccount(
     { name: "second-account", region: "eu-west-1" },
-    { authType: "default" },
+    {
+      authType: "keys",
+      accessKeyId: "test-key",
+      secretAccessKey: "test-secret",
+    },
   );
   const calls = [];
   gateway.send = async (account, service, region, command, input) => {

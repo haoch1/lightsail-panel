@@ -13,7 +13,6 @@ export function registerAccounts(app, { store, gateway }) {
       authType: v.authType,
       ...identity,
       keyHint: `…${v.accessKeyId.slice(-4)}`,
-      hasRole: !!v.roleArn,
       addedAt: new Date().toISOString(),
     };
     const saved = store.saveAccount(meta, v);

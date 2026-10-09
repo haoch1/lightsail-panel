@@ -5,9 +5,8 @@ export interface Account {
   region: string;
   awsAccountId: string;
   arn?: string;
-  authType: string;
+  authType: "keys";
   keyHint: string;
-  hasRole?: boolean;
   addedAt?: string;
 }
 export interface Instance {
