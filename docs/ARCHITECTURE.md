@@ -56,7 +56,7 @@ Docker 通过命名卷持久化 `/app/data`。数据库与加密密钥必须共�
 
 ## 运行标识
 
-npm 包名、Compose 项目及服务、Docker 容器和启动命令统一为 `lightsail-panel`。`bin/lightsail-panel.mjs` 通过 shebang 直接运行 Node.js，容器启动后应用为 PID 1；`--healthcheck` 模式只检查本地健康端点，不加载数据库或 AWS 客户端。
+npm 包名、Compose 项目及服务、Docker 容器、容器 hostname 和启动命令统一为 `lightsail-panel`。Dockerfile 清除基础镜像继承的 entrypoint，实际容器启动命令为 `lightsail-panel`。`bin/lightsail-panel.mjs` 通过 shebang 直接运行 Node.js，容器启动后应用为 PID 1；`--healthcheck` 模式只检查本地健康端点，不加载数据库或 AWS 客户端。
 
 `server/runtime-identity.mjs` 设置 `process.title`，并在 Linux 上将同一进程各线程的 `/proc/self/task/<tid>/comm` 统一为 `lightsail-panel`。启动时立即处理已有线程，1 秒后补齐启动期间创建的线程，此后每 30 秒仅修改新增或名称不同的线程。定时器使用 `unref`，停止服务时清理；不依赖 root 或额外 capabilities，不涉及网络请求。受限环境中无法访问 `/proc` 时仅记录一次警告，业务服务继续运行。
 

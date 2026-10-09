@@ -290,7 +290,7 @@ sudo systemctl reload nginx
 
 | 项目 | 名称或命令 |
 | --- | --- |
-| Compose 项目、服务与 Docker 容器 | `lightsail-panel` |
+| Compose 项目、服务、Docker 容器与容器 hostname | `lightsail-panel` |
 | npm 包与容器内启动命令 | `lightsail-panel` |
 | Docker 默认启动命令（CMD） | `["lightsail-panel"]` |
 | 容器内健康检查 | `lightsail-panel --healthcheck` |

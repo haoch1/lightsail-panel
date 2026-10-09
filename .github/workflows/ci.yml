@@ -44,7 +44,7 @@ jobs:
             --tag "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}" .
       - name: Verify container startup and HTTP endpoints
         run: |
-          docker run --detach --name lightsail-panel-test \
+          docker run --detach --name lightsail-panel-test --hostname lightsail-panel \
             --publish 127.0.0.1:8090:4180 \
             --security-opt no-new-privileges:true --cap-drop ALL \
             "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}"
@@ -56,6 +56,8 @@ jobs:
           curl --fail --silent http://127.0.0.1:8090/lightsail | grep -q 'id="root"'
           test "$(docker inspect --format '{{.Config.User}}' lightsail-panel-test)" = node
           test "$(docker inspect --format '{{json .Config.Cmd}}' lightsail-panel-test)" = '["lightsail-panel"]'
+          test "$(docker inspect --format '{{.Path}}' lightsail-panel-test)" = lightsail-panel
+          test "$(docker exec lightsail-panel-test hostname)" = lightsail-panel
           docker exec lightsail-panel-test lightsail-panel --healthcheck
           docker exec lightsail-panel-test sh -ec '
             test "$(cat /proc/1/comm)" = lightsail-panel
@@ -135,6 +137,8 @@ jobs:
             --retry-connrefused http://127.0.0.1:8090/api/health > health.json
           python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
           test "$(docker inspect --format '{{.Name}}' lightsail-panel)" = /lightsail-panel
+          test "$(docker inspect --format '{{.Path}}' lightsail-panel)" = lightsail-panel
+          test "$(docker exec lightsail-panel hostname)" = lightsail-panel
           test "$(docker exec lightsail-panel cat /app/data/upgrade-check)" = retained
           docker exec lightsail-panel lightsail-panel --healthcheck
       - name: Deployment logs

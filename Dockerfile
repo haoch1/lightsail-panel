@@ -27,4 +27,5 @@ RUN chmod 755 /app/bin/lightsail-panel.mjs \
 USER node
 EXPOSE 4180
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD ["lightsail-panel", "--healthcheck"]
+ENTRYPOINT []
 CMD ["lightsail-panel"]

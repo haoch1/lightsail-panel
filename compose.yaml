@@ -4,6 +4,7 @@ services:
   lightsail-panel:
     image: ${PANEL_IMAGE:-ghcr.io/haoch1/lightsail-panel:latest}
     container_name: lightsail-panel
+    hostname: lightsail-panel
     restart: unless-stopped
     ports:
       - "${PANEL_BIND:-127.0.0.1}:${PANEL_PORT:-8090}:4180"
