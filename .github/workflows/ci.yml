@@ -44,7 +44,7 @@ jobs:
             --tag "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}" .
       - name: Verify container startup and HTTP endpoints
         run: |
-          docker run --detach --name panel-test \
+          docker run --detach --name lightsail-panel-test \
             --publish 127.0.0.1:8090:4180 \
             --security-opt no-new-privileges:true --cap-drop ALL \
             "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}"
@@ -54,8 +54,23 @@ jobs:
           curl --fail --silent http://127.0.0.1:8090/api/auth > auth.json
           python3 -c 'import json; d=json.load(open("auth.json")); assert d["initialized"] is False and d["authenticated"] is False'
           curl --fail --silent http://127.0.0.1:8090/lightsail | grep -q 'id="root"'
-          test "$(docker inspect --format '{{.Config.User}}' panel-test)" = node
+          test "$(docker inspect --format '{{.Config.User}}' lightsail-panel-test)" = node
+          test "$(docker inspect --format '{{json .Config.Cmd}}' lightsail-panel-test)" = '["lightsail-panel"]'
+          docker exec lightsail-panel-test lightsail-panel --healthcheck
+          docker exec lightsail-panel-test sh -ec '
+            test "$(cat /proc/1/comm)" = lightsail-panel
+            test "$(tr "\000" "\n" < /proc/1/cmdline | head -n 1)" = lightsail-panel
+            for attempt in 1 2 3 4 5; do
+              names=$(cat /proc/1/task/*/comm | sort -u)
+              if [ "$names" = lightsail-panel ]; then exit 0; fi
+              sleep 1
+            done
+            printf "%s\n" "$names"
+            exit 1
+          '
           test "$(docker inspect --format '{{.Architecture}}' "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}")" = "${{ matrix.arch }}"
+          docker stop --time 10 lightsail-panel-test
+          test "$(docker inspect --format '{{.State.ExitCode}}' lightsail-panel-test)" = 0
       - name: Publish tested platform image
         if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
         env:
@@ -65,10 +80,10 @@ jobs:
           docker push "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}"
       - name: Container logs
         if: always()
-        run: docker logs panel-test || true
+        run: docker logs lightsail-panel-test || true
       - name: Stop test container
         if: always()
-        run: docker rm --force panel-test || true
+        run: docker rm --force lightsail-panel-test || true
 
   publish:
     name: Publish multi-platform image
@@ -105,11 +120,22 @@ jobs:
           PANEL_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
           PANEL_PORT: 8090
         run: |
+          docker compose config --format json > compose.json
+          python3 -c 'import json; d=json.load(open("compose.json")); assert list(d["services"]) == ["lightsail-panel"]; assert d["services"]["lightsail-panel"]["container_name"] == "lightsail-panel"; assert d["volumes"]["panel-data"]["name"] == "lightsail-panel_panel-data"'
+          docker volume create \
+            --label com.docker.compose.project=lightsail-panel \
+            --label com.docker.compose.volume=panel-data lightsail-panel_panel-data
+          docker run --rm --user root --entrypoint sh \
+            -v lightsail-panel_panel-data:/app/data "$PANEL_IMAGE" \
+            -c 'printf retained > /app/data/upgrade-check; chown -R node:node /app/data'
           docker compose pull
           docker compose up -d
           curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
             --retry-connrefused http://127.0.0.1:8090/api/health > health.json
           python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
+          test "$(docker inspect --format '{{.Name}}' lightsail-panel)" = /lightsail-panel
+          test "$(docker exec lightsail-panel cat /app/data/upgrade-check)" = retained
+          docker exec lightsail-panel lightsail-panel --healthcheck
       - name: Deployment logs
         if: always()
         run: docker compose logs || true

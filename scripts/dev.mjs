@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 const children = [
-  spawn(process.execPath, ["server/index.mjs"], {
+  spawn(process.execPath, ["bin/lightsail-panel.mjs"], {
     stdio: "inherit",
     env: { ...process.env, PORT: process.env.PORT || "4180" },
   }),

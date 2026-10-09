@@ -10,6 +10,7 @@ RUN pnpm prune --prod
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
 LABEL org.opencontainers.image.source="https://github.com/haoch1/lightsail-panel" \
+      org.opencontainers.image.title="Lightsail Panel" \
       org.opencontainers.image.description="Self-hosted Amazon Lightsail management panel" \
       org.opencontainers.image.licenses="MIT"
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=4180 DATA_DIR=/app/data
@@ -19,8 +20,11 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/server ./server
 COPY --from=build /app/shared ./shared
+COPY --from=build /app/bin ./bin
 COPY --from=build /app/scripts/verify-aws.mjs ./scripts/verify-aws.mjs
+RUN chmod 755 /app/bin/lightsail-panel.mjs \
+    && ln -s /app/bin/lightsail-panel.mjs /usr/local/bin/lightsail-panel
 USER node
 EXPOSE 4180
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD node -e "fetch('http://127.0.0.1:4180/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "server/index.mjs"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD ["lightsail-panel", "--healthcheck"]
+CMD ["lightsail-panel"]

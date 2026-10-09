@@ -11,4 +11,4 @@ if($nodeMajor -lt 24){throw '需要 Node.js 24 或更新版本。'}
 $env:PATH=(Split-Path -Parent $nodeTool)+';'+$env:PATH
 if(!(Test-Path -LiteralPath (Join-Path $PSScriptRoot 'node_modules'))){& $pnpmTool install --frozen-lockfile;if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}}
 if($Dev){Write-Host '开发界面：http://127.0.0.1:4173/'; & $nodeTool scripts/dev.mjs}
-else{& $pnpmTool run build;if($LASTEXITCODE -ne 0){exit $LASTEXITCODE};Write-Host '面板：http://127.0.0.1:4180/';Write-Host '演示：http://127.0.0.1:4180/lightsail?demo=1'; & $nodeTool server/index.mjs}
+else{& $pnpmTool run build;if($LASTEXITCODE -ne 0){exit $LASTEXITCODE};Write-Host '面板：http://127.0.0.1:4180/';Write-Host '演示：http://127.0.0.1:4180/lightsail?demo=1'; & $nodeTool bin/lightsail-panel.mjs}

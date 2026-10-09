@@ -1,8 +1,9 @@
 name: lightsail-panel
 
 services:
-  panel:
+  lightsail-panel:
     image: ${PANEL_IMAGE:-ghcr.io/haoch1/lightsail-panel:latest}
+    container_name: lightsail-panel
     restart: unless-stopped
     ports:
       - "${PANEL_BIND:-127.0.0.1}:${PANEL_PORT:-8090}:4180"
@@ -20,3 +21,5 @@ services:
       - ALL
 volumes:
   panel-data:
+    # Keep the existing physical volume so upgrades retain accounts and keys.
+    name: lightsail-panel_panel-data

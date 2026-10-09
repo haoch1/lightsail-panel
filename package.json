@@ -1,19 +1,22 @@
 {
-  "name": "lightsail-selfhost-panel",
+  "name": "lightsail-panel",
   "version": "1.6.0",
   "private": true,
   "packageManager": "pnpm@11.25.0",
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "lightsail-panel": "./bin/lightsail-panel.mjs"
+  },
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:web": "vite --host 127.0.0.1 --port 4173 --strictPort",
-    "dev:api": "node --watch server/index.mjs",
+    "dev:api": "node --watch bin/lightsail-panel.mjs",
     "build": "vite build",
-    "start": "node server/index.mjs",
+    "start": "node bin/lightsail-panel.mjs",
     "test": "node --test tests/*.test.mjs",
     "check": "tsc --noEmit",
     "verify:aws": "node scripts/verify-aws.mjs"
