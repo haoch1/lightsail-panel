@@ -85,6 +85,14 @@ WebSocket 每 15 秒检查心跳、登录有效期和账户状态；退出登录
 
 ## 持久化
 
+### 操作日志
+
+`audit` 表保存操作标识、时间、目标、结果与错误详情，最多保留 5000 条；`GET /api/audit` 返回最近 200 条。`shared/audit-actions.ts` 集中定义中文显示名称，AWS、SSH、IPv6、IP 等专业术语保留英文。
+
+`DELETE /api/audit` 经会话、来源和 CSRF 校验后删除全部日志，并返回删除数量。清理仅作用于日志表及前端日志缓存，资源查询缓存保持有效。界面复用 `Modal` 和 `PendingButton` 进行确认与提交反馈；演示模式仅清理内存记录。
+
+### 数据与加密
+
 数据目录包含 `panel.sqlite` 与 `encryption.key`。SQLite 采用 WAL 模式；管理员密码经过 scrypt 处理；账户凭证使用独立随机 IV 的 AES-256-GCM 加密；会话令牌以哈希保存。
 
 会话、自动关机规则、资源操作进度及操作日志均保存在数据库中。Docker 通过命名卷持久化 `/app/data`，数据库与加密密钥必须共同备份和恢复。

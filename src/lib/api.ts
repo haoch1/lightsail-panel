@@ -2,6 +2,10 @@ import { resourceCache } from "./resource-cache";
 import { matchesUpdate, mutationUpdate } from "../../shared/resource-update";
 import { ApiError } from "./api-error";
 function changed(path: string, body: unknown) {
+  if (path === "/audit") {
+    resourceCache.invalidate((key) => key === path);
+    return;
+  }
   if (
     path === "/session" ||
     path === "/traffic-limit" ||

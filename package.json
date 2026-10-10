@@ -1,6 +1,6 @@
 {
   "name": "lightsail-panel",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "private": true,
   "packageManager": "pnpm@11.25.0",
   "license": "MIT",

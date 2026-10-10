@@ -184,6 +184,9 @@ export class Store {
       .prepare("SELECT * FROM audit ORDER BY at DESC LIMIT 200")
       .all();
   }
+  clearLogs() {
+    return Number(this.db.prepare("DELETE FROM audit").run().changes);
+  }
   saveLaunchNetwork(job) {
     this.db
       .prepare("INSERT OR REPLACE INTO launch_network VALUES(?,?)")

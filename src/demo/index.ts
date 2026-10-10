@@ -441,6 +441,13 @@ export async function demoApi(
     audit(body.close ? "close-port" : "open-port", body.id);
     return { notice: "演示端口规则已更新" };
   }
-  if (p === "/audit") return { items: logs };
+  if (p === "/audit") {
+    if (method === "DELETE") {
+      const deleted = logs.length;
+      logs.length = 0;
+      return { deleted };
+    }
+    return { items: [...logs] };
+  }
   throw new Error("此演示仅支持 Lightsail 相关操作");
 }

@@ -1,12 +1,44 @@
-import { ScrollText } from "lucide-react";
+import { ScrollText, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { auditActionLabel } from "../../../shared/audit-actions";
 import type { AuditEntry } from "../../../shared/types";
-import { useApi } from "../../app/context";
-import { Busy, ErrorBox, RefreshButton } from "../../components/ui";
+import { useApi, usePanel } from "../../app/context";
+import {
+  Busy,
+  ErrorBox,
+  Modal,
+  PendingButton,
+  RefreshButton,
+} from "../../components/ui";
+import { api } from "../../lib/api";
 
 export default function Audit() {
+  const { toast } = usePanel();
   const { data, error, loading, refresh } = useApi<{ items: AuditEntry[] }>(
     "/audit",
   );
+  const [confirm, setConfirm] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [clearError, setClearError] = useState("");
+
+  async function clear() {
+    if (clearing) return;
+    setClearing(true);
+    try {
+      const { deleted } = await api<{ deleted: number }>(
+        "/audit",
+        undefined,
+        "DELETE",
+      );
+      refresh();
+      setConfirm(false);
+      toast(`已清空 ${deleted} 条操作日志`);
+    } catch (e) {
+      setClearError((e as Error).message);
+    } finally {
+      setClearing(false);
+    }
+  }
   return (
     <>
       <div className="page-heading">
@@ -17,7 +49,20 @@ export default function Audit() {
           </h1>
           <p>近期操作记录，最多显示 200 条</p>
         </div>
-        <RefreshButton loading={loading} onClick={refresh} />
+        <div className="row-actions">
+          <RefreshButton loading={loading || clearing} onClick={refresh} />
+          <button
+            className="button danger"
+            disabled={loading || clearing || !data?.items.length}
+            onClick={() => {
+              setClearError("");
+              setConfirm(true);
+            }}
+          >
+            <Trash2 size={15} />
+            清空日志
+          </button>
+        </div>
       </div>
       {error && <ErrorBox message={error} retry={refresh} />}
       <div className="table-wrap">
@@ -35,7 +80,7 @@ export default function Audit() {
             {data?.items.map((x) => (
               <tr key={x.id}>
                 <td>{new Date(x.at).toLocaleString("zh-CN")}</td>
-                <td>{x.action === "ssh-connect" ? "SSH 终端" : x.action}</td>
+                <td>{auditActionLabel(x.action)}</td>
                 <td className="mono">{x.target || "—"}</td>
                 <td>
                   <span
@@ -56,6 +101,33 @@ export default function Audit() {
           <div className="empty">暂无操作记录</div>
         )}
       </div>
+      {confirm && (
+        <Modal
+          title="清空操作日志"
+          busy={clearing}
+          onClose={() => setConfirm(false)}
+        >
+          <p>清空全部已存储的操作日志，包括未显示的记录。删除后不可恢复。</p>
+          {clearError && <ErrorBox message={clearError} />}
+          <div className="modal-actions">
+            <button
+              className="button"
+              disabled={clearing}
+              onClick={() => setConfirm(false)}
+            >
+              取消
+            </button>
+            <PendingButton
+              className="button danger"
+              busy={clearing}
+              pendingLabel="正在清空日志…"
+              onClick={clear}
+            >
+              确认清空
+            </PendingButton>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

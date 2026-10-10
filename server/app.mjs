@@ -108,7 +108,7 @@ export function createApp(
     next();
   }
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, version: "1.7.3", service: "lightsail" }),
+    res.json({ ok: true, version: "1.7.4", service: "lightsail" }),
   );
   app.get("/api/auth", (req, res) => {
     const s = store.session(token(req));
@@ -179,13 +179,15 @@ export function createApp(
   // Resource mutations invalidate their own scope; account changes invalidate all snapshots.
   app.use("/api", (req, res, next) => {
     if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
-      const update = mutationUpdate(req.path, req.body);
+      const path = req.path;
+      const update = mutationUpdate(path, req.body);
       res.on("finish", () => {
         if (update) reads.invalidate((path) => matchesUpdate(path, update));
         else if (
           res.statusCode < 400 &&
-          req.path !== "/traffic-limit" &&
-          !req.path.startsWith("/ssh/")
+          path !== "/traffic-limit" &&
+          path !== "/audit" &&
+          !path.startsWith("/ssh/")
         )
           reads.clear();
       });

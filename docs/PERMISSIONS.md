@@ -20,7 +20,7 @@
 | 默认 SSH 私钥下载 | `DownloadDefaultKeyPair`                                                                                 |
 | 自动关机          | `GetInstance`、`GetBundles`、`GetInstanceMetricData`、`StopInstance`                                     |
 
-策略覆盖凭证所属账户各区域的实例、静态 IP、防火墙、流量和 SSH 功能，不授予账单、快照、备份管理或其他 AWS 服务权限。流量查询无需 CloudWatch 授权；登录有效期由本地会话管理，流量进度复用套餐和指标查询。
+策略覆盖凭证所属账户各区域的实例、静态 IP、防火墙、流量和 SSH 功能，不授予账单、快照、备份管理或其他 AWS 服务权限。流量查询无需 CloudWatch 授权；会话管理与日志清理在本地执行，流量进度复用套餐和指标查询。
 
 统一策略使用 `Resource: "*"`，可依据 Lightsail 支持的资源类型与标签条件限制授权范围。`sts:GetCallerIdentity` 无需额外授权，策略显式列出该动作以对应身份验证调用。
 
