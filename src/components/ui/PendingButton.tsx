@@ -1,4 +1,3 @@
-import { LoaderCircle } from "lucide-react";
 import { useId, type ButtonHTMLAttributes, type ReactNode } from "react";
 
 /** Busy feedback must not replace the caption, move the button, or drop focus. */
@@ -39,9 +38,6 @@ export function PendingButton({
         }}
       >
         <span className="pending-button-label">{children}</span>
-        <span className="pending-button-progress" aria-hidden="true">
-          <LoaderCircle size={14} />
-        </span>
       </button>
       <span id={statusId} className="sr-only" role="status">
         {busy ? pendingLabel : ""}

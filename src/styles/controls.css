@@ -32,23 +32,8 @@
   justify-content: center;
   gap: 8px;
 }
-.pending-button-progress {
-  display: inline-flex;
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
 .pending-button[aria-busy="true"] {
   cursor: progress;
-}
-.pending-button[aria-busy="true"] .pending-button-progress {
-  opacity: 1;
-  transition-delay: 0.15s;
-}
-.pending-button[aria-busy="true"] .pending-button-progress svg {
-  animation: refresh-turn 1s linear infinite;
 }
 .button.primary {
   background: var(--accent);
