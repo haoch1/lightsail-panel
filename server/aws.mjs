@@ -71,6 +71,9 @@ export class AwsGateway {
   downloadDefaultKeyPair(...args) {
     return keys.downloadDefaultKeyPair(this, ...args);
   }
+  instanceAccessDetails(...args) {
+    return keys.instanceAccessDetails(this, ...args);
+  }
   traffic(...args) {
     return monitoring.traffic(this, ...args);
   }

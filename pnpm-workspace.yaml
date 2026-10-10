@@ -1,1 +1,2 @@
-allowBuilds: {}
+allowBuilds:
+  node-pty: true

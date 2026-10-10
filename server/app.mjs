@@ -11,6 +11,7 @@ import { registerInstances } from "./http/instances.mjs";
 import { registerMonitoring } from "./http/monitoring.mjs";
 import { registerNetworking } from "./http/networking.mjs";
 import { registerSsh } from "./http/ssh.mjs";
+import { SshSessions } from "./ssh/sessions.mjs";
 import { ReadCache } from "./read-cache.mjs";
 import { LaunchNetworkQueue } from "./launch-network.mjs";
 import { TrafficGuard } from "./traffic-guard.mjs";
@@ -23,10 +24,16 @@ export function createApp(
   {
     publicOrigin = process.env.PUBLIC_ORIGIN || "",
     dist = resolve("dist"),
+    sshOpener,
   } = {},
 ) {
   const app = express();
   const reads = new ReadCache();
+  const ssh = new SshSessions(store, gateway, {
+    publicOrigin,
+    opener: sshOpener,
+  });
+  app.locals.ssh = ssh;
   app.disable("x-powered-by");
   app.use(
     helmet({
@@ -36,7 +43,14 @@ export function createApp(
           scriptSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", "data:"],
-          connectSrc: ["'self'"],
+          connectSrc: [
+            "'self'",
+            (req) =>
+              (publicOrigin || `${req.protocol}://${req.headers.host}`).replace(
+                /^http/,
+                "ws",
+              ),
+          ],
           fontSrc: ["'self'", "data:"],
           upgradeInsecureRequests: publicOrigin.startsWith("https:")
             ? []
@@ -94,7 +108,7 @@ export function createApp(
     next();
   }
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, version: "1.6.0", service: "lightsail" }),
+    res.json({ ok: true, version: "1.7.0", service: "lightsail" }),
   );
   app.get("/api/auth", (req, res) => {
     const s = store.session(token(req));
@@ -145,6 +159,7 @@ export function createApp(
     next();
   });
   app.post("/api/logout", (req, res) => {
+    ssh.revoke(req.panelSession.hash);
     store.deleteSession(token(req));
     res.clearCookie("panel_session", { path: "/" });
     res.json({ ok: true });
@@ -167,7 +182,11 @@ export function createApp(
       const update = mutationUpdate(req.path, req.body);
       res.on("finish", () => {
         if (update) reads.invalidate((path) => matchesUpdate(path, update));
-        else if (res.statusCode < 400 && req.path !== "/traffic-limit")
+        else if (
+          res.statusCode < 400 &&
+          req.path !== "/traffic-limit" &&
+          !req.path.startsWith("/ssh/")
+        )
           reads.clear();
       });
     }
@@ -177,6 +196,7 @@ export function createApp(
   const services = {
     store,
     gateway,
+    ssh,
     read: reads.read.bind(reads),
     ...routeContext(store),
   };

@@ -61,6 +61,17 @@ jobs:
           test "$(docker inspect --format '{{.Path}}' lightsail-panel-test)" = lightsail-panel
           test "$(docker exec lightsail-panel-test hostname)" = lightsail-panel
           docker exec lightsail-panel-test lightsail-panel --healthcheck
+          docker exec lightsail-panel-test ssh -V
+          docker exec lightsail-panel-test node --input-type=module -e '
+            import { spawn } from "node-pty";
+            const terminal = spawn("ssh", ["-V"], { name: "xterm-256color", cols: 80, rows: 24 });
+            let output = "";
+            terminal.onData(data => { output += data; });
+            terminal.onExit(({ exitCode }) => {
+              if (exitCode || !output.includes("OpenSSH")) process.exit(1);
+              console.log("OpenSSH PTY verified");
+            });
+          '
           docker exec lightsail-panel-test sh -ec '
             test "$(cat /proc/1/comm)" = lightsail-panel
             test "$(tr "\000" "\n" < /proc/1/cmdline | head -n 1)" = lightsail-panel

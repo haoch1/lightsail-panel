@@ -11,6 +11,7 @@
         "lightsail:GetBundles",
         "lightsail:GetInstances",
         "lightsail:GetInstance",
+        "lightsail:GetInstanceAccessDetails",
         "lightsail:GetInstanceMetricData",
         "lightsail:GetInstancePortStates",
         "lightsail:GetStaticIps",

@@ -4,25 +4,26 @@ Lightsail Panel 采用浏览器前端与同源 HTTP API。React 负责资源展�
 
 ## 目录结构
 
-| 目录                          | 职责                                               |
-| ----------------------------- | -------------------------------------------------- |
-| `src/app`                     | 路由、导航、主题、账户与区域上下文                 |
-| `src/features`                | 账户、实例、创建、静态 IP、防火墙、流量与操作日志  |
-| `src/components/ui`           | 表单、下拉选择、弹窗、按钮和状态反馈               |
-| `src/hooks`                   | 资源读取、实例扫描、流量查询与自动更新             |
-| `src/lib`                     | API 请求、缓存、资源目标、菜单定位和数值格式       |
-| `src/styles`                  | 主题、布局、控件、业务样式与响应式规则             |
-| `src/demo`                    | 在浏览器内运行的示例数据和操作                     |
-| `shared`                      | 类型、区域标签、镜像排序、刷新策略和流量计算       |
-| `server/http`                 | HTTP 路由、参数校验与操作审计                      |
-| `server/aws`                  | SDK 客户端、传输、目录、实例、网络、默认密钥与指标 |
-| `server/store.mjs`            | SQLite、账户凭证加密、会话与日志持久化             |
-| `server/launch-network.mjs`   | 创建后网络配置与资源状态跟踪                       |
-| `server/traffic-guard.mjs`    | 套餐流量阈值规则、后台检查与自动关机               |
-| `bin/lightsail-panel.mjs`     | 统一启动入口与容器健康检查                         |
-| `server/runtime-identity.mjs` | 进程标题与 Linux 线程名称同步                      |
-| `tests`                       | 请求安全、SDK 输入、资源处理、数据计算与缓存验证   |
-| `.github/workflows`           | Docker 构建与容器运行检查                          |
+| 目录                          | 职责                                                |
+| ----------------------------- | --------------------------------------------------- |
+| `src/app`                     | 路由、导航、主题、账户与区域上下文                  |
+| `src/features`                | 账户、实例、创建、静态 IP、防火墙、流量、SSH 与日志 |
+| `src/components/ui`           | 表单、下拉选择、弹窗、按钮和状态反馈                |
+| `src/hooks`                   | 资源读取、实例扫描、流量查询与自动更新              |
+| `src/lib`                     | API 请求、缓存、资源目标、菜单定位和数值格式        |
+| `src/styles`                  | 主题、布局、控件、业务样式与响应式规则              |
+| `src/demo`                    | 在浏览器内运行的示例数据和操作                      |
+| `shared`                      | 类型、区域标签、镜像排序、刷新策略和流量计算        |
+| `server/http`                 | HTTP 路由、参数校验与操作审计                       |
+| `server/ssh`                  | WebSocket 会话、SSH 证书认证与 PTY 生命周期         |
+| `server/aws`                  | SDK 客户端、传输、目录、实例、网络、默认密钥与指标  |
+| `server/store.mjs`            | SQLite、账户凭证加密、会话与日志持久化              |
+| `server/launch-network.mjs`   | 创建后网络配置与资源状态跟踪                        |
+| `server/traffic-guard.mjs`    | 套餐流量阈值规则、后台检查与自动关机                |
+| `bin/lightsail-panel.mjs`     | 统一启动入口与容器健康检查                          |
+| `server/runtime-identity.mjs` | 进程标题与 Linux 线程名称同步                       |
+| `tests`                       | 请求安全、SDK 输入、资源处理、数据计算与缓存验证    |
+| `.github/workflows`           | Docker 构建与容器运行检查                           |
 
 ## 请求路径
 
@@ -31,6 +32,16 @@ Lightsail Panel 采用浏览器前端与同源 HTTP API。React 负责资源展�
 账户凭证仅在服务器侧解密。公开的账户列表返回元数据与密钥尾号，不返回 Secret Access Key。默认 SSH 私钥下载受登录、来源和 CSRF 校验保护，响应禁止缓存。
 
 账户内部保留 SDK 请求所需的验证端点区域；该值不作为资源筛选条件，也不暴露为添加账户表单字段。账户和资源区域由前端分别选择。
+
+## SSH 终端连接
+
+实例操作菜单通过动态导入加载 xterm.js 与 FitAddon。固定尺寸弹窗保留终端实例，状态变化只更新工具栏；ResizeObserver 同步网页终端与服务端 PTY 尺寸，终端内的 Escape、Tab、Ctrl+C 交由终端处理。关闭窗口结束连接，断线保留输出供排查，重连建立新的会话。
+
+`POST /api/ssh/connect` 在登录、来源与 CSRF 校验后签发绑定当前会话的单次票据，有效期 45 秒。`/api/ssh/terminal` 只接受同源且持有有效登录 Cookie 的 WebSocket，票据通过第一帧提交并立即消费，不放入 URL。每个登录会话最多 4 个连接或待用票据，全局最多 16 个。
+
+`server/ssh/sessions.mjs` 确认实例运行后调用 `GetInstanceAccessDetails`，通过 `server/ssh/openssh.mjs` 启动 OpenSSH 和 node-pty。临时私钥、证书与 AWS 主机密钥记录写入受限临时目录，使用证书认证与严格主机密钥校验，禁用密码、代理、端口转发及用户 SSH 配置。子进程只继承运行所需的系统变量，不继承 AWS 或面板密钥。PTY 提供终端控制字符及远程窗口尺寸同步，登录 shell 发出就绪标记后才允许输入。
+
+WebSocket 采用 15 秒心跳，检查登录有效期与账户状态；退出登录立即撤销对应连接。连接超时、断线、关闭窗口或停止服务会结束 PTY 并清理临时文件。票据、终端输入输出、临时密钥不持久化；审计只记录连接目标与结果。SSH 建连与关闭不使资源缓存失效。Docker 构建阶段编译 node-pty，运行镜像内置 OpenSSH 客户端；反向代理须支持 WebSocket。
 
 ## 缓存与并发
 

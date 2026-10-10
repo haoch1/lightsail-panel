@@ -3,7 +3,7 @@
 [![Docker CI](https://github.com/haoch1/lightsail-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/haoch1/lightsail-panel/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Lightsail Panel 是面向 Amazon Lightsail 的自托管管理面板，提供中文界面，支持多账户、跨区域资源管理、流量统计与进度展示、按套餐流量阈值自动关机，以及登录有效期设置。
+Lightsail Panel 是面向 Amazon Lightsail 的自托管管理面板，提供中文界面，支持多账户、跨区域资源管理、网页 SSH、流量统计与进度展示、按套餐流量阈值自动关机，以及登录有效期设置。
 
 应用采用 React、TypeScript 和 Node.js 24，使用 AWS SDK for JavaScript v3 调用 Lightsail 与 STS API。账户凭证以 AES-256-GCM 加密保存，应用数据持久化至 SQLite。
 
@@ -25,6 +25,7 @@ Lightsail Panel 是面向 Amazon Lightsail 的自托管管理面板，提供中�
 | 模块     | 功能                                                                                                                                        |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | 实例管理 | 跨账户、跨区域查询；名称与 IP 搜索；状态筛选；批量启动与停止；重启、删除、IPv6 切换和公网 IP 更换                                           |
+| 网页 SSH | 从实例操作菜单打开终端；临时证书认证、主机身份校验；终端输入、复制粘贴、尺寸同步、断开与重连                                                |
 | 实例信息 | 系统、规格、套餐价格、公网与私网地址；本月流量进度、套餐额度、使用比例及上行与下行明细                                                      |
 | 实例创建 | Debian、Ubuntu、CentOS 系统镜像；通用型套餐；双栈与仅 IPv6 网络；可用区选择；默认 SSH 密钥与启动脚本；可选防火墙规则及自动分配、绑定静态 IP |
 | 静态 IP  | 按账户与区域分配地址；绑定、解绑和释放；禁止直接释放已绑定地址                                                                              |
@@ -81,7 +82,7 @@ curl -fsS http://127.0.0.1:8090/api/health
 健康检查返回示例：
 
 ```json
-{ "ok": true, "version": "1.6.0", "service": "lightsail" }
+{ "ok": true, "version": "1.7.0", "service": "lightsail" }
 ```
 
 远程连接可使用 SSH 端口转发：
@@ -179,6 +180,16 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 
 跟踪进度持久化保存，刷新页面或重启面板后继续，不触发全区域扫描。超过 10 分钟仍未完成时提示核对，可手动刷新重新检查。
 
+### SSH 终端连接
+
+在运行中的实例选择 **操作 → SSH 终端连接**，直接打开网页终端。登录用户由 AWS 返回，Debian 通常为 `admin`；具备 sudo 权限时可执行 `sudo -i` 切换至 root。支持命令输入、复制粘贴、窗口自适应、断开与重新连接，关闭窗口即结束连接。
+
+连接需要 `lightsail:GetInstanceAccessDetails`，已列入 [IAM 策略](docs/iam-policy.json)。面板服务器须能访问实例的 TCP 22 端口；仅 IPv6 实例要求面板服务器具备 IPv6 连通性。操作系统须保留 Lightsail 临时证书认证配置。自定义 SSH 端口及文件传输暂不提供。
+
+临时私钥与证书只在服务端使用，存入受限临时目录并在连接结束后删除，不返回浏览器或写入数据库、日志。主机密钥按 AWS 返回的记录严格校验。退出面板、会话到期、移除账户或停止服务会断开连接；不会持久化或恢复 SSH 会话。
+
+Docker 镜像内置 OpenSSH 客户端；通过源码运行时须自行安装。使用反向代理时配置下文的 WebSocket 转发。终端以登录用户权限执行命令，操作日志记录连接结果，不记录终端输入、输出。
+
 ### 登录有效期
 
 1. 初始化管理员或登录时，在 **登录有效期** 中选择 12 小时、1 天、7 天、30 天或 90 天，默认 30 天。
@@ -243,6 +254,11 @@ docker compose up -d
 Nginx 配置示例，需要替换域名和证书路径：
 
 ```nginx
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
 server {
     listen 80;
     server_name panel.example.com;
@@ -258,6 +274,8 @@ server {
     location / {
         proxy_pass http://127.0.0.1:8090;
         proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -361,6 +379,7 @@ docker compose down
 | 会话到期后的自动关机           | 规则由服务端独立执行，不依赖浏览器会话；容器须保持运行。                                         |
 | 自动关机规则暂停或未执行       | 在实例的自动关机窗口查看原因，核对 IAM 权限、套餐额度、指标及实例身份；解决后重新启用并保存。    |
 | 流量进度显示未知               | 当前套餐未返回有效额度或流量查询尚未完成、失败；不会将未知数据作为 0% 或触发关机。               |
+| SSH 终端无法连接               | 检查实例运行状态、`GetInstanceAccessDetails` 权限、TCP 22 连通性及 WebSocket 转发配置。          |
 
 排查部署问题时，依次检查容器状态、健康接口和近期日志：
 
@@ -374,7 +393,7 @@ docker compose logs --tail=100 lightsail-panel
 
 ## 开发与验证
 
-开发环境需要 Node.js 24 和 pnpm 11.25.0：
+开发环境需要 Node.js 24、pnpm 11.25.0 和 OpenSSH 客户端。Linux 安装依赖时还需 Python 3、make 与 C++ 编译器，用于构建终端模块：
 
 ```bash
 corepack enable
@@ -400,7 +419,7 @@ PANEL_IMAGE=lightsail-panel:local docker compose up -d --pull never
 
 GitHub Actions 在 amd64 和 arm64 原生 runner 上完成构建、测试、容器启动及 Compose 部署验证后发布镜像；Pull Request 仅验证。容器以非 root 用户运行，启用 `no-new-privileges` 并移除 Linux capabilities。
 
-演示入口为 `/lightsail?demo=1`，使用浏览器内存数据，不调用 AWS API。可预览流量进度与自动关机设置；演示规则不执行真实关机。
+演示入口为 `/lightsail?demo=1`，使用浏览器内存数据，不调用 AWS API。可预览流量进度、自动关机设置与 SSH 终端；演示终端仅模拟输入，演示规则不执行真实关机。
 
 ## 许可证
 

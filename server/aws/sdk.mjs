@@ -18,6 +18,7 @@ export const usedCommands = {
     "GetBlueprints",
     "GetBundles",
     "DownloadDefaultKeyPair",
+    "GetInstanceAccessDetails",
     "CreateInstances",
     "GetStaticIps",
     "GetStaticIp",

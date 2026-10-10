@@ -1,0 +1,84 @@
+.ssh-modal {
+  height: min(720px, calc(100dvh - var(--modal-inset)));
+}
+.ssh-modal .modal-head {
+  margin-bottom: 16px;
+}
+.ssh-modal .modal-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ssh-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ssh-connection,
+.ssh-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ssh-connection {
+  flex: 1;
+}
+.ssh-identity {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--muted);
+}
+.ssh-terminal {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  background: #202020;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px;
+  overflow: hidden;
+  text-align: left;
+}
+.ssh-terminal .xterm {
+  height: 100%;
+}
+.ssh-terminal textarea.xterm-helper-textarea {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  box-shadow: none;
+}
+.ssh-footer {
+  font-size: 12px;
+  line-height: 1.6;
+  flex-shrink: 0;
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .ssh-toolbar {
+    gap: 10px;
+  }
+  .ssh-connection {
+    flex-basis: 100%;
+  }
+  .ssh-tools {
+    width: 100%;
+  }
+  .ssh-tools .button:last-child {
+    margin-left: auto;
+  }
+  .ssh-terminal {
+    padding: 8px;
+  }
+}

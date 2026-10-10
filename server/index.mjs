@@ -14,8 +14,10 @@ const port = Number(process.env.PORT || 8090);
 const server = app.listen(port, host, () =>
   console.log(`lightsail-panel: http://${host}:${port}`),
 );
+app.locals.ssh.attach(server);
 function close() {
   stopIdentity();
+  app.locals.ssh.close();
   gateway.invalidate();
   server.close(() => {
     store.close();

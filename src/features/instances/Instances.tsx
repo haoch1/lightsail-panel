@@ -13,6 +13,7 @@ import {
   RotateCw,
   ShieldCheck,
   Square,
+  TerminalSquare,
   Trash2,
 } from "lucide-react";
 import {
@@ -21,6 +22,8 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  lazy,
+  Suspense,
 } from "react";
 import type { Instance } from "../../../shared/types";
 import { usePanel } from "../../app/context";
@@ -54,8 +57,9 @@ import InstanceAddresses from "./InstanceAddresses";
 import Ports from "../firewall/Ports";
 import Traffic from "../monitoring/Traffic";
 import TrafficLimit from "../monitoring/TrafficLimit";
+const SshTerminal = lazy(() => import("../ssh/SshTerminal"));
 type Dialog = {
-  kind: "action" | "details" | "ports" | "traffic" | "traffic-limit";
+  kind: "action" | "details" | "ports" | "traffic" | "traffic-limit" | "ssh";
   instance: Instance;
   action?: string;
 };
@@ -466,6 +470,17 @@ export default function Instances() {
           <hr />
           <button
             role="menuitem"
+            disabled={menu.instance.state !== "running"}
+            onClick={() => {
+              setDialog({ kind: "ssh", instance: menu.instance });
+              setMenu(null);
+            }}
+          >
+            <TerminalSquare />
+            SSH 终端连接
+          </button>
+          <button
+            role="menuitem"
             disabled={
               menu.instance.state !== "running" ||
               menu.instance.ipAddressType === "ipv6"
@@ -556,6 +571,14 @@ export default function Instances() {
             run(dialog.instance, dialog.action!, confirm, acceptBundleUpdate)
           }
         />
+      )}
+      {dialog?.kind === "ssh" && (
+        <Suspense fallback={null}>
+          <SshTerminal
+            instance={dialog.instance}
+            onClose={() => setDialog(null)}
+          />
+        </Suspense>
       )}
       {dialog?.kind === "traffic" && (
         <Modal
