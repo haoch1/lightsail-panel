@@ -3,7 +3,11 @@ import test from "node:test";
 import { ReadCache } from "../server/read-cache.mjs";
 import { ResourceCache } from "../src/lib/resource-cache.ts";
 import { scheduleAutoRefresh } from "../src/lib/auto-refresh.ts";
-import { AUTO_REFRESH_MS, refreshPath } from "../shared/refresh-policy.ts";
+import {
+  AUTO_REFRESH_MS,
+  refreshPath,
+  nextRefreshAt,
+} from "../shared/refresh-policy.ts";
 
 test("server AWS snapshots survive reloads, share pending reads, and refresh only when due or requested", async () => {
   let now = 1000,
@@ -15,8 +19,8 @@ test("server AWS snapshots survive reloads, share pending reads, and refresh onl
     query: { accountId: "sg", region: "ap-southeast-1" },
   };
   const first = await cache.read(req, read);
-  assert.equal(first.cacheExpiresAt, now + AUTO_REFRESH_MS);
-  now += 299_999;
+  assert.equal(first.cacheExpiresAt, nextRefreshAt(now));
+  now = first.cacheExpiresAt - 1;
   assert.deepEqual(
     await cache.read(
       { ...req, query: { region: "ap-southeast-1", accountId: "sg" } },
@@ -72,7 +76,10 @@ test("browser reloads restore the same session without extending the server dead
   const key = "/instances?accountId=sg&region=ap-southeast-1";
   const first = new ResourceCache(AUTO_REFRESH_MS, () => now);
   first.restore(storage, "session-a");
-  await first.load(key, async () => ({ items: [1], cacheExpiresAt: 301_000 }));
+  await first.load(key, async () => ({
+    items: [1],
+    cacheExpiresAt: 300_000,
+  }));
   await first.load("/key-pair?accountId=sg", async () => ({
     privateKey: "NEVER_SAVE",
   }));
@@ -82,14 +89,14 @@ test("browser reloads restore the same session without extending the server dead
   reloaded.restore(storage, "session-a");
   assert.equal(
     reloaded.nextExpiry((path) => path === key),
-    301_000,
+    300_000,
   );
   await reloaded.load(key, async () => {
     calls++;
     return {};
   });
   assert.equal(calls, 0);
-  now = 301_000;
+  now = 300_000;
   await reloaded.load(key, async () => {
     calls++;
     return {};
@@ -181,11 +188,35 @@ test("failed resource reads schedule a later automatic retry instead of stopping
   );
   assert.equal(
     cache.nextExpiry((key) => key.startsWith("/traffic")),
-    301_000,
+    300_000,
   );
   cache.clear();
   assert.equal(
     cache.nextExpiry(() => true),
     undefined,
+  );
+});
+
+test("wall-clock schedules align resource reads, retries and manual refreshes to five-minute marks", async () => {
+  let now = Date.parse("2026-10-10T03:06:36Z");
+  const expected = Date.parse("2026-10-10T03:10:00Z");
+  assert.equal(nextRefreshAt(now), expected);
+  const server = new ReadCache(AUTO_REFRESH_MS, () => now);
+  const client = new ResourceCache(AUTO_REFRESH_MS, () => now);
+  const path = "/traffic?accountId=a";
+  const result = await server.load(path, async () => ({ items: [] }));
+  assert.equal(result.cacheExpiresAt, expected);
+  await client.load(path, async () => result);
+  assert.equal(
+    client.nextExpiry((k) => k === path),
+    expected,
+  );
+  now = Date.parse("2026-10-10T03:07:30Z");
+  const manual = await server.load(path, async () => ({ items: [1] }), true);
+  assert.equal(manual.cacheExpiresAt, expected);
+  now = expected;
+  assert.equal(
+    (await server.load(path, async () => ({ items: [2] }))).cacheExpiresAt,
+    Date.parse("2026-10-10T03:15:00Z"),
   );
 });

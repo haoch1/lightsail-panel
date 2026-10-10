@@ -14,6 +14,7 @@ import {
 
 export type InstanceUsage = {
   price?: number | null;
+  allowance?: number | null;
   traffic?: number | null;
   inbound?: number | null;
   outbound?: number | null;
@@ -73,14 +74,23 @@ export function useInstanceUsage(instances: Instance[]) {
         );
       void catalogs
         .get(catalogPath)!
-        .then((catalog) =>
+        .then((catalog) => {
+          const bundle = instanceBundle(catalog, i);
           publish(key, {
-            price: instanceBundle(catalog, i)?.price ?? null,
+            price: bundle?.price ?? null,
+            allowance:
+              bundle?.transfer && bundle.transfer > 0
+                ? bundle.transfer * 1024 ** 3
+                : null,
             priceError: undefined,
-          }),
-        )
+          });
+        })
         .catch((error: Error) =>
-          publish(key, { price: null, priceError: error.message }),
+          publish(key, {
+            price: null,
+            allowance: null,
+            priceError: error.message,
+          }),
         );
       const path = monthlyTrafficPath(i, offset);
       void resourceCache

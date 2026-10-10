@@ -378,20 +378,117 @@
   gap: 12px;
 }
 .traffic-link {
+  display: block;
   padding: 0;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
+  text-align: left;
   cursor: pointer;
   white-space: nowrap;
 }
 .traffic-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: var(--text);
 }
 .traffic-link:focus-visible {
   outline: 2px solid var(--text);
   outline-offset: 4px;
   border-radius: 3px;
+}
+
+.traffic-progress {
+  display: block;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+  --traffic-fill: var(--chart-color);
+}
+.traffic-progress[data-tone="warning"] {
+  --traffic-fill: var(--warning);
+}
+.traffic-progress[data-tone="danger"] {
+  --traffic-fill: var(--danger);
+}
+.traffic-progress-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.traffic-progress-percent {
+  color: var(--traffic-fill);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.traffic-progress-amount {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-top: 12px;
+}
+.traffic-progress-amount strong {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.3px;
+}
+.traffic-progress-amount > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.traffic-progress-track {
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 100px;
+  background: var(--border);
+  margin-top: 12px;
+}
+.traffic-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--traffic-fill);
+}
+.traffic-progress-caption {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.traffic-progress.compact {
+  width: 154px;
+}
+.traffic-progress.compact .traffic-progress-heading {
+  font-size: 13px;
+  font-weight: 400;
+  gap: 12px;
+}
+.traffic-progress.compact .traffic-progress-percent {
+  font-size: 12px;
+  font-weight: 400;
+}
+.traffic-progress.compact .traffic-progress-track {
+  height: 5px;
+  margin-top: 7px;
+}
+.traffic-progress.compact .traffic-progress-caption {
+  font-size: 11px;
+  margin-top: 5px;
+}
+.traffic-link:hover .traffic-progress-heading > span:first-child {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.traffic-limit-usage {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  background: var(--subtle);
 }

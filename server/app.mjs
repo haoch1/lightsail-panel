@@ -13,6 +13,8 @@ import { registerNetworking } from "./http/networking.mjs";
 import { registerSsh } from "./http/ssh.mjs";
 import { ReadCache } from "./read-cache.mjs";
 import { LaunchNetworkQueue } from "./launch-network.mjs";
+import { TrafficGuard } from "./traffic-guard.mjs";
+import { sessionHours } from "./validation.mjs";
 import { matchesUpdate, mutationUpdate } from "../shared/resource-update.ts";
 
 export function createApp(
@@ -68,13 +70,13 @@ export function createApp(
       req.headers.cookie || "",
     )?.[1];
   }
-  function cookie(res, value) {
+  function cookie(res, value, expires) {
     res.cookie("panel_session", value, {
       httpOnly: true,
       sameSite: "strict",
       secure: publicOrigin.startsWith("https:"),
       path: "/",
-      maxAge: 12 * 3600 * 1000,
+      maxAge: Math.max(0, expires - Date.now()),
     });
   }
   const attempts = new Map();
@@ -100,31 +102,36 @@ export function createApp(
       initialized: !!store.config("admin"),
       authenticated: !!s,
       csrf: s?.csrf,
+      expires: s?.expires,
     });
   });
   const password = z.object({
     password: z.string().min(12, "管理员密码至少 12 位").max(200),
+    sessionHours: sessionHours.default(720),
   });
   app.post("/api/setup", limit, (req, res) => {
     if (store.config("admin"))
       return res.status(409).json({ error: "面板已经初始化" });
     const data = password.parse(req.body);
     store.setPassword(data.password);
-    const s = store.createSession();
-    cookie(res, s.token);
+    const s = store.createSession(data.sessionHours);
+    cookie(res, s.token, s.expires);
     store.audit({ action: "setup", status: "success" });
-    res.json({ csrf: s.csrf });
+    res.json({ csrf: s.csrf, expires: s.expires });
   });
   app.post("/api/login", limit, (req, res) => {
     const data = z
-      .object({ password: z.string().min(1).max(200) })
+      .object({
+        password: z.string().min(1).max(200),
+        sessionHours: sessionHours.default(720),
+      })
       .parse(req.body);
     if (!store.verifyPassword(data.password))
       return res.status(401).json({ error: "密码不正确" });
     attempts.delete(req.socket.remoteAddress);
-    const s = store.createSession();
-    cookie(res, s.token);
-    res.json({ csrf: s.csrf });
+    const s = store.createSession(data.sessionHours);
+    cookie(res, s.token, s.expires);
+    res.json({ csrf: s.csrf, expires: s.expires });
   });
   app.use("/api", (req, res, next) => {
     const s = store.session(token(req));
@@ -143,13 +150,25 @@ export function createApp(
     res.json({ ok: true });
   });
 
+  app.post("/api/session", (req, res) => {
+    const { hours } = z
+      .object({ hours: sessionHours })
+      .strict()
+      .parse(req.body);
+    const value = token(req);
+    const s = store.renewSession(value, hours);
+    cookie(res, value, s.expires);
+    res.json(s);
+  });
+
   // Resource mutations invalidate their own scope; account changes invalidate all snapshots.
   app.use("/api", (req, res, next) => {
     if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
       const update = mutationUpdate(req.path, req.body);
       res.on("finish", () => {
         if (update) reads.invalidate((path) => matchesUpdate(path, update));
-        else if (res.statusCode < 400) reads.clear();
+        else if (res.statusCode < 400 && req.path !== "/traffic-limit")
+          reads.clear();
       });
     }
     next();
@@ -161,19 +180,29 @@ export function createApp(
     read: reads.read.bind(reads),
     ...routeContext(store),
   };
-  const launchNetwork = new LaunchNetworkQueue(store, gateway, (job) =>
+  let trafficGuard;
+  const launchNetwork = new LaunchNetworkQueue(store, gateway, (job) => {
+    trafficGuard?.resourceUpdated(job);
     reads.invalidate((path) =>
       matchesUpdate(path, {
         ...job,
         resources: job.resources || ["instances", "static-ips", "ports"],
       }),
-    ),
-  );
+    );
+  });
   services.launchNetwork = launchNetwork;
   launchNetwork.start();
   registerAccounts(app, services);
   registerInstances(app, services);
   registerSsh(app, services);
+  trafficGuard = new TrafficGuard(store, gateway, (target, result) => {
+    launchNetwork.watch({ ...target, action: "stop" }, result);
+    reads.invalidate((path) =>
+      matchesUpdate(path, { ...target, resources: ["instances"] }),
+    );
+  });
+  services.trafficGuard = trafficGuard;
+  trafficGuard.start();
   registerMonitoring(app, services);
   registerNetworking(app, services);
   registerAudit(app, services);

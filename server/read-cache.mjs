@@ -1,4 +1,4 @@
-import { AUTO_REFRESH_MS } from "../shared/refresh-policy.ts";
+import { AUTO_REFRESH_MS, nextRefreshAt } from "../shared/refresh-policy.ts";
 
 /** Shares AWS reads across page reloads and tabs; includes in-flight and failed reads. */
 export class ReadCache {
@@ -17,12 +17,18 @@ export class ReadCache {
       .then(
         (value) => {
           entry.pending = false;
-          entry.expires = this.now() + this.ttl;
+          entry.expires =
+            this.ttl === AUTO_REFRESH_MS
+              ? nextRefreshAt(this.now())
+              : this.now() + this.ttl;
           return { ...value, cacheExpiresAt: entry.expires };
         },
         (error) => {
           entry.pending = false;
-          entry.expires = this.now() + this.ttl;
+          entry.expires =
+            this.ttl === AUTO_REFRESH_MS
+              ? nextRefreshAt(this.now())
+              : this.now() + this.ttl;
           throw error;
         },
       );

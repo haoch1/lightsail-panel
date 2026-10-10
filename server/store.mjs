@@ -31,6 +31,7 @@ export class Store {
       CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS accounts(id TEXT PRIMARY KEY,meta TEXT NOT NULL,secret TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(hash TEXT PRIMARY KEY,csrf TEXT NOT NULL,expires INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS traffic_limits(id TEXT PRIMARY KEY,body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS launch_network(id TEXT PRIMARY KEY,body TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS launch_network_status ON launch_network(json_extract(body, '$.status'));
       CREATE INDEX IF NOT EXISTS launch_network_at ON launch_network(json_extract(body, '$.at'));
@@ -81,14 +82,17 @@ export class Store {
       )
     );
   }
-  createSession() {
+  createSession(hours = 720) {
+    if (!Number.isInteger(hours) || hours < 1 || hours > 2160)
+      throw new Error("登录有效期须为 1–2160 小时");
     this.db.prepare("DELETE FROM sessions WHERE expires<?").run(Date.now());
     const token = randomBytes(32).toString("hex");
     const csrf = randomBytes(24).toString("hex");
+    const expires = Date.now() + hours * 3600000;
     this.db
       .prepare("INSERT INTO sessions VALUES(?,?,?)")
-      .run(this.hash(token), csrf, Date.now() + 12 * 3600 * 1000);
-    return { token, csrf };
+      .run(this.hash(token), csrf, expires);
+    return { token, csrf, expires };
   }
   hash(token) {
     return createHash("sha256").update(token).digest("hex");
@@ -103,6 +107,16 @@ export class Store {
         .prepare("SELECT * FROM sessions WHERE hash=? AND expires>?")
         .get(hash, Date.now()) ?? null
     );
+  }
+  renewSession(token, hours) {
+    if (!Number.isInteger(hours) || hours < 1 || hours > 2160)
+      throw new Error("登录有效期须为 1–2160 小时");
+    if (!this.session(token)) return null;
+    const expires = Date.now() + hours * 3600000;
+    this.db
+      .prepare("UPDATE sessions SET expires=? WHERE hash=?")
+      .run(expires, this.hash(token));
+    return { expires };
   }
   deleteSession(token) {
     if (token)
@@ -137,6 +151,11 @@ export class Store {
   }
   deleteAccount(id) {
     this.db.prepare("DELETE FROM accounts WHERE id=?").run(id);
+    this.db
+      .prepare(
+        "DELETE FROM traffic_limits WHERE json_extract(body, '$.accountId')=?",
+      )
+      .run(id);
   }
   audit({
     account = "",
@@ -198,6 +217,23 @@ export class Store {
       .prepare(query)
       .all(...(pendingOnly || recentSince === undefined ? [] : [recentSince]))
       .map((r) => JSON.parse(r.body));
+  }
+  trafficLimit(id) {
+    const row = this.db
+      .prepare("SELECT body FROM traffic_limits WHERE id=?")
+      .get(id);
+    return row ? JSON.parse(row.body) : null;
+  }
+  trafficLimits() {
+    return this.db
+      .prepare("SELECT body FROM traffic_limits")
+      .all()
+      .map((r) => JSON.parse(r.body));
+  }
+  saveTrafficLimit(rule) {
+    this.db
+      .prepare("INSERT OR REPLACE INTO traffic_limits VALUES(?,?)")
+      .run(rule.key, JSON.stringify(rule));
   }
   close() {
     for (const stop of this.onClose) stop();

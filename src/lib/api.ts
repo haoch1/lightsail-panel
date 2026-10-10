@@ -1,6 +1,7 @@
 import { resourceCache } from "./resource-cache";
 import { matchesUpdate, mutationUpdate } from "../../shared/resource-update";
 function changed(path: string, body: unknown) {
+  if (path === "/session" || path === "/traffic-limit") return;
   const update = mutationUpdate(path, body);
   if (update) {
     resourceCache.invalidate((key) => matchesUpdate(key, update));

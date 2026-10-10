@@ -1,6 +1,7 @@
 import type { InstanceUsage } from "../../hooks/useInstanceUsage";
 import { bundlePrice } from "../../lib/bundle";
 import { bytes } from "../../lib/format";
+import TrafficProgress from "../../components/TrafficProgress";
 
 export function InstanceRate({ usage }: { usage?: InstanceUsage }) {
   return (
@@ -22,11 +23,7 @@ export function MonthlyTraffic({ usage }: { usage?: InstanceUsage }) {
           : `上行：${usage.outbound == null ? "—" : bytes(usage.outbound)}\n下行：${usage.inbound == null ? "—" : bytes(usage.inbound)}`
       }
     >
-      {usage?.traffic === undefined
-        ? "…"
-        : usage.traffic === null
-          ? "—"
-          : bytes(usage.traffic)}
+      <TrafficProgress usage={usage} compact />
     </span>
   );
 }

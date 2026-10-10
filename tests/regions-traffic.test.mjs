@@ -11,16 +11,39 @@ import { launch as launchInput } from "../server/validation.mjs";
 
 test("new instances use the regional default key and auto-select an actual available zone", async () => {
   const gateway = new AwsGateway({ account: () => ({ id: "account" }) });
-  gateway.catalog = async () => ({ images: [{ id: "debian_13" }], types: [{ id: "micro" }], zones: ["us-east-1b"] });
-  const input = { accountId: "account", service: "lightsail", region: "us-east-1", imageId: "debian_13", instanceType: "micro", name: "example", count: 1, userData: "", token: "00000000-0000-4000-8000-000000000000" };
+  gateway.catalog = async () => ({
+    images: [{ id: "debian_13" }],
+    types: [{ id: "micro" }],
+    zones: ["us-east-1b"],
+  });
+  const input = {
+    accountId: "account",
+    service: "lightsail",
+    region: "us-east-1",
+    imageId: "debian_13",
+    instanceType: "micro",
+    name: "example",
+    count: 1,
+    userData: "",
+    token: "00000000-0000-4000-8000-000000000000",
+  };
   let request;
-  gateway.send = async (_a, _s, _r, command, body) => { request = { command, body }; return {}; };
+  gateway.send = async (_a, _s, _r, command, body) => {
+    request = { command, body };
+    return {};
+  };
   await gateway.launch(launchInput.parse(input));
   assert.equal(request.command, "CreateInstances");
   assert.equal(request.body.availabilityZone, "us-east-1b");
   assert.equal(Object.hasOwn(request.body, "keyPairName"), false);
-  assert.equal(launchInput.safeParse({ ...input, keyName: "custom-key" }).success, false);
-  await assert.rejects(gateway.launch({ ...input, keyName: "custom-key" }), /仅支持默认/);
+  assert.equal(
+    launchInput.safeParse({ ...input, keyName: "custom-key" }).success,
+    false,
+  );
+  await assert.rejects(
+    gateway.launch({ ...input, keyName: "custom-key" }),
+    /仅支持默认/,
+  );
 });
 
 test("regional catalogs use the selected endpoint for zones and cache each endpoint separately", async () => {
@@ -54,13 +77,13 @@ test("today starts at local calendar midnight and excludes previous-day samples"
   const now = new Date("2026-10-08T10:45:00Z");
   const window = trafficRange("today", now, 480);
   assert.equal(window.start.toISOString(), "2026-10-07T16:00:00.000Z");
-  assert.equal(window.end.toISOString(), "2026-10-08T10:00:00.000Z");
+  assert.equal(window.end.toISOString(), "2026-10-08T10:45:00.000Z");
   const result = aggregateTraffic(
     [
       [
         { timestamp: "2026-10-07T15:00:00Z", sum: 999 },
         { timestamp: "2026-10-07T16:00:00Z", sum: 10 },
-        { timestamp: "2026-10-08T10:00:00Z", sum: 999 },
+        { timestamp: "2026-10-08T10:45:00Z", sum: 999 },
       ],
       [{ timestamp: "2026-10-08T09:00:00Z", sum: 20 }],
     ],
@@ -74,10 +97,10 @@ test("today starts at local calendar midnight and excludes previous-day samples"
     "2026-10-08T07:00:00.000Z",
   );
   const midnight = trafficRange("today", new Date("2026-10-07T16:15:00Z"), 480);
-  assert.equal(midnight.start.getTime(), midnight.end.getTime());
+  assert.equal(midnight.end - midnight.start, 15 * 60000);
   const halfHour = trafficRange("today", new Date("2026-10-07T18:35:00Z"), 330);
   assert.equal(halfHour.start.toISOString(), "2026-10-07T18:30:00.000Z");
-  assert.ok(halfHour.start > halfHour.end);
+  assert.equal(halfHour.end - halfHour.start, 5 * 60000);
 });
 
 test("only opt-in failures on an otherwise working account become unavailable-region notices; page revisits reuse results", async () => {

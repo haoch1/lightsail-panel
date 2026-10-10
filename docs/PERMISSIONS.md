@@ -9,7 +9,7 @@
 - 创建实例包含 AWS 权限表列出的 `lightsail:TagResource` 依赖权限。面板当前不提供单独的标签编辑功能。
 - 创建时可选的防火墙与静态 IP 配置在实例就绪后执行：`lightsail:PutInstancePublicPorts` 替换全部公网端口规则，`lightsail:AllocateStaticIp` 分配地址，`lightsail:AttachStaticIp` 绑定地址。仅 IPv6 实例不支持静态 IPv4；批量创建为每台实例分配独立地址。
 - 网络配置进度持久化到 SQLite，面板重启后继续处理；前端进度查询只读取本地记录。配置失败保留已创建的实例，不自动重建。能够确认尚未绑定且未提交绑定请求的本次新分配地址会尝试释放；绑定结果不确定时保留地址并提示人工核对。
-- 流量使用 `lightsail:GetInstanceMetricData`，无需额外授予 CloudWatch 权限。流量汇总使用 NetworkIn/NetworkOut、Sum、Bytes，1 小时粒度，包含本月和近 30 天。流量包含所有网卡，不能直接换算为超额计费流量。
+- 流量使用 `lightsail:GetInstanceMetricData`，无需额外授予 CloudWatch 权限。流量汇总使用 NetworkIn/NetworkOut、Sum、Bytes，历史按小时汇总，首尾不足一小时的部分按 5 分钟查询。自动关机使用策略已包含的 `lightsail:StopInstance`。流量包含所有网卡，不能直接换算为超额计费流量。
 - 示例使用 `Resource: "*"`，便于初次验证；正式使用可按 Lightsail 支持的资源类型与标签条件收紧。
 - 账户仅使用 Access Key ID / Secret Access Key，STS 用于身份查询。
 - 此策略涵盖当前账户各区域的实例、静态 IP、防火墙、流量统计与默认密钥下载；不授予账单、快照、备份管理和其他 AWS 服务权限。

@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   CheckCircle,
   Cloud,
+  Clock,
   FlaskConical,
   Globe,
   LogOut,
@@ -23,6 +24,7 @@ import Select from "../components/ui/Select";
 import Accounts from "../features/accounts/Accounts";
 import Audit from "../features/audit/Audit";
 import Auth from "../features/auth/Auth";
+import SessionDialog from "../features/auth/SessionDialog";
 import Firewall from "../features/firewall/Firewall";
 import Instances from "../features/instances/Instances";
 import Launch from "../features/launch/Launch";
@@ -50,11 +52,13 @@ export default function App() {
   const [auth, setAuth] = useState<{
     initialized: boolean;
     authenticated: boolean;
+    expires?: number;
   } | null>(demo ? { initialized: true, authenticated: true } : null);
   const [path, setPath] = useState(initialPath);
   const [accountId, setAccountId] = useState("all");
   const [region, setRegion] = useState("all");
   const [mobile, setMobile] = useState(false);
+  const [sessionDialog, setSessionDialog] = useState(false);
   const [manageAccounts, setManageAccounts] = useState(false);
   const [notices, setNotices] = useState<
     { id: number; message: string; type: string }[]
@@ -126,8 +130,8 @@ export default function App() {
     return (
       <Auth
         initialized={auth.initialized}
-        onDone={() => {
-          setAuth({ initialized: true, authenticated: true });
+        onDone={(expires) => {
+          setAuth({ initialized: true, authenticated: true, expires });
           accountData.refresh();
         }}
       />
@@ -252,6 +256,16 @@ export default function App() {
               >
                 <UsersRound size={16} /> <span>AWS 账户管理</span>
               </button>
+              {!demo && (
+                <button
+                  className="icon-button"
+                  aria-label="登录有效期"
+                  title="登录有效期"
+                  onClick={() => setSessionDialog(true)}
+                >
+                  <Clock size={16} />
+                </button>
+              )}
               {demo ? (
                 <a className="text-link" href="/">
                   连接 AWS <ArrowUpRight size={13} />
@@ -296,6 +310,17 @@ export default function App() {
             {page}
           </main>
         </div>
+        {sessionDialog && (
+          <SessionDialog
+            expires={auth.expires}
+            onClose={() => setSessionDialog(false)}
+            onSaved={(expires) => {
+              setAuth((a) => (a ? { ...a, expires } : a));
+              setSessionDialog(false);
+              toast("登录有效期已更新");
+            }}
+          />
+        )}
         {manageAccounts && (
           <Accounts onClose={() => setManageAccounts(false)} />
         )}

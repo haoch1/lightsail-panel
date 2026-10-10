@@ -3,15 +3,17 @@ import { useState } from "react";
 import { ThemeControl } from "../../app/theme";
 import { ErrorBox, Field } from "../../components/ui";
 import { api, setCsrf } from "../../lib/api";
+import SessionDuration from "./SessionDuration";
 
 export default function Auth({
   initialized,
   onDone,
 }: {
   initialized: boolean;
-  onDone: () => void;
+  onDone: (expires: number) => void;
 }) {
   const [password, setPassword] = useState("");
+  const [hours, setHours] = useState(720);
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -40,9 +42,10 @@ export default function Auth({
             try {
               const result = await api(initialized ? "/login" : "/setup", {
                 password,
+                sessionHours: hours,
               });
               setCsrf(result.csrf);
-              onDone();
+              onDone(result.expires);
             } catch (err) {
               setError((err as Error).message);
             } finally {
@@ -75,6 +78,7 @@ export default function Auth({
               />
             </Field>
           )}
+          <SessionDuration hours={hours} onChange={setHours} disabled={busy} />
           {error && <ErrorBox message={error} />}
           <button className="button primary full" disabled={busy}>
             {busy ? "正在验证…" : initialized ? "登录" : "创建管理员并进入"}

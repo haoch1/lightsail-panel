@@ -16,6 +16,14 @@ export const account = z
   })
   .strict()
   .transform((v) => ({ ...v, authType: "keys", region: "us-east-1" }));
+export const sessionHours = z.number().int().min(1).max(2160);
+export const trafficLimit = target
+  .extend({
+    enabled: z.boolean(),
+    thresholdPercent: z.number().min(0.1).max(100),
+    utcOffsetMinutes: z.number().int().min(-720).max(840).default(0),
+  })
+  .strict();
 export const action = target.extend({
   action: z.enum([
     "start",

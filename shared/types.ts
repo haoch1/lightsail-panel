@@ -138,3 +138,17 @@ export type ToastFn = (
   message: string,
   type?: "success" | "error" | "info",
 ) => void;
+
+export interface TrafficLimitRule {
+  enabled: boolean;
+  thresholdPercent: number;
+  utcOffsetMinutes: number;
+  status: string;
+  allowanceBytes?: number;
+  usedBytes?: number;
+  usedPercent?: number;
+  checkedAt?: string;
+  metricEnd?: string;
+  lastStoppedAt?: string;
+  detail?: string;
+}

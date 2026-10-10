@@ -1,5 +1,6 @@
 import {
   AUTO_REFRESH_MS,
+  nextRefreshAt,
   isResourcePath,
 } from "../../shared/refresh-policy.ts";
 type Entry = { value?: unknown; expires: number; pending?: Promise<unknown> };
@@ -120,7 +121,9 @@ export class ResourceCache {
           entry.expires =
             typeof serverDeadline === "number"
               ? serverDeadline
-              : this.now() + ttl;
+              : ttl === AUTO_REFRESH_MS && isResourcePath(key)
+                ? nextRefreshAt(this.now())
+                : this.now() + ttl;
           entry.pending = undefined;
           this.persist();
         }
@@ -129,7 +132,12 @@ export class ResourceCache {
       (error) => {
         if (this.entries.get(key) === entry) {
           this.entries.delete(key);
-          this.failures.set(key, this.now() + ttl);
+          this.failures.set(
+            key,
+            ttl === AUTO_REFRESH_MS && isResourcePath(key)
+              ? nextRefreshAt(this.now())
+              : this.now() + ttl,
+          );
           this.persist();
         }
         throw error;

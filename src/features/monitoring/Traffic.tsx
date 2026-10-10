@@ -1,4 +1,3 @@
-import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { useState } from "react";
 import type { Instance, TrafficData } from "../../../shared/types";
 import { useApi } from "../../app/context";
@@ -12,6 +11,7 @@ import {
   when,
 } from "../../components/ui";
 import { query } from "../../lib/api";
+
 const size = (n: number | null) => (n === null ? "—" : bytes(n));
 export default function Traffic({ instance }: { instance: Instance }) {
   const [range, setRange] = useState("month");
@@ -66,17 +66,11 @@ export default function Traffic({ instance }: { instance: Instance }) {
           <>
             <section className="traffic-overview" aria-label="流量汇总">
               <div>
-                <span>
-                  <ArrowDownLeft size={15} />
-                  入站流量
-                </span>
+                <span>入站流量</span>
                 <strong>{size(data.totals.inbound)}</strong>
               </div>
               <div>
-                <span>
-                  <ArrowUpRight size={15} />
-                  出站流量
-                </span>
+                <span>出站流量</span>
                 <strong>{size(data.totals.outbound)}</strong>
               </div>
               <div>
@@ -86,13 +80,7 @@ export default function Traffic({ instance }: { instance: Instance }) {
             </section>
             <div className="traffic-range">
               {displayTime(data.start)} → {displayTime(data.end)}（{timezone}）
-              <span role="status">
-                {loading
-                  ? "正在更新…"
-                  : previousData
-                    ? "当前显示上次查询结果"
-                    : "截至最近完成的整点"}
-              </span>
+              {previousData && <span role="status">当前显示上次查询结果</span>}
             </div>
             <section className="panel traffic-daily">
               <div className="section-heading">
@@ -140,14 +128,10 @@ export default function Traffic({ instance }: { instance: Instance }) {
             </section>
             <p className="traffic-note">
               统计全部网卡的入站、出站字节数。流量使用量不等同于 AWS
-              计费流量或套餐剩余额度；当前小时尚未纳入，近期数据可能延迟。
+              计费流量或套餐剩余额度；近期指标可能延迟。
             </p>
             <div className="table-footer">
               <span>上次查询 {when(data.at)}</span>
-              <span>
-                入站 {data.samples.inbound} / 出站 {data.samples.outbound}{" "}
-                个小时数据点
-              </span>
             </div>
           </>
         )

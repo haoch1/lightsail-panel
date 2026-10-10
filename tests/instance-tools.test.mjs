@@ -30,14 +30,14 @@ function fixture(t) {
     g: new AwsGateway(store),
   };
 }
-test("traffic windows start at calendar midnight and finish at the completed hour", () => {
+test("traffic windows start at calendar midnight and finish at the completed five-minute interval", () => {
   const now = new Date("2026-10-08T05:43:21Z");
   const month = trafficRange("month", now),
     thirty = trafficRange("30d", now);
   assert.equal(month.start.toISOString(), "2026-10-01T00:00:00.000Z");
-  assert.equal(month.end.toISOString(), "2026-10-08T05:00:00.000Z");
+  assert.equal(month.end.toISOString(), "2026-10-08T05:40:00.000Z");
   assert.equal(thirty.start.toISOString(), "2026-09-09T00:00:00.000Z");
-  assert.equal((thirty.end - thirty.start) / 3600000, 29 * 24 + 5);
+  assert.equal((thirty.end - thirty.start) / 3600000, 29 * 24 + 5 + 40 / 60);
   assert.equal(
     trafficRange("month", new Date("2027-01-01T00:42:00Z")).start.toISOString(),
     "2027-01-01T00:00:00.000Z",
@@ -92,22 +92,25 @@ test("instance traffic calls native NetworkIn/Out Sum Bytes and preserves partia
     return { metricData: [{ timestamp: p.startTime, sum: 4096 }] };
   };
   const data = await g.traffic(target, "30d", new Date("2026-10-08T05:43:00Z"));
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 4);
   for (const p of calls) {
     assert.equal(p.instanceName, "tokyo-blog");
-    assert.equal(p.period, 3600);
+    assert.ok([300, 3600].includes(p.period));
     assert.equal(p.unit, "Bytes");
     assert.deepEqual(p.statistics, ["Sum"]);
-    assert.equal((p.endTime - p.startTime) / 3600000, 29 * 24 + 5);
+    assert.equal(
+      (p.endTime - p.startTime) / 60000,
+      p.period === 3600 ? (29 * 24 + 5) * 60 : 40,
+    );
   }
   assert.deepEqual(data.totals, {
-    inbound: 4096,
+    inbound: 8192,
     outbound: null,
     combined: null,
   });
   assert.match(data.warnings[0], /出站查询失败/);
   await g.traffic(target, "month", new Date("2026-11-01T00:40:00Z"));
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 6);
 });
 test("traffic routes validate ranges and removed connection, monitoring and custom key routes return 404", async (t) => {
   const { store, account } = fixture(t),
@@ -165,5 +168,6 @@ test("fresh databases contain only current resource, session and audit tables", 
     "config",
     "launch_network",
     "sessions",
+    "traffic_limits",
   ]);
 });

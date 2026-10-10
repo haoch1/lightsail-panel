@@ -1,4 +1,5 @@
 import ScanNotices from "../../components/ScanNotices";
+import TrafficProgress from "../../components/TrafficProgress";
 import { regionLabel } from "../../../shared/regions";
 import {
   ArrowDownUp,
@@ -6,6 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   Cloud,
+  Gauge,
   Network,
   Play,
   Rocket,
@@ -53,8 +55,9 @@ import Details from "./Details";
 import InstanceAddresses from "./InstanceAddresses";
 const Ports = lazy(() => import("../firewall/Ports"));
 const Traffic = lazy(() => import("../monitoring/Traffic"));
+const TrafficLimit = lazy(() => import("../monitoring/TrafficLimit"));
 type Dialog = {
-  kind: "action" | "details" | "ports" | "traffic";
+  kind: "action" | "details" | "ports" | "traffic" | "traffic-limit";
   instance: Instance;
   action?: string;
 };
@@ -236,11 +239,7 @@ export default function Instances() {
         </div>
         <div className="table-caption">
           <span>点击实例右侧“操作”可管理网络与流量。</span>
-          <span>
-            {data
-              ? `共 ${data.items.length} 个实例 · ${data.scanned} 个账户/区域已扫描${loading ? " · 正在加载…" : ""}`
-              : ""}
-          </span>
+          <span>{data ? "共 " + data.items.length + " 个实例" : ""}</span>
         </div>
         <ScanNotices scan={data} />
         <LaunchNetworkStatus />
@@ -402,7 +401,6 @@ export default function Instances() {
         {data?.at && (
           <div className="table-footer">
             <span>上次刷新 {when(data.at)}</span>
-            <span>空闲每 5 分钟同步 · 操作后自动跟踪状态</span>
           </div>
         )}
       </>
@@ -497,6 +495,16 @@ export default function Instances() {
           <button
             role="menuitem"
             onClick={() => {
+              setDialog({ kind: "traffic-limit", instance: menu.instance });
+              setMenu(null);
+            }}
+          >
+            <Gauge />
+            自动关机
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
               setDialog({ kind: "ports", instance: menu.instance });
               setMenu(null);
             }}
@@ -559,6 +567,34 @@ export default function Instances() {
             <Traffic instance={dialog.instance} />
           </Suspense>
         </Modal>
+      )}
+      {dialog?.kind === "traffic-limit" && (
+        <Suspense
+          fallback={
+            <Modal
+              title="自动关机"
+              description={
+                dialog.instance.name +
+                " · " +
+                regionLabel(dialog.instance.region)
+              }
+              onClose={() => setDialog(null)}
+            >
+              <div className="traffic-limit-usage">
+                <TrafficProgress
+                  usage={usage.values[instanceKey(dialog.instance)]}
+                />
+              </div>
+              <Busy />
+            </Modal>
+          }
+        >
+          <TrafficLimit
+            instance={dialog.instance}
+            initialUsage={usage.values[instanceKey(dialog.instance)]}
+            onClose={() => setDialog(null)}
+          />
+        </Suspense>
       )}
       {dialog?.kind === "details" && (
         <Details instance={dialog.instance} onClose={() => setDialog(null)} />

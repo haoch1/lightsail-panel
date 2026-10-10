@@ -32,7 +32,7 @@ export function scheduleAutoRefresh(
         fired = true;
         refresh();
       },
-      Math.max(1000, deadline - environment.now()),
+      Math.max(0, deadline - environment.now()),
     );
   };
   const unsubscribe = environment.onVisibility(schedule);

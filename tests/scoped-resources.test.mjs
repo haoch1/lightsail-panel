@@ -82,7 +82,7 @@ test("every traffic range uses the same local dates; today's daily row matches t
   for (const [range, start] of Object.entries(expectations)) {
     const window = trafficRange(range, now, 480);
     assert.equal(window.start.toISOString(), start);
-    assert.equal(window.end.toISOString(), "2026-10-08T12:00:00.000Z");
+    assert.equal(window.end.toISOString(), "2026-10-08T12:45:00.000Z");
     const result = aggregateTraffic(series, window);
     const row = result.daily.find((row) => row.date === "2026-10-08");
     assert.equal(row.inbound, today.totals.inbound);

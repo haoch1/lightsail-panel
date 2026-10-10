@@ -1,7 +1,7 @@
 export function trafficRange(range, now = new Date(), utcOffsetMinutes = 0) {
   const offset = utcOffsetMinutes;
   const localNow = new Date(now.getTime() + offset * 60000);
-  const end = new Date(Math.floor(now.getTime() / 3600000) * 3600000);
+  const end = new Date(Math.floor(now.getTime() / 300000) * 300000);
   // Calendar days include today, so every range shares the same daily buckets.
   const day =
     range === "month"
@@ -50,6 +50,6 @@ export function aggregateTraffic(series, { start, end, utcOffsetMinutes = 0 }) {
     totals,
     samples,
     daily: [...daily.values()].sort((a, b) => a.date.localeCompare(b.date)),
-    period: 3600,
+    period: 300,
   };
 }

@@ -34,7 +34,7 @@ export default function Launch() {
   const [imageId, setImage] = useState(""),
     [instanceType, setType] = useState("");
   const [name, setName] = useState("my-lightsail"),
-    [count, setCount] = useState(1),
+    [count, setCount] = useState("1"),
     [userData, setUserData] = useState(defaultStartupScript);
   const [confirm, setConfirm] = useState(false),
     [busy, setBusy] = useState(false),
@@ -86,7 +86,7 @@ export default function Launch() {
     imageId,
     instanceType,
     name,
-    count,
+    count: Number(count),
     userData,
     ipAddressType: network,
     zone,
@@ -355,7 +355,7 @@ export default function Launch() {
                   min={1}
                   max={20}
                   value={count}
-                  onChange={(e) => setCount(Number(e.target.value))}
+                  onChange={(e) => setCount(e.target.value)}
                 />
               </Field>
             </div>

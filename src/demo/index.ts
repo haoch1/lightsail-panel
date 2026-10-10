@@ -6,6 +6,7 @@ import type {
   LaunchNetworkJob,
   PortInfo,
   StaticIp,
+  TrafficLimitRule,
 } from "../../shared/types";
 import { demoCatalog, demoRegions as regions } from "./catalog";
 const accounts: Account[] = [
@@ -119,6 +120,7 @@ const logs: AuditEntry[] = [
   },
 ];
 const rules = new Map<string, PortInfo[]>();
+const trafficLimits = new Map<string, TrafficLimitRule>();
 let nextIp = 90;
 function audit(action: string, target: string) {
   logs.unshift({
@@ -313,6 +315,25 @@ export async function demoApi(
         : undefined;
     if (networkJob) networkJobs.push(networkJob);
     return { ok: true, networkJob, notice: "演示实例已创建" };
+  }
+  if (p === "/traffic-limit") {
+    const key = [
+      body?.accountId || q.get("accountId"),
+      body?.region || q.get("region"),
+      body?.id || q.get("id"),
+    ].join(":");
+    if (body) {
+      const instance = instances.find((i) => instanceKey(i) === key);
+      const bundle = demoCatalog.types.find(
+        (b) => b.id === instance?.instanceType,
+      );
+      trafficLimits.set(key, {
+        ...body,
+        status: body.enabled ? "monitoring" : "disabled",
+        allowanceBytes: (bundle?.transfer || 1024) * 1024 ** 3,
+      });
+    }
+    return { rule: trafficLimits.get(key) || null };
   }
   if (p === "/traffic") {
     const now = new Date(),
