@@ -21,10 +21,15 @@
   width: 100%;
   min-height: 36px;
   font-size: 13px;
+  line-height: 20px;
 }
 .context-menu button svg {
-  width: 15px;
-  height: 15px;
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  /* Align the icon's visual centre with the CJK glyphs. */
+  transform: translateY(1px);
 }
 .menu-power-actions {
   display: flex;
@@ -40,7 +45,13 @@
   padding: 6px 4px;
   min-height: 32px;
   font-size: 12px;
+  line-height: 18px;
   border: 1px solid var(--border);
+}
+.context-menu .menu-power-actions svg {
+  width: 14px;
+  height: 14px;
+  flex-basis: 14px;
 }
 .context-menu button:hover:enabled {
   background: var(--surface-hover);

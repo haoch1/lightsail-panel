@@ -3,7 +3,7 @@
 [![Docker CI](https://github.com/haoch1/lightsail-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/haoch1/lightsail-panel/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Lightsail Panel 是面向 Amazon Lightsail 的自托管管理面板，提供中文界面，支持多账户、跨区域资源管理、网页 SSH、流量统计与进度展示、按套餐流量阈值自动关机，以及登录有效期设置。
+Lightsail Panel 是 Amazon Lightsail 的自托管中文管理面板，支持多账户与跨区域资源管理、网页 SSH、流量统计、阈值自动关机和登录有效期设置。
 
 应用采用 React、TypeScript 和 Node.js 24，使用 AWS SDK for JavaScript v3 调用 Lightsail 与 STS API。账户凭证以 AES-256-GCM 加密保存，应用数据持久化至 SQLite。
 
@@ -38,11 +38,11 @@ Lightsail Panel 是面向 Amazon Lightsail 的自托管管理面板，提供中�
 
 ## Docker 部署
 
-预构建镜像：[`ghcr.io/haoch1/lightsail-panel:latest`](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel)，支持 `linux/amd64` 和 `linux/arm64`。Docker 自动选择对应架构，服务器无需安装构建工具。
+预构建镜像：[`ghcr.io/haoch1/lightsail-panel:latest`](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel)，支持 `linux/amd64` 和 `linux/arm64`，由 Docker 自动选择目标架构。
 
 ### 1. 准备环境
 
-在 Linux 服务器上安装 [Docker Engine](https://docs.docker.com/engine/install/)、Docker Compose v2 和 curl，并确保能够访问 GitHub、GHCR 和 AWS API。当前用户没有 Docker 权限时，在 Docker 命令前添加 `sudo`；拉取公开镜像无需登录。
+依赖：[Docker Engine](https://docs.docker.com/engine/install/)、Docker Compose v2 和 curl。服务器须能访问 GitHub、GHCR 和 AWS API；Docker 命令须具有执行权限，必要时使用 `sudo`。公开镜像支持匿名拉取。
 
 ```bash
 docker --version
@@ -60,7 +60,7 @@ curl -fsSLo .env.example https://raw.githubusercontent.com/haoch1/lightsail-pane
 cp .env.example .env
 ```
 
-使用 `nano .env` 编辑实际配置。默认访问地址为 `127.0.0.1:8090`；宿主机端口由 `PANEL_PORT` 指定。AWS Access Key 在面板中添加，无需写入此文件。
+编辑 `.env`。默认监听地址为 `127.0.0.1:8090`，宿主机端口由 `PANEL_PORT` 指定。AWS Access Key 通过面板管理。
 
 ```dotenv
 PANEL_IMAGE=ghcr.io/haoch1/lightsail-panel:latest
@@ -82,7 +82,7 @@ curl -fsS http://127.0.0.1:8090/api/health
 健康检查返回示例：
 
 ```json
-{ "ok": true, "version": "1.7.2", "service": "lightsail" }
+{ "ok": true, "version": "1.7.3", "service": "lightsail" }
 ```
 
 远程连接可使用 SSH 端口转发：
@@ -91,13 +91,13 @@ curl -fsS http://127.0.0.1:8090/api/health
 ssh -N -L 8090:127.0.0.1:8090 user@server
 ```
 
-随后访问 `http://127.0.0.1:8090`。长期远程访问可配置下文的 HTTPS 反向代理。
+浏览器访问 `http://127.0.0.1:8090`。域名访问配置见 [HTTPS 反向代理](#https-反向代理)。
 
 直接通过服务器 IP 访问时，将 `PANEL_BIND` 改为 `0.0.0.0`，执行 `docker compose up -d`，并在防火墙中允许指定来源访问宿主机端口。公网访问应使用 HTTPS。
 
 ### 4. 初始化管理员
 
-首次访问时设置管理员密码，至少 12 个字符，并选择登录有效期，默认 30 天。进入面板后按下一节添加 AWS 账户。
+首次访问时设置至少 12 个字符的管理员密码，并选择登录有效期，默认 30 天。完成初始化后添加 AWS 账户。
 
 ## 获取 Access Key 与配置 IAM
 
@@ -110,13 +110,13 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 1. 使用具有 IAM 管理权限的身份登录 [AWS IAM 控制台](https://console.aws.amazon.com/iam/)。
 2. 打开 **Users（用户）→ Create user（创建用户）**。
 3. 填写用户名，例如 `lightsail-panel`。该用户仅供面板调用 API，无需开启 AWS Management Console 登录权限。
-4. 完成用户创建。若已有专用用户，打开该用户的详情页。
+4. 完成创建并打开用户详情页。
 
 #### 2. 创建并附加统一权限策略
 
 1. 打开 **Policies（策略）→ Create policy（创建策略）**。
 2. 在 **Policy editor（策略编辑器）** 中选择 **JSON**。
-3. 打开本仓库的 [docs/iam-policy.json](docs/iam-policy.json)，复制完整 JSON，替换编辑器中的内容。
+3. 将 [docs/iam-policy.json](docs/iam-policy.json) 的完整内容粘贴至编辑器。
 4. 检查策略内容并点击 **Next（下一步）**，填写策略名称，例如 `LightsailPanelPolicy`，然后创建策略。
 5. 返回 **Users → lightsail-panel → Permissions（权限）**。
 6. 选择 **Add permissions（添加权限）→ Attach policies directly（直接附加策略）**，搜索并勾选 `LightsailPanelPolicy`，完成添加。
@@ -129,7 +129,7 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 2. 找到 **Access keys（访问密钥）**，点击 **Create access key（创建访问密钥）**。
 3. 在用途页面选择 **Other（其他）**，继续下一步。可填写用途描述 `Lightsail Panel`。
 4. 创建后保存 **Access Key ID** 与 **Secret Access Key**，或下载 CSV。
-5. 妥善保存密钥。Secret Access Key 仅在创建时显示，遗失后需创建新密钥。
+5. Secret Access Key 仅在创建时显示，遗失后须重新创建密钥。
 
 每个 IAM 用户最多拥有两对 Access Key，管理方法见 [AWS 文档](https://docs.aws.amazon.com/IAM/latest/UserGuide/access-key-self-managed.html)。
 
@@ -156,7 +156,7 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 
 3. 点击 **验证并保存**。应用通过 `STS GetCallerIdentity` 验证身份，成功后加密保存凭证。
 
-添加账户无需选择默认区域。身份验证成功表示凭证有效，资源操作仍受 IAM 权限、区域状态和配额限制。
+账户验证仅确认凭证身份。资源操作受 IAM 权限、区域状态和配额限制，目标区域在资源页面选择。
 
 密钥和 CSV 不应提交至 Git 仓库。移除面板账户不会停用 AWS Access Key 或删除云资源；撤销访问需在 AWS **Security credentials → Access keys** 中停用或删除密钥。
 
@@ -164,63 +164,65 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 
 ### 查询与管理实例
 
-顶部 **区域范围** 和 **账户** 默认显示 **全部区域** 与 **全部账户**，筛选范围仅随手动选择改变。实例列表支持名称、IP 和状态筛选；右侧 **操作** 菜单提供资源管理入口，列表复选框用于批量操作。
+顶部 **区域范围** 和 **账户** 默认为 **全部区域** 与 **全部账户**。实例列表支持名称、IP 和状态筛选；**操作** 菜单提供单实例管理，列表复选框支持批量操作。
 
-价格为 AWS 套餐月价，停止实例后仍会继续计费。停止与重启会中断服务，删除实例不可恢复。
+价格按 AWS 套餐月价展示，停止后仍计费。停止与重启会中断服务，删除不可恢复。
 
-**本月流量** 以进度条展示已用量、当前套餐月额度和使用百分比。悬停可查看上行与下行，点击进度区域打开流量统计。缺少套餐额度或流量指标时显示未知，不按零计算使用比例。
+**本月流量** 展示已用量、套餐月额度和使用比例。悬停显示入站与出站明细，点击打开流量统计；缺失额度或指标时显示未知。
 
 刷新方式：
 
-- **自动同步：** 在每小时 00、05、10、15 分等 5 分钟时间点更新；页面隐藏时暂停。刷新网页或切换页面复用有效缓存。
+- **自动同步：** 每小时 00、05、10、15 分等 5 分钟时间点更新，页面隐藏时暂停；页面刷新与切换复用有效缓存。
 - **操作跟踪：** 资源变更后仅查询目标状态，首分钟约每 5 秒、之后约每 15 秒检查，完成后更新列表并停止跟踪。
 - **手动刷新：** 立即重新查询当前筛选范围。
 
 查询期间保留资源快照，响应返回后局部更新。连接异常提示支持关闭，恢复后自动清除。
 
-跟踪进度持久化保存，刷新页面或重启面板后继续，不触发全区域扫描。超过 10 分钟仍未完成时提示核对，可手动刷新重新检查。
+操作进度持久化保存，页面刷新或服务重启后恢复跟踪。超过 10 分钟仍未完成时提示核对资源，手动刷新可重新检查。
 
-### SSH 终端连接
+### SSH 终端
 
-在运行中的实例选择 **操作 → SSH 终端连接**，直接打开网页终端。登录用户由 AWS 返回，Debian 通常为 `admin`；具备 sudo 权限时可执行 `sudo -i` 切换至 root。支持命令输入、复制粘贴、终端尺寸同步、全屏切换、断开与重新连接。全屏切换保留当前连接，关闭窗口即结束连接。
+在运行中的实例选择 **操作 → SSH 终端**。登录用户由 AWS 返回，Debian 通常为 `admin`；具备 sudo 权限时可通过 `sudo -i` 切换至 root。终端支持复制粘贴、尺寸同步、全屏切换和重连；全屏切换保持连接，关闭窗口断开连接。
 
-连接需要 `lightsail:GetInstanceAccessDetails`，已列入 [IAM 策略](docs/iam-policy.json)。面板服务器须能访问实例的 TCP 22 端口；仅 IPv6 实例要求面板服务器具备 IPv6 连通性。操作系统须保留 Lightsail 临时证书认证配置。自定义 SSH 端口及文件传输暂不提供。
+终端聚焦时，`Ctrl+Shift+C` 复制选中文本，`Ctrl+C` 中断远程命令。无选区时复制操作保留剪贴板内容；复制粘贴须授予浏览器剪贴板权限。
 
-临时私钥与证书只在服务端使用，存入受限临时目录并在连接结束后删除，不返回浏览器或写入数据库、日志。主机密钥按 AWS 返回的记录严格校验。退出面板、会话到期、移除账户或停止服务会断开连接；不会持久化或恢复 SSH 会话。
+连接要求：授予 `lightsail:GetInstanceAccessDetails` 权限，面板服务器可访问实例 TCP 22 端口，实例保留 Lightsail 临时证书认证配置。仅 IPv6 实例要求服务器具备 IPv6 连通性。支持范围为交互式终端，不提供自定义端口或文件传输。
 
-Docker 镜像内置 OpenSSH 客户端；通过源码运行时须自行安装。使用反向代理时配置下文的 WebSocket 转发。终端以登录用户权限执行命令，操作日志记录连接结果，不记录终端输入、输出。
+临时凭证仅在服务端使用，保存在受限临时目录，连接结束后删除；主机密钥依据 AWS 记录严格校验。退出登录、会话到期、移除账户或停止服务均会断开连接，SSH 会话不持久化。
+
+Docker 镜像内置 OpenSSH 客户端，源码部署须安装该客户端。反向代理须支持 WebSocket 转发。操作日志仅记录连接目标与结果，终端输入输出不写入日志。
 
 ### 登录有效期
 
-1. 初始化管理员或登录时，在 **登录有效期** 中选择 12 小时、1 天、7 天、30 天或 90 天，默认 30 天。
-2. 登录后点击顶部 **登录有效期** 时钟按钮，查看到期时间或重新设置期限。保存后从当前时间起计算，仅影响当前浏览器会话。
-3. 点击 **退出登录** 立即注销当前会话。普通页面访问不会自动延长有效期，到期后需重新登录。
+有效期支持 12 小时、1 天、7 天、30 天和 90 天，默认 30 天，在初始化或登录时选择。登录后通过顶部 **登录有效期** 按钮查看或修改期限，保存时从当前时间重新计算，仅作用于当前浏览器会话。
+
+普通请求不延长有效期，到期后须重新登录；**退出登录** 立即注销当前会话。
 
 ### 自动关机
 
-1. 在实例列表中选择 **操作 → 自动关机**。窗口打开即显示本月流量进度、套餐额度和使用比例，无需先启用规则。
+1. 选择 **操作 → 自动关机**，查看本月流量进度、套餐额度和使用比例。
 2. 勾选 **启用自动关机**，设置 **套餐流量阈值（%）**，范围为 0.1–100%，初始值为 90%。
-3. 点击 **保存** 后立即检查。每台实例独立配置，默认关闭；取消勾选并保存可关闭该实例的规则。
+3. **保存** 后立即检查。规则按实例独立配置，默认关闭；取消勾选并保存后停用。
 
-计算公式为 `本月（NetworkIn + NetworkOut）÷ 当前套餐月流量额度 × 100%`。例如套餐额度为 3 TiB、阈值为 90% 时，本月合计流量达到 2.7 TiB 后提交停止请求。套餐额度以目标区域 AWS 返回的当前套餐为准，月份按保存规则时的本地时区起算。
+使用比例为 `本月（NetworkIn + NetworkOut）÷ 套餐月流量额度 × 100%`。3 TiB 套餐设置 90% 阈值时，合计达到 2.7 TiB 后提交停止请求。额度取自目标区域的 AWS 套餐目录，月份按规则保存时的本地时区计算。
 
-- **检查频率：** 后台在每小时 00、05、10、15 分等 5 分钟时间点检查已启用的实例。资源操作完成后立即检查对应实例，浏览器关闭或登录到期不影响执行。
-- **异常处理：** 实例身份变化或权限失败会暂停规则；查询失败或数据不完整时不触发关机。无法确认停止结果时不重复提交，须核对实例后重新保存规则。执行结果可在 **操作日志** 查看。
-- **行为限制：** AWS 指标可能延迟，无法保证恰好在阈值处停止；统计值不等于计费流量。停止后套餐继续计费，下月不会自动启动。手动启动或重启后，启用的规则仍会检查阈值。
+- **调度：** 每小时 00、05、10 分等时间点检查；资源操作完成后立即检查目标实例。执行独立于浏览器会话。
+- **异常：** 实例身份变化或权限失败时暂停规则；查询失败或指标不完整时跳过关机。停止结果不确定时暂停重试，须核对实例后重新保存规则。结果写入 **操作日志**。
+- **限制：** AWS 指标延迟可能造成阈值超出，统计值不等同于计费流量。停止后套餐仍计费，下月不自动启动；手动启动或重启后规则继续生效。
 
-规则和检查进度保存在 SQLite 中，面板服务启动后继续执行，因此容器必须保持运行。现有 [IAM 策略](docs/iam-policy.json) 已包含所需权限。
+规则与检查进度持久化至 SQLite，服务启动后恢复执行，容器须持续运行。授权要求见 [权限文档](docs/PERMISSIONS.md)。
 
 ### 创建实例
 
 1. 点击 **创建实例** 或实例列表中的 **启动新实例**。
 2. 选择目标 AWS 账户与区域，区域初始选择为列表第一项。
 3. 在 **选择网络类型** 中选择 **双堆栈** 或 **仅限 IPv6**。双堆栈提供公网 IPv4 与 IPv6；仅 IPv6 不提供公网 IPv4，访问端需要支持 IPv6。
-4. 选择系统镜像与通用型套餐。Debian 排在首位，套餐参数以当前区域 AWS 目录为准。
+4. 选择系统镜像与通用型套餐，参数以目标区域的 AWS 目录为准。
 5. 填写实例名称、数量及可用区。批量创建会在名称后追加 `-1`、`-2` 等后缀；可用区以 AWS 返回的有效列表为准。
-6. 按需配置下文的防火墙与静态 IP。保持未勾选时使用 AWS 默认防火墙，且不自动分配静态 IP。
-7. 使用默认 SSH 密钥，需要 SSH 连接时下载该账户、区域的 `.pem` 私钥。私钥不保存至应用数据库或日志。
-8. 检查启动脚本。默认脚本中的密码占位符必须替换；不需要启动脚本时，清空输入框。
-9. 点击创建，在确认窗口核对账户、区域、镜像、套餐、数量及网络配置，再提交。
+6. 按需启用防火墙与静态 IP 配置。默认使用 AWS 防火墙规则，不分配静态 IP。
+7. 默认 SSH 密钥按账户与区域管理，可下载 `.pem` 私钥供外部客户端使用。
+8. 配置启动脚本并替换密码占位符；无需脚本时清空该字段。
+9. 点击创建，核对确认窗口中的配置并提交。
 
 ### 创建时配置防火墙与静态 IP
 
@@ -228,7 +230,7 @@ Docker 镜像内置 OpenSSH 客户端；通过源码运行时须自行安装。�
 
 **静态 IP：** 勾选 **自动分配并绑定静态 IPv4**，实例就绪后为每台实例绑定一个同区域地址。仅 IPv6 实例禁用此选项；分配受区域配额限制。
 
-网络配置失败时保留实例，并提示失败项目；修正权限或配额后，在对应页面完成配置，无需重新创建。无法确认绑定结果的静态 IP 会保留并标明名称。
+网络配置失败时保留实例并显示失败项，修正权限或配额后可在对应页面完成配置。绑定结果不确定的静态 IP 保留并标明名称。
 
 ### 静态 IP、防火墙与流量
 
@@ -239,19 +241,19 @@ Docker 镜像内置 OpenSSH 客户端；通过源码运行时须自行安装。�
 
 ## HTTPS 反向代理
 
-以下示例适用于 Nginx 与面板运行在同一台服务器的情况。首先配置域名解析和 TLS 证书，然后修改 `.env`：
+以下配置适用于 Nginx 与面板部署在同一服务器。配置域名解析和 TLS 证书后，设置 `.env`：
 
 ```dotenv
 PUBLIC_ORIGIN=https://panel.example.com
 ```
 
-应用配置后重新创建容器：
+重新创建容器以应用配置：
 
 ```bash
 docker compose up -d
 ```
 
-Nginx 配置示例，需要替换域名和证书路径：
+Nginx 配置示例，按实际部署替换域名与证书路径：
 
 ```nginx
 map $http_upgrade $connection_upgrade {
@@ -296,7 +298,7 @@ sudo systemctl reload nginx
 
 | 变量             | 默认值                                  | 说明                                                                    |
 | ---------------- | --------------------------------------- | ----------------------------------------------------------------------- |
-| `PANEL_IMAGE`    | `ghcr.io/haoch1/lightsail-panel:latest` | 要部署的镜像；支持版本标签、提交标签或 `@sha256:...` 摘要               |
+| `PANEL_IMAGE`    | `ghcr.io/haoch1/lightsail-panel:latest` | 镜像引用，支持版本标签、提交标签或 `@sha256:...` 摘要                   |
 | `PANEL_BIND`     | `127.0.0.1`                             | Compose 在宿主机绑定的地址                                              |
 | `PANEL_PORT`     | `8090`                                  | Compose 在宿主机发布的端口                                              |
 | `PUBLIC_ORIGIN`  | 空                                      | 浏览器访问来源；HTTPS 反向代理时设置                                    |
@@ -389,7 +391,7 @@ curl -fsS http://127.0.0.1:8090/api/health
 docker compose logs --tail=100 lightsail-panel
 ```
 
-端口改为其他值时同步修改健康检查地址。提交问题反馈时，提供镜像标签、服务器架构、操作步骤和去除敏感信息的错误文本。
+自定义端口须同步修改健康检查地址。问题报告应包含镜像标签、服务器架构、复现步骤和脱敏错误信息。
 
 ## 开发与验证
 
@@ -410,7 +412,7 @@ pnpm test
 pnpm build
 ```
 
-需要自行构建镜像时，在源码目录执行：
+从源码构建镜像：
 
 ```bash
 docker build -t lightsail-panel:local .
@@ -419,7 +421,7 @@ PANEL_IMAGE=lightsail-panel:local docker compose up -d --pull never
 
 GitHub Actions 在 amd64 和 arm64 原生 runner 上完成构建、测试、容器启动及 Compose 部署验证后发布镜像；Pull Request 仅验证。容器以非 root 用户运行，启用 `no-new-privileges` 并移除 Linux capabilities。
 
-演示入口为 `/lightsail?demo=1`，使用浏览器内存数据，不调用 AWS API。可预览流量进度、自动关机设置与 SSH 终端；演示终端仅模拟输入，演示规则不执行真实关机。
+演示入口：`/lightsail?demo=1`。数据与操作在浏览器内模拟，包括流量进度、自动关机设置和 SSH 终端，不调用 AWS API。
 
 ## 许可证
 

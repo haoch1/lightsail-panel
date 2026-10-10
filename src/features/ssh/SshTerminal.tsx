@@ -264,12 +264,12 @@ export default function SshTerminal({
   }, [accountId, region, service, id, demo, attempt, instance.sshUser]);
 
   async function copy() {
+    const value = terminalRef.current?.getSelection();
+    if (!value) return;
     try {
-      await navigator.clipboard.writeText(
-        terminalRef.current?.getSelection() || "",
-      );
+      await navigator.clipboard.writeText(value);
     } catch {
-      toast("无法访问剪贴板，可使用 Ctrl+Shift+C 复制所选文本", "error");
+      toast("无法访问剪贴板，请检查浏览器的剪贴板权限", "error");
     }
   }
   async function paste() {
@@ -285,7 +285,7 @@ export default function SshTerminal({
   return (
     <Modal
       wide
-      title="SSH 终端连接"
+      title="SSH 终端"
       description={instance.name + " · " + regionLabel(instance.region)}
       className={"ssh-modal" + (fullscreen ? " fullscreen" : "")}
       backdropClassName={fullscreen ? "ssh-fullscreen-backdrop" : ""}
@@ -357,6 +357,19 @@ export default function SshTerminal({
           ref={element}
           className="ssh-terminal"
           aria-label="SSH 终端"
+          onKeyDownCapture={(e) => {
+            if (
+              e.ctrlKey &&
+              e.shiftKey &&
+              !e.altKey &&
+              !e.metaKey &&
+              e.key.toLowerCase() === "c"
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!e.repeat) void copy();
+            }
+          }}
           onKeyDown={(e) => e.stopPropagation()}
         />
       </div>

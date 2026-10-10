@@ -1,31 +1,48 @@
-# Lightsail 权限
+# IAM 权限
 
-资源管理调用 Lightsail，STS 用于身份验证。[iam-policy.json](iam-policy.json) 提供当前功能所需的统一 IAM 策略，部署时将该策略附加到面板使用的 IAM 用户。
+[iam-policy.json](iam-policy.json) 定义面板所需的统一 IAM 策略，附加至面板使用的 IAM 用户。资源管理调用 Lightsail API，身份验证调用 STS。
 
-- 只读：区域、实例、镜像、套餐、静态 IP、端口规则、操作结果与网络流量指标。
-- 操作：创建、启停、重启和删除实例；静态 IP 分配与绑定；IPv6 启用/关闭；开放/关闭公网端口；默认 SSH 私钥下载。
-- IPv6：`lightsail:SetIpAddressType` 将实例设为 `dualstack` 或 `ipv4`。仅 IPv6 实例关闭 IPv6 需要接受套餐变更，UI 勾选后才发送 `acceptBundleUpdate: true`；其他开关操作不接受套餐变更。关闭将释放原 IPv6 地址。
-- 默认私钥下载需要 `lightsail:DownloadDefaultKeyPair`，已包含在统一策略中。该 API 在区域默认密钥不存在时会创建一个。私钥只返回给登录且通过 CSRF 校验的请求，不保存到数据库或日志。
-- 创建实例包含 AWS 权限表列出的 `lightsail:TagResource` 依赖权限。面板当前不提供单独的标签编辑功能。
-- SSH 终端连接需要 `lightsail:GetInstanceAccessDetails` 获取临时 SSH 私钥、证书、登录用户名与主机密钥；`lightsail:GetInstance` 用于确认运行状态。两者已包含在统一策略中。凭证只用于服务端 OpenSSH 连接，不返回浏览器；受限临时文件在连接结束后清理。
-- 创建时可选的防火墙与静态 IP 配置在实例就绪后执行：`lightsail:PutInstancePublicPorts` 替换全部公网端口规则，`lightsail:AllocateStaticIp` 分配地址，`lightsail:AttachStaticIp` 绑定地址。仅 IPv6 实例不支持静态 IPv4；批量创建为每台实例分配独立地址。
-- 网络配置进度持久化到 SQLite，面板重启后继续处理；前端进度查询只读取本地记录。配置失败保留已创建的实例，不自动重建。能够确认尚未绑定且未提交绑定请求的本次新分配地址会尝试释放；绑定结果不确定时保留地址并提示人工核对。
-- 流量使用 `lightsail:GetInstanceMetricData`，无需额外授予 CloudWatch 权限。流量汇总使用 NetworkIn/NetworkOut、Sum、Bytes，历史按小时汇总，首尾不足一小时的部分按 5 分钟查询。流量包含所有网卡，不能直接换算为超额计费流量。
-- 自动关机查询 `lightsail:GetInstance` 确认实例身份与状态，使用 `lightsail:GetBundles` 获取目标区域套餐月流量额度，达到阈值后调用 `lightsail:StopInstance`。这些权限均已包含在统一策略中。
-- 登录有效期由面板本地会话管理；流量进度复用现有套餐与指标查询，两者均无需新增 IAM 权限。
-- 示例使用 `Resource: "*"`，便于初次验证；正式使用可按 Lightsail 支持的资源类型与标签条件收紧。
-- 账户仅使用 Access Key ID / Secret Access Key，STS 用于身份查询。
-- 此策略涵盖当前账户各区域的实例、静态 IP、防火墙、流量统计、SSH 终端连接与默认密钥下载；不授予账单、快照、备份管理和其他 AWS 服务权限。
-- 删除实例和静态 IP 都需要确认，删除资源还要求输入名称。脚本验证只读，不执行这些操作。
+## 权限范围
 
-官方接口依据：[静态 IP 列表](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_GetStaticIps.html)、[开放端口](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_OpenInstancePublicPorts.html)、[关闭端口](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_CloseInstancePublicPorts.html)。
+以下动作除 STS 外均使用 `lightsail:` 前缀。
 
-创建后网络配置依据：[CreateInstances](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_CreateInstances.html)、[PutInstancePublicPorts](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_PutInstancePublicPorts.html)、[AllocateStaticIp](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_AllocateStaticIp.html)、[AttachStaticIp](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_AttachStaticIp.html)。
+| 功能              | 权限动作                                                                                                 |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| 身份验证          | `sts:GetCallerIdentity`                                                                                  |
+| 区域与创建目录    | `GetRegions`、`GetBlueprints`、`GetBundles`                                                              |
+| 实例与操作查询    | `GetInstances`、`GetInstance`、`GetOperation`                                                            |
+| 实例管理          | `CreateInstances`、`TagResource`、`StartInstance`、`StopInstance`、`RebootInstance`、`DeleteInstance`    |
+| IPv6 配置         | `SetIpAddressType`                                                                                       |
+| 静态 IP           | `GetStaticIps`、`GetStaticIp`、`AllocateStaticIp`、`AttachStaticIp`、`DetachStaticIp`、`ReleaseStaticIp` |
+| 公网防火墙        | `GetInstancePortStates`、`OpenInstancePublicPorts`、`PutInstancePublicPorts`、`CloseInstancePublicPorts` |
+| 流量统计          | `GetInstanceMetricData`                                                                                  |
+| SSH 终端          | `GetInstance`、`GetInstanceAccessDetails`                                                                |
+| 默认 SSH 私钥下载 | `DownloadDefaultKeyPair`                                                                                 |
+| 自动关机          | `GetInstance`、`GetBundles`、`GetInstanceMetricData`、`StopInstance`                                     |
 
-权限动作与创建依赖依据：[Lightsail 服务授权参考](https://docs.aws.amazon.com/service-authorization/latest/reference/list_lightsail.html)。`sts:GetCallerIdentity` 无需额外授权，策略显式列出此动作便于对应身份验证调用，参见 [STS 文档](https://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html)。
+策略覆盖凭证所属账户各区域的实例、静态 IP、防火墙、流量和 SSH 功能，不授予账单、快照、备份管理或其他 AWS 服务权限。流量查询无需 CloudWatch 授权；登录有效期由本地会话管理，流量进度复用套餐和指标查询。
 
-新增接口依据：[IPv6 地址类型](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_SetIpAddressType.html)。
+统一策略使用 `Resource: "*"`，可依据 Lightsail 支持的资源类型与标签条件限制授权范围。`sts:GetCallerIdentity` 无需额外授权，策略显式列出该动作以对应身份验证调用。
 
-SSH 官方依据：[GetInstanceAccessDetails](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_GetInstanceAccessDetails.html)、[临时 SSH 凭证](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_InstanceAccessDetails.html)、[DownloadDefaultKeyPair](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_DownloadDefaultKeyPair.html)。
+## 执行规则
 
-流量依据：[指标及保留期](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-resource-health-metrics.html)、[流量额度与计费](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-faq-data-transfer-allowance.html)。
+- **实例创建：** `TagResource` 为创建操作的依赖权限。面板不提供独立标签编辑功能。
+- **IPv6：** `SetIpAddressType` 设置 `dualstack` 或 `ipv4`。仅 IPv6 实例关闭 IPv6 涉及套餐变更，须确认后发送 `acceptBundleUpdate: true`；关闭会释放原地址。
+- **创建后网络配置：** 实例就绪后，`PutInstancePublicPorts` 替换公网规则，`AllocateStaticIp` 和 `AttachStaticIp` 分配并绑定地址。批量创建按实例分配独立地址，仅 IPv6 实例不支持静态 IPv4。
+- **网络配置失败：** 任务进度保存至 SQLite，服务重启后恢复执行。失败时保留实例；本次分配且确认未绑定、未提交绑定请求的地址尝试释放，绑定结果不确定时保留并提示核对。
+- **流量：** 查询 `NetworkIn`、`NetworkOut` 的 `Sum` 值，单位为 `Bytes`。历史按小时汇总，首尾不足一小时的区间按 5 分钟查询。指标涵盖全部网卡，不等同于超额计费流量。
+- **自动关机：** 确认实例身份与运行状态，按目标区域套餐的月流量额度判断阈值，达到后提交停止请求。
+- **SSH 终端：** 临时私钥、证书、登录用户名和主机密钥来自 `GetInstanceAccessDetails`。凭证仅供服务端 OpenSSH 使用，连接结束后清理临时文件。
+- **默认私钥下载：** `DownloadDefaultKeyPair` 在区域默认密钥不存在时创建密钥。下载须通过会话、来源和 CSRF 校验；私钥不写入数据库或日志。
+- **删除与释放：** 删除实例和释放静态 IP 均须确认并核对资源名称。
+
+## 官方参考
+
+- [Lightsail 服务授权参考](https://docs.aws.amazon.com/service-authorization/latest/reference/list_lightsail.html)
+- [STS GetCallerIdentity](https://docs.aws.amazon.com/STS/latest/APIReference/API_GetCallerIdentity.html)
+- [CreateInstances](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_CreateInstances.html)、[PutInstancePublicPorts](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_PutInstancePublicPorts.html)
+- [静态 IP 查询](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_GetStaticIps.html)、[分配](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_AllocateStaticIp.html)、[绑定](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_AttachStaticIp.html)
+- [公网端口开放](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_OpenInstancePublicPorts.html)、[关闭](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_CloseInstancePublicPorts.html)
+- [SetIpAddressType](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_SetIpAddressType.html)
+- [GetInstanceAccessDetails](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_GetInstanceAccessDetails.html)、[临时 SSH 凭证](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_InstanceAccessDetails.html)、[DownloadDefaultKeyPair](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_DownloadDefaultKeyPair.html)
+- [指标及保留期](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-resource-health-metrics.html)、[流量额度与计费](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-faq-data-transfer-allowance.html)

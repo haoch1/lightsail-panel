@@ -75,6 +75,11 @@
 }
 .ssh-terminal .xterm-viewport {
   background-color: #202020;
+  /* xterm's scrollable element handles history; this layer is only a backdrop. */
+  overflow: hidden;
+}
+.ssh-terminal .xterm-scrollable-element > .scrollbar > .slider {
+  border-radius: 4px;
 }
 .ssh-terminal textarea.xterm-helper-textarea {
   min-height: 0;

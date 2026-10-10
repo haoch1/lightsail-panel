@@ -448,7 +448,7 @@ export default function Instances() {
               onClick={() => command(menu.instance, "start")}
             >
               <Play />
-              启动
+              <span>启动</span>
             </button>
             <button
               role="menuitem"
@@ -456,7 +456,7 @@ export default function Instances() {
               onClick={() => command(menu.instance, "stop")}
             >
               <Square />
-              停止
+              <span>停止</span>
             </button>
             <button
               role="menuitem"
@@ -464,7 +464,7 @@ export default function Instances() {
               onClick={() => command(menu.instance, "reboot")}
             >
               <RotateCw />
-              重启
+              <span>重启</span>
             </button>
           </div>
           <hr />
@@ -477,7 +477,7 @@ export default function Instances() {
             }}
           >
             <TerminalSquare />
-            SSH 终端连接
+            <span>SSH 终端</span>
           </button>
           <button
             role="menuitem"
@@ -488,7 +488,7 @@ export default function Instances() {
             onClick={() => command(menu.instance, "rotate-ip")}
           >
             <ArrowLeftRight />
-            更换公网 IP
+            <span>更换公网 IP</span>
           </button>
           <button
             role="menuitem"
@@ -498,7 +498,7 @@ export default function Instances() {
             }}
           >
             <Network />
-            实例详情
+            <span>实例详情</span>
           </button>
           <button
             role="menuitem"
@@ -508,7 +508,7 @@ export default function Instances() {
             }}
           >
             <ArrowDownUp />
-            流量统计
+            <span>流量统计</span>
           </button>
           <button
             role="menuitem"
@@ -518,7 +518,7 @@ export default function Instances() {
             }}
           >
             <Gauge />
-            自动关机
+            <span>自动关机</span>
           </button>
           <button
             role="menuitem"
@@ -528,7 +528,7 @@ export default function Instances() {
             }}
           >
             <ShieldCheck />
-            防火墙设置
+            <span>防火墙设置</span>
           </button>
           <button
             role="menuitem"
@@ -544,11 +544,13 @@ export default function Instances() {
             }
           >
             <Network />
-            {menu.instance.ipv6?.length ||
-            menu.instance.ipAddressType === "ipv6" ||
-            menu.instance.ipAddressType === "dualstack"
-              ? "关闭 IPv6"
-              : "启用 IPv6"}
+            <span>
+              {menu.instance.ipv6?.length ||
+              menu.instance.ipAddressType === "ipv6" ||
+              menu.instance.ipAddressType === "dualstack"
+                ? "关闭 IPv6"
+                : "启用 IPv6"}
+            </span>
           </button>
           <hr />
           <button
@@ -557,7 +559,7 @@ export default function Instances() {
             onClick={() => command(menu.instance, "terminate")}
           >
             <Trash2 />
-            删除实例
+            <span>删除实例</span>
           </button>
         </div>
       )}

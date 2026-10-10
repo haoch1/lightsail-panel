@@ -35,9 +35,7 @@ export default function Audit() {
             {data?.items.map((x) => (
               <tr key={x.id}>
                 <td>{new Date(x.at).toLocaleString("zh-CN")}</td>
-                <td>
-                  {x.action === "ssh-connect" ? "SSH 终端连接" : x.action}
-                </td>
+                <td>{x.action === "ssh-connect" ? "SSH 终端" : x.action}</td>
                 <td className="mono">{x.target || "—"}</td>
                 <td>
                   <span
