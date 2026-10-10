@@ -108,7 +108,7 @@ export function createApp(
     next();
   }
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, version: "1.7.0", service: "lightsail" }),
+    res.json({ ok: true, version: "1.7.1", service: "lightsail" }),
   );
   app.get("/api/auth", (req, res) => {
     const s = store.session(token(req));

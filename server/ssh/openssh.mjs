@@ -13,9 +13,14 @@ export function accessFiles(details) {
   const host = [details.ipAddress, ...(details.ipv6Addresses || [])].find(isIP);
   if (!host || !/^[a-zA-Z_][a-zA-Z0-9_.-]{0,63}$/.test(details.username || ""))
     throw new Error("AWS 返回的 SSH 地址或用户名无效");
-  const expires = new Date(details.expiresAt).getTime();
-  if (!Number.isFinite(expires) || expires <= Date.now() + 15000)
-    throw new Error("AWS 临时 SSH 凭证已到期，请重新连接");
+  // AWS may omit expiresAt. OpenSSH still verifies the certificate's validity.
+  if (details.expiresAt != null) {
+    const expires = new Date(details.expiresAt).getTime();
+    if (!Number.isFinite(expires))
+      throw new Error("AWS 返回的 SSH 凭证到期时间无效，请重新连接");
+    if (expires <= Date.now() + 15000)
+      throw new Error("AWS 临时 SSH 凭证已到期，请重新连接");
+  }
   const privateKey = details.privateKey?.startsWith("-----BEGIN ")
     ? details.privateKey
     : Buffer.from(details.privateKey || "", "base64").toString("utf8");

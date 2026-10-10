@@ -57,7 +57,7 @@ class FakePty extends EventEmitter {
     }
   }
 }
-async function fixture(t, { delay = 0 } = {}) {
+async function fixture(t, { delay = 0, accessDetails } = {}) {
   mkdirSync(root, { recursive: true });
   const dir = mkdtempSync(join(root, "ssh-test-"));
   const store = new Store(dir);
@@ -68,7 +68,7 @@ async function fixture(t, { delay = 0 } = {}) {
   );
   const sessions = [store.createSession(), store.createSession()];
   const terminals = [];
-  const secrets = {
+  const secrets = accessDetails || {
     privateKey: "temporary-private-secret",
     certKey: "temporary-certificate-secret",
   };
@@ -78,6 +78,7 @@ async function fixture(t, { delay = 0 } = {}) {
     {
       sshOpener: async (details, size) => {
         assert.equal(details, secrets);
+        if (accessDetails) accessFiles(details);
         await new Promise((r) => setTimeout(r, delay));
         const terminal = new FakePty();
         terminals.push(terminal);
@@ -287,6 +288,37 @@ function credentials() {
     hostKeys: [{ publicKey: bytes.toString("base64") }],
   };
 }
+
+test("SSH accepts credentials without the optional expiresAt field while rejecting expired or invalid timestamps", () => {
+  const details = credentials();
+  const { expiresAt: _expires, ...withoutExpiry } = details;
+  assert.equal(accessFiles(withoutExpiry).username, "admin");
+  assert.equal(accessFiles({ ...details, expiresAt: null }).username, "admin");
+  assert.equal(accessFiles(details).username, "admin");
+  assert.throws(
+    () => accessFiles({ ...details, expiresAt: new Date(0) }),
+    /凭证已到期/,
+  );
+  assert.throws(
+    () => accessFiles({ ...details, expiresAt: new Date(NaN) }),
+    /到期时间无效/,
+  );
+});
+
+test("SSH websocket reaches the terminal when AWS omits expiresAt", async (t) => {
+  const details = credentials();
+  delete details.expiresAt;
+  const f = await fixture(t, { accessDetails: details });
+  const { ws, received } = await f.connect(await f.ticket());
+  await waitFor(() => received.some((m) => m.type === "ready"));
+  assert.equal(
+    received.some((m) => m.type === "error"),
+    false,
+  );
+  assert.equal(f.terminals.length, 1);
+  ws.close();
+  await waitFor(() => f.terminals[0].killed);
+});
 
 test("OpenSSH uses pinned host keys and certificate auth, ignores ambient config, and removes temporary keys", async (t) => {
   mkdirSync(root, { recursive: true });
