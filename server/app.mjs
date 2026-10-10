@@ -3,6 +3,7 @@ import helmet from "helmet";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";
+import packageInfo from "../package.json" with { type: "json" };
 import { scrubError } from "./aws.mjs";
 import { registerAccounts } from "./http/accounts.mjs";
 import { registerAudit } from "./http/audit.mjs";
@@ -109,7 +110,7 @@ export function createApp(
     next();
   }
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, version: "1.7.6", service: "lightsail" }),
+    res.json({ ok: true, version: packageInfo.version, service: "lightsail" }),
   );
   app.get("/api/auth", (req, res) => {
     const s = store.session(token(req));
