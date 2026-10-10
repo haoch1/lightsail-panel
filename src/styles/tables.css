@@ -157,7 +157,8 @@
   background: var(--accent-soft);
 }
 .traffic-daily .table-wrap {
-  max-height: 350px;
+  height: 320px;
+  scrollbar-gutter: stable;
 }
 .amount-column.mono {
   font-family: inherit;

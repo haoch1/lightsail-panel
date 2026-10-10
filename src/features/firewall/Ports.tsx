@@ -45,7 +45,7 @@ export default function Ports({ instance }: { instance: Instance }) {
     }
   }
   return (
-    <>
+    <div className="ports-content" aria-busy={data.loading}>
       <div className="toolbar">
         <div className="toolbar-actions">
           <RefreshButton loading={data.loading} onClick={data.refresh} />
@@ -66,7 +66,7 @@ export default function Ports({ instance }: { instance: Instance }) {
       </div>
       {data.error && <ErrorBox message={data.error} retry={data.refresh} />}
       <LaunchNetworkStatus resource="ports" instance={instance} />
-      <div className="table-wrap">
+      <div className="table-wrap firewall-table">
         <table>
           <thead>
             <tr>
@@ -144,6 +144,6 @@ export default function Ports({ instance }: { instance: Instance }) {
           </div>
         </Modal>
       )}
-    </>
+    </div>
   );
 }

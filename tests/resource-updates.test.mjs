@@ -40,3 +40,36 @@ test("mutations invalidate only affected resources and scopes, preserving metric
   );
   assert.equal(mutationUpdate("/accounts", { name: "test" }), undefined);
 });
+
+test("invalidating a snapshot detaches old requests without clearing the displayed value", async () => {
+  const cache = new ResourceCache();
+  const path = "/instances?accountId=one&region=us-east-1";
+  await cache.load(path, async () => ({ state: "running" }));
+  let resolve;
+  const old = cache.load(
+    path,
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+    true,
+  );
+  cache.invalidate((key) => key === path);
+  assert.equal(cache.peek(path), undefined);
+  assert.deepEqual(cache.peek(path, true), { state: "running" });
+  await cache.load(path, async () => ({ state: "stopped" }));
+  resolve({ state: "obsolete" });
+  await old;
+  assert.deepEqual(cache.peek(path), { state: "stopped" });
+  await assert.rejects(
+    cache.load(
+      path,
+      async () => {
+        throw Error("offline");
+      },
+      true,
+    ),
+  );
+  assert.deepEqual(cache.peek(path, true), { state: "stopped" });
+  assert.equal(cache.peek(path), undefined);
+});

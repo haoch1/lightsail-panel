@@ -1,21 +1,32 @@
 import type { ResourceScan } from "../../shared/types";
-import { regionLabel } from "../../shared/regions";
+import { useEffect, useState } from "react";
 import { ErrorBox } from "./ui";
-import { isRegionalAccessError } from "../lib/region-access";
+import { scanNotices } from "../lib/scan-notices";
 
 export default function ScanNotices({
   scan,
 }: {
   scan?: ResourceScan<unknown>;
 }) {
+  const notices = scanNotices(scan?.errors);
+  const keys = JSON.stringify(notices.map((notice) => notice.key));
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  useEffect(() => {
+    const active = new Set<string>(JSON.parse(keys));
+    setDismissed((current) => {
+      const next = current.filter((key) => active.has(key));
+      return next.length === current.length ? current : next;
+    });
+  }, [keys]);
   return (
     <>
-      {scan?.errors
-        .filter((error) => !isRegionalAccessError(error.region, error.message))
-        .map((error, index) => (
+      {notices
+        .filter((notice) => !dismissed.includes(notice.key))
+        .map((notice) => (
           <ErrorBox
-            key={index}
-            message={`${error.account} · ${regionLabel(error.region)}：${error.message}`}
+            key={notice.key}
+            message={notice.message}
+            dismiss={() => setDismissed((current) => [...current, notice.key])}
           />
         ))}
     </>

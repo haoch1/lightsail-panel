@@ -2,12 +2,12 @@ import { useInstances } from "../../hooks/useInstances";
 import ScanNotices from "../../components/ScanNotices";
 import { regionLabel } from "../../../shared/regions";
 import { Shield } from "lucide-react";
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import type { Scan } from "../../../shared/types";
 import { usePanel } from "../../app/context";
 import { Busy, Empty, Field } from "../../components/ui";
 import Select from "../../components/ui/Select";
-const Ports = lazy(() => import("./Ports"));
+import Ports from "./Ports";
 export default function Firewall() {
   const p = usePanel();
   const data = useInstances(p);
@@ -48,9 +48,7 @@ export default function Firewall() {
       {data.loading && !data.data ? (
         <Busy />
       ) : instance ? (
-        <Suspense fallback={<Busy />}>
-          <Ports key={key(instance)} instance={instance} />
-        </Suspense>
+        <Ports key={key(instance)} instance={instance} />
       ) : (
         <Empty
           title="当前范围没有实例"

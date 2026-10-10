@@ -70,6 +70,7 @@ export interface ResourceScan<T> {
     accountId?: string;
     region: string;
     message: string;
+    kind?: "connection" | "http";
   }[];
   unavailable?: { account: string; region: string; message: string }[];
   at: string;

@@ -59,6 +59,7 @@
   white-space: nowrap;
 }
 .modal-backdrop {
+  --modal-inset: 48px;
   position: fixed;
   inset: 0;
   display: flex;
@@ -72,8 +73,9 @@
 }
 .modal {
   max-width: 100%;
-  max-height: calc(100dvh - 48px);
-  overflow: auto;
+  max-height: calc(100dvh - var(--modal-inset));
+  display: flex;
+  overflow: hidden;
   border: 1px solid var(--border);
   background: var(--surface);
   padding: 24px;
@@ -86,6 +88,47 @@
 .modal.wide {
   width: 1040px;
 }
+.modal-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+.modal-body {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.traffic-modal {
+  height: min(780px, calc(100dvh - var(--modal-inset)));
+}
+.firewall-modal {
+  height: min(660px, calc(100dvh - var(--modal-inset)));
+}
+.traffic-limit-modal {
+  height: min(660px, calc(100dvh - var(--modal-inset)));
+}
+.traffic-modal .modal-body,
+.firewall-modal .modal-body,
+.traffic-limit-modal .modal-body,
+.account-manager-modal .modal-body {
+  flex: 1;
+}
+.traffic-limit-modal .modal-body,
+.account-manager-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  scrollbar-gutter: stable;
+}
+.traffic-limit-modal form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.traffic-limit-modal .modal-actions {
+  margin-top: auto;
+}
 .account-manager-backdrop {
   animation: account-backdrop-in 160ms ease-out;
 }
@@ -95,14 +138,14 @@
 }
 .modal.account-manager-modal {
   width: 820px;
-  height: min(540px, calc(100dvh - 48px));
+  height: min(540px, calc(100dvh - var(--modal-inset)));
   display: flex;
   overflow: hidden;
 }
 .account-manager-modal .modal-view {
   min-height: 0;
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   animation: account-view-in 140ms ease-out;
@@ -146,6 +189,7 @@
   }
 }
 .modal-head {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   gap: 15px;

@@ -131,7 +131,10 @@ export class ResourceCache {
       },
       (error) => {
         if (this.entries.get(key) === entry) {
-          this.entries.delete(key);
+          if (entry.value !== undefined) {
+            entry.pending = undefined;
+            entry.expires = 0;
+          } else this.entries.delete(key);
           this.failures.set(
             key,
             ttl === AUTO_REFRESH_MS && isResourcePath(key)
@@ -154,8 +157,14 @@ export class ResourceCache {
     this.persist();
   }
   invalidate(matches: (key: string) => boolean) {
-    for (const key of this.entries.keys())
-      if (matches(key)) this.entries.delete(key);
+    for (const [key, entry] of this.entries)
+      if (matches(key)) {
+        // Keep the last displayed snapshot, but detach any pre-mutation request.
+        // Fresh reads replace it without clearing or reordering the visible rows.
+        if (entry.value !== undefined)
+          this.entries.set(key, { value: entry.value, expires: 0 });
+        else this.entries.delete(key);
+      }
     for (const key of this.failures.keys())
       if (matches(key)) this.failures.delete(key);
     this.persist();

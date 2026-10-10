@@ -2,6 +2,7 @@ import type { Account, Region, ResourceScan } from "../../shared/types";
 import type { ResourceCache } from "./resource-cache";
 import { optInRegionIds } from "../../shared/regions.ts";
 import { AUTO_REFRESH_MS, refreshPath } from "../../shared/refresh-policy.ts";
+import { isConnectionError, ApiError } from "./api-error.ts";
 
 export type ResourceScope = {
   accounts: Account[];
@@ -148,6 +149,10 @@ export async function loadResourceScan<T>(
                 region,
               );
             } catch (error) {
+              // A lost connection is a panel-wide problem, not an empty AWS region.
+              // Reject it so the cache retains the last successful snapshot.
+              if (error instanceof Error && isConnectionError(error))
+                throw error;
               return {
                 items: [],
                 scanned: 0,
@@ -159,6 +164,7 @@ export async function loadResourceScan<T>(
                     region,
                     message:
                       error instanceof Error ? error.message : "资源查询失败",
+                    kind: error instanceof ApiError ? error.kind : undefined,
                   },
                 ],
               };
@@ -173,6 +179,7 @@ export async function loadResourceScan<T>(
         account: account.name,
         region,
         message: error instanceof Error ? error.message : "资源查询失败",
+        kind: error instanceof ApiError ? error.kind : undefined,
       });
     }
     publish();
@@ -204,6 +211,7 @@ export async function loadResourceScan<T>(
         errors.push({
           account: account.name,
           region: account.region,
+          kind: error instanceof ApiError ? error.kind : undefined,
           message:
             "区域列表查询失败：" +
             (error instanceof Error ? error.message : "请求失败"),

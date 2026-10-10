@@ -27,6 +27,7 @@ export function Modal({
 }) {
   const titleId = useId();
   const ref = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const busyRef = useRef(busy);
   busyRef.current = busy;
   const closeRef = useRef(onClose);
@@ -89,7 +90,7 @@ export function Modal({
   }, []);
   useEffect(() => {
     if (!viewKey) return;
-    ref.current?.scrollTo(0, 0);
+    bodyRef.current?.scrollTo(0, 0);
     const controls = Array.from(
       ref.current?.querySelectorAll<HTMLElement>(
         "button,input,select,textarea,a[href]",
@@ -120,7 +121,7 @@ export function Modal({
         aria-describedby={description ? titleId + "-description" : undefined}
         aria-busy={busy}
       >
-        <div key={viewKey} className={viewKey ? "modal-view" : undefined}>
+        <div key={viewKey} className="modal-view">
           <div className="modal-head">
             <div>
               <h2 id={titleId}>{title}</h2>
@@ -137,7 +138,9 @@ export function Modal({
               <X size={18} />
             </button>
           </div>
-          {children}
+          <div ref={bodyRef} className="modal-body">
+            {children}
+          </div>
         </div>
       </div>
     </div>,

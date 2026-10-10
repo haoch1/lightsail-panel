@@ -1,5 +1,6 @@
 import { resourceCache } from "./resource-cache";
 import { matchesUpdate, mutationUpdate } from "../../shared/resource-update";
+import { ApiError } from "./api-error";
 function changed(path: string, body: unknown) {
   if (path === "/session" || path === "/traffic-limit") return;
   const update = mutationUpdate(path, body);
@@ -90,15 +91,18 @@ export async function api<T = any>(
       error instanceof Error &&
       (error.name === "TimeoutError" || error.name === "AbortError")
     ) {
-      throw new Error(
+      throw new ApiError(
         requestMethod === "GET"
           ? "连接超时，请检查面板服务和浏览器网络后重试。"
           : "请求超时，操作可能已经提交。请先刷新资源状态，再决定是否重试。",
+        "connection",
       );
     }
-    throw new Error(
-      "无法连接面板服务，请检查本机服务和浏览器网络。" +
-        (error instanceof Error ? `（${error.message}）` : ""),
+    throw new ApiError(
+      requestMethod === "GET"
+        ? "无法连接面板服务，请检查网络后点击刷新。"
+        : "连接中断，操作可能已经提交。请先刷新资源状态，再决定是否重试。",
+      "connection",
     );
   }
   const data = await result
@@ -112,7 +116,11 @@ export async function api<T = any>(
       resourceCache.clear();
       window.dispatchEvent(new Event("panel:unauthorized"));
     }
-    throw new Error(data.error || `HTTP ${result.status}`);
+    throw new ApiError(
+      data.error || `HTTP ${result.status}`,
+      "http",
+      result.status,
+    );
   }
   if (requestMethod !== "GET") changed(path, body);
   return data;

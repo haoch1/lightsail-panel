@@ -225,6 +225,7 @@
     gap: 14px;
   }
   .modal-backdrop {
+    --modal-inset: 24px;
     padding: 12px;
   }
   .modal {
@@ -373,5 +374,11 @@
   }
   .traffic-overview strong {
     font-size: var(--stat-size);
+    flex-direction: column;
+    gap: 0;
+  }
+  .traffic-overview .traffic-unit {
+    font-size: 13px;
+    color: var(--muted);
   }
 }

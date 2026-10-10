@@ -2,12 +2,12 @@ import { useInstances } from "../../hooks/useInstances";
 import ScanNotices from "../../components/ScanNotices";
 import { regionLabel } from "../../../shared/regions";
 import { ArrowDownUp } from "lucide-react";
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import type { Scan } from "../../../shared/types";
 import { usePanel } from "../../app/context";
 import { Busy, Empty, Field } from "../../components/ui";
 import Select from "../../components/ui/Select";
-const Traffic = lazy(() => import("./Traffic"));
+import Traffic from "./Traffic";
 export default function TrafficPage() {
   const p = usePanel(),
     [selected, setSelected] = useState("");
@@ -48,9 +48,7 @@ export default function TrafficPage() {
       {scan.loading && !scan.data ? (
         <Busy />
       ) : instance ? (
-        <Suspense fallback={<Busy />}>
-          <Traffic key={key(instance)} instance={instance} />
-        </Suspense>
+        <Traffic instance={instance} />
       ) : (
         <Empty
           title="当前范围没有实例"

@@ -289,6 +289,14 @@
   font-size: 11px;
   overflow-wrap: anywhere;
 }
+.traffic-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.traffic-content > :not(.traffic-daily) {
+  flex-shrink: 0;
+}
 .traffic-overview {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -310,12 +318,19 @@
   font-size: 12px;
 }
 .traffic-overview strong {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
   margin-top: 8px;
   font-weight: 600;
   font-size: var(--stat-size);
   letter-spacing: -0.5px;
   font-variant-numeric: tabular-nums;
+}
+.traffic-overview strong span {
+  display: inline;
+  color: inherit;
+  font: inherit;
 }
 .traffic-range {
   display: flex;
@@ -324,6 +339,77 @@
   font-size: 12px;
   color: var(--muted);
   margin: 14px 0 20px;
+  min-height: 18px;
+}
+.traffic-daily {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: 0;
+  margin-top: 0;
+}
+.traffic-daily .section-heading {
+  flex-shrink: 0;
+}
+.traffic-daily table {
+  table-layout: fixed;
+  min-width: 480px;
+  font-variant-numeric: tabular-nums;
+}
+.traffic-modal .traffic-content,
+.firewall-modal .ports-content {
+  height: 100%;
+}
+.traffic-content .table-footer {
+  margin-top: 0;
+}
+.traffic-modal .traffic-daily,
+.firewall-modal .firewall-table {
+  flex: 1;
+  min-height: 140px;
+}
+.traffic-modal .traffic-daily .table-wrap {
+  height: auto;
+  flex: 1;
+  min-height: 70px;
+}
+.ports-content {
+  display: flex;
+  flex-direction: column;
+}
+.ports-content > :not(.firewall-table) {
+  flex-shrink: 0;
+}
+.firewall-table {
+  height: 320px;
+  min-height: 240px;
+  scrollbar-gutter: stable;
+}
+.firewall-modal .firewall-table {
+  height: auto;
+}
+.firewall-table table {
+  table-layout: fixed;
+  min-width: 720px;
+}
+.firewall-table th:nth-child(1) {
+  width: 20%;
+}
+.firewall-table th:nth-child(2) {
+  width: 10%;
+}
+.firewall-table th:nth-child(3) {
+  width: 12%;
+}
+.firewall-table th:nth-child(4) {
+  width: 42%;
+}
+.firewall-table th:nth-child(5) {
+  width: 16%;
+}
+.firewall-table th {
+  position: sticky;
+  top: 0;
 }
 .traffic-daily th {
   position: sticky;

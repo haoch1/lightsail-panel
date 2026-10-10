@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import type { Catalog, PortInfo } from "../../../shared/types";
 import { useApi, usePanel } from "../../app/context";
 import {
-  Busy,
   Empty,
   ErrorBox,
   Field,
@@ -238,9 +237,6 @@ export default function Launch() {
               retry={catalog.refresh}
             />
           )}{" "}
-          {catalog.loading && !catalog.data && (
-            <Busy text="加载 Lightsail 创建目录…" />
-          )}
           {catalog.data?.warnings?.map((w) => (
             <div className="notice" key={w}>
               {w}
@@ -295,10 +291,13 @@ export default function Launch() {
                 aria-label="系统镜像"
                 required
                 value={imageId}
+                disabled={!catalog.data}
                 onChange={(e) => setImage(e.target.value)}
               >
                 <option value="" disabled>
-                  选择系统镜像
+                  {catalog.loading && !catalog.data
+                    ? "加载系统镜像…"
+                    : "选择系统镜像"}
                 </option>
                 {images.map((i) => (
                   <option key={i.id} value={i.id}>
@@ -310,12 +309,10 @@ export default function Launch() {
                 ))}
               </Select>
             </Field>
-            {selectedImage && (
-              <div className="image-blueprint">
-                <span>AWS 蓝图 ID</span>
-                <code>{selectedImage.id}</code>
-              </div>
-            )}
+            <div className="image-blueprint" aria-busy={catalog.loading}>
+              <span>AWS 蓝图 ID</span>
+              <code>{selectedImage?.id || "—"}</code>
+            </div>
             <Field
               label="实例套餐"
               help={`通用型 · ${types.length} 个可选套餐 · ${network === "ipv6" ? "仅 IPv6" : "含公网 IPv4"}。按所选系统和 IP 类型筛选。`}

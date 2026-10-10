@@ -1,5 +1,4 @@
 import ScanNotices from "../../components/ScanNotices";
-import TrafficProgress from "../../components/TrafficProgress";
 import { regionLabel } from "../../../shared/regions";
 import {
   ArrowDownUp,
@@ -17,8 +16,6 @@ import {
   Trash2,
 } from "lucide-react";
 import {
-  lazy,
-  Suspense,
   useDeferredValue,
   useEffect,
   useLayoutEffect,
@@ -53,9 +50,9 @@ import ActionDialog from "./ActionDialog";
 import { actionNames } from "./actions";
 import Details from "./Details";
 import InstanceAddresses from "./InstanceAddresses";
-const Ports = lazy(() => import("../firewall/Ports"));
-const Traffic = lazy(() => import("../monitoring/Traffic"));
-const TrafficLimit = lazy(() => import("../monitoring/TrafficLimit"));
+import Ports from "../firewall/Ports";
+import Traffic from "../monitoring/Traffic";
+import TrafficLimit from "../monitoring/TrafficLimit";
 type Dialog = {
   kind: "action" | "details" | "ports" | "traffic" | "traffic-limit";
   instance: Instance;
@@ -558,43 +555,21 @@ export default function Instances() {
         <Modal
           wide
           title="流量统计"
+          className="traffic-modal"
           description={
             dialog.instance.name + " · " + regionLabel(dialog.instance.region)
           }
           onClose={() => setDialog(null)}
         >
-          <Suspense fallback={<Busy />}>
-            <Traffic instance={dialog.instance} />
-          </Suspense>
+          <Traffic instance={dialog.instance} />
         </Modal>
       )}
       {dialog?.kind === "traffic-limit" && (
-        <Suspense
-          fallback={
-            <Modal
-              title="自动关机"
-              description={
-                dialog.instance.name +
-                " · " +
-                regionLabel(dialog.instance.region)
-              }
-              onClose={() => setDialog(null)}
-            >
-              <div className="traffic-limit-usage">
-                <TrafficProgress
-                  usage={usage.values[instanceKey(dialog.instance)]}
-                />
-              </div>
-              <Busy />
-            </Modal>
-          }
-        >
-          <TrafficLimit
-            instance={dialog.instance}
-            initialUsage={usage.values[instanceKey(dialog.instance)]}
-            onClose={() => setDialog(null)}
-          />
-        </Suspense>
+        <TrafficLimit
+          instance={dialog.instance}
+          initialUsage={usage.values[instanceKey(dialog.instance)]}
+          onClose={() => setDialog(null)}
+        />
       )}
       {dialog?.kind === "details" && (
         <Details instance={dialog.instance} onClose={() => setDialog(null)} />
@@ -603,12 +578,11 @@ export default function Instances() {
         <Modal
           wide
           title="防火墙设置"
+          className="firewall-modal"
           description={dialog.instance.name}
           onClose={() => setDialog(null)}
         >
-          <Suspense fallback={<Busy />}>
-            <Ports instance={dialog.instance} />
-          </Suspense>
+          <Ports instance={dialog.instance} />
         </Modal>
       )}
       {bulk && (

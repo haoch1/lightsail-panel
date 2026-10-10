@@ -52,6 +52,7 @@ export default function TrafficLimit({
   return (
     <Modal
       title="自动关机"
+      className="traffic-limit-modal"
       description={instance.name + " · " + regionLabel(instance.region)}
       onClose={onClose}
       busy={busy}
