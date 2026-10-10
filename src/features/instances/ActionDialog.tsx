@@ -46,7 +46,7 @@ export default function ActionDialog({
       {changesBundle && (
         <Checkbox
           checked={acceptBundleUpdate}
-          disabled={busy}
+          pending={busy}
           onChange={(e) => setAcceptBundleUpdate(e.target.checked)}
         >
           我确认切换为含 IPv4 的套餐，并接受 AWS 调整套餐和费用
@@ -55,6 +55,7 @@ export default function ActionDialog({
       {action === "terminate" && (
         <Field label="输入实例 ID 确认">
           <input
+            data-pending={busy || undefined}
             autoComplete="off"
             disabled={busy}
             placeholder={instance.id}

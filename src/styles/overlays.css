@@ -67,7 +67,7 @@
   justify-content: center;
   padding: 24px;
   z-index: 80;
-  animation: menu-in 0.12s ease-out;
+  animation: modal-in 0.12s ease-out;
   background: #0008;
   backdrop-filter: blur(2px);
 }
@@ -218,7 +218,11 @@
   padding-top: 20px;
 }
 .modal[aria-busy="true"] .modal-actions > .button:disabled,
-.modal[aria-busy="true"] .modal-head > .icon-button:disabled {
+.modal[aria-busy="true"] .modal-head > .icon-button:disabled,
+.account-manager-modal[aria-busy="true"]
+  .account-manager-toolbar
+  > .button:disabled,
+.account-manager-modal[aria-busy="true"] .row-actions > .icon-button:disabled {
   opacity: 1;
   cursor: progress;
 }

@@ -32,7 +32,6 @@ export default function Ports({ instance }: { instance: Instance }) {
     }
     submitting.current = true;
     setBusy(true);
-    setError("");
     try {
       const result = await api("/ports", { ...target, portInfo, close });
       panel.toast(result.notice || "防火墙规则已提交");

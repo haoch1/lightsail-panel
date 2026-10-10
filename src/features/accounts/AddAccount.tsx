@@ -32,7 +32,6 @@ export default function AddAccount({
         e.preventDefault();
         if (busy) return;
         onBusyChange(true);
-        setError("");
         try {
           await api("/accounts", form);
           toast(demo ? "示例账户已添加" : "AWS 账户验证通过并已保存");
@@ -46,6 +45,8 @@ export default function AddAccount({
     >
       <Field label="账户名称">
         <input
+          disabled={busy}
+          data-pending={busy || undefined}
           aria-label="账户名称"
           required
           maxLength={80}
@@ -57,6 +58,8 @@ export default function AddAccount({
         <>
           <Field label="Access Key ID">
             <input
+              disabled={busy}
+              data-pending={busy || undefined}
               autoComplete="off"
               required
               value={form.accessKeyId}
@@ -65,6 +68,8 @@ export default function AddAccount({
           </Field>
           <Field label="Secret Access Key">
             <input
+              disabled={busy}
+              data-pending={busy || undefined}
               type="password"
               autoComplete="new-password"
               name="aws-access-key-secret"

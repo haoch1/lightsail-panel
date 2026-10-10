@@ -4,13 +4,21 @@ import { useId } from "react";
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   children?: ReactNode;
   description?: ReactNode;
+  pending?: boolean;
 };
 
-export function Checkbox({ children, description, ...props }: Props) {
+export function Checkbox({
+  children,
+  description,
+  pending = false,
+  ...props
+}: Props) {
   const descriptionId = useId();
   const input = (
     <input
       {...props}
+      disabled={props.disabled || pending}
+      data-pending={(pending && !props.disabled) || undefined}
       type="checkbox"
       aria-describedby={description ? descriptionId : props["aria-describedby"]}
     />

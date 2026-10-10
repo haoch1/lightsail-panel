@@ -34,7 +34,6 @@ export default function Auth({
           onSubmit={async (e) => {
             e.preventDefault();
             if (busy) return;
-            setError("");
             if (!initialized && password !== confirm) {
               setError("两次输入的密码不一致");
               return;
@@ -59,6 +58,8 @@ export default function Auth({
             help={initialized ? undefined : "至少 12 位，无默认密码。"}
           >
             <input
+              disabled={busy}
+              data-pending={busy || undefined}
               type="password"
               required
               autoComplete={initialized ? "current-password" : "new-password"}
@@ -70,6 +71,8 @@ export default function Auth({
           {!initialized && (
             <Field label="确认密码">
               <input
+                disabled={busy}
+                data-pending={busy || undefined}
                 type="password"
                 required
                 minLength={12}

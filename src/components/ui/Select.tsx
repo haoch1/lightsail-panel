@@ -24,6 +24,7 @@ type Option = {
   group?: string;
 };
 type Props = SelectHTMLAttributes<HTMLSelectElement> & {
+  pending?: boolean;
   icon?: ReactNode;
   placement?: "down" | "auto";
   openFromStart?: boolean;
@@ -77,10 +78,12 @@ export default function Select({
   menuClassName = "",
   id,
   required,
-  disabled,
+  disabled: unavailable,
+  pending = false,
   name,
   ...props
 }: Props) {
+  const disabled = unavailable || pending;
   const generated = useId();
   const listId = generated + "-list";
   const root = useRef<HTMLDivElement>(null),
@@ -289,6 +292,7 @@ export default function Select({
         aria-activedescendant={open ? listId + "-" + active : undefined}
         aria-required={required}
         disabled={disabled}
+        data-pending={(pending && !unavailable) || undefined}
         title={selected?.text}
         onClick={() => (open ? setOpen(false) : show())}
         onKeyDown={keyboard}

@@ -65,6 +65,7 @@ export default function PortRuleEditor({
       >
         <Field label="规则类型">
           <Select
+            pending={busy}
             aria-label="规则类型"
             value={preset}
             onChange={(e) => {
@@ -84,6 +85,7 @@ export default function PortRuleEditor({
           <>
             <Field label="协议">
               <Select
+                pending={busy}
                 aria-label="协议"
                 value={protocol}
                 onChange={(e) => {
@@ -109,6 +111,8 @@ export default function PortRuleEditor({
             <div className="form-grid">
               <Field label={icmp ? "类型" : "起始端口"}>
                 <input
+                  disabled={busy}
+                  data-pending={busy || undefined}
                   type="number"
                   required
                   aria-label={icmp ? "ICMP 类型" : "起始端口"}
@@ -120,6 +124,8 @@ export default function PortRuleEditor({
               </Field>
               <Field label={icmp ? "代码" : "结束端口"}>
                 <input
+                  disabled={busy}
+                  data-pending={busy || undefined}
                   type="number"
                   required
                   aria-label={icmp ? "ICMP 代码" : "结束端口"}
@@ -148,6 +154,8 @@ export default function PortRuleEditor({
               help="多个地址用逗号分隔；双栈实例可同时勾选 IPv4 和 IPv6。"
             >
               <input
+                disabled={busy}
+                data-pending={busy || undefined}
                 required
                 aria-label="来源 IP 地址或 CIDR"
                 value={sources}
@@ -157,6 +165,7 @@ export default function PortRuleEditor({
             <div className="source-options">
               <Checkbox
                 disabled={!v4}
+                pending={busy}
                 checked={v4 && selectedSources.includes("0.0.0.0/0")}
                 onChange={(e) =>
                   setSources((s) =>
@@ -168,6 +177,7 @@ export default function PortRuleEditor({
               </Checkbox>
               <Checkbox
                 disabled={!v6}
+                pending={busy}
                 checked={v6 && selectedSources.includes("::/0")}
                 onChange={(e) =>
                   setSources((s) => toggleSource(s, "::/0", e.target.checked))

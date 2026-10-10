@@ -49,7 +49,6 @@ export default function StaticIps() {
   async function run() {
     if (busy || !dialog?.ip || dialog.action === "allocate") return;
     setBusy(true);
-    setError("");
     try {
       const result = await api("/static-ips", {
         accountId: dialog.ip.accountId,
@@ -195,7 +194,7 @@ export default function StaticIps() {
               <>
                 <Field label="目标实例">
                   <Select
-                    disabled={busy}
+                    pending={busy}
                     required
                     value={target}
                     onChange={(e) => setTarget(e.target.value)}
@@ -230,6 +229,7 @@ export default function StaticIps() {
                 </div>
                 <Field label="输入名称确认释放">
                   <input
+                    data-pending={busy || undefined}
                     disabled={busy}
                     required
                     value={confirm}

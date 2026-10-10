@@ -103,7 +103,6 @@ function TrafficLimitForm({
         e.preventDefault();
         if (busy) return;
         setBusy(true);
-        setError("");
         try {
           await api("/traffic-limit", {
             ...targetOf(instance),
@@ -123,7 +122,7 @@ function TrafficLimitForm({
     >
       <Checkbox
         checked={enabled}
-        disabled={busy}
+        pending={busy}
         onChange={(e) => setEnabled(e.target.checked)}
         description="按本月入站＋出站合计计算，达到阈值后停止此实例。"
       >
@@ -141,6 +140,7 @@ function TrafficLimitForm({
           step={0.1}
           value={Number.isFinite(percent) ? percent : ""}
           disabled={busy || !enabled}
+          data-pending={(busy && enabled) || undefined}
           onChange={(e) => setPercent(e.target.valueAsNumber)}
         />
       </Field>

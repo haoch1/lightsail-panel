@@ -1,33 +1,51 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { LoaderCircle } from "lucide-react";
+import { useId, type ButtonHTMLAttributes, type ReactNode } from "react";
 
-/** Keep both labels in the layout so submitting never moves adjacent controls. */
+/** Busy feedback must not replace the caption, move the button, or drop focus. */
 export function PendingButton({
   busy,
   pendingLabel,
   children,
   className = "button primary",
   disabled,
+  onClick,
   ...props
 }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
   busy: boolean;
   pendingLabel: string;
   children: ReactNode;
 }) {
+  const statusId = useId();
   return (
-    <button
-      {...props}
-      className={className + " pending-button"}
-      disabled={busy || disabled}
-      aria-busy={busy}
-    >
-      <span className="pending-button-label">
-        <span aria-hidden={busy} className={busy ? "" : "active"}>
-          {children}
+    <>
+      <button
+        {...props}
+        className={className + " pending-button"}
+        disabled={disabled}
+        aria-disabled={busy || disabled || undefined}
+        aria-busy={busy}
+        aria-describedby={
+          [props["aria-describedby"], busy ? statusId : undefined]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
+        onClick={(event) => {
+          if (busy || disabled) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
+          onClick?.(event);
+        }}
+      >
+        <span className="pending-button-label">{children}</span>
+        <span className="pending-button-progress" aria-hidden="true">
+          <LoaderCircle size={14} />
         </span>
-        <span aria-hidden={!busy} className={busy ? "active" : ""}>
-          {pendingLabel}
-        </span>
+      </button>
+      <span id={statusId} className="sr-only" role="status">
+        {busy ? pendingLabel : ""}
       </span>
-    </button>
+    </>
   );
 }

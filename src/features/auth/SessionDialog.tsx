@@ -30,7 +30,6 @@ export default function SessionDialog({
           e.preventDefault();
           if (busy) return;
           setBusy(true);
-          setError("");
           try {
             const result = await api<{ expires: number }>("/session", {
               hours,

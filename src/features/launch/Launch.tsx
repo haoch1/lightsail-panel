@@ -98,7 +98,6 @@ export default function Launch() {
     if (submitting.current) return;
     submitting.current = true;
     setBusy(true);
-    setError("");
     const fingerprint = JSON.stringify(body);
     if (submission.current.fingerprint !== fingerprint)
       submission.current = { fingerprint, token: crypto.randomUUID() };
@@ -114,7 +113,6 @@ export default function Launch() {
       panel.navigate("/lightsail");
     } catch (e) {
       setError(creationRegionError(region, (e as Error).message));
-      setConfirm(false);
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -426,7 +424,7 @@ export default function Launch() {
               </div>
             )}
           </section>
-          {error && <ErrorBox message={error} />}
+          {error && !confirm && <ErrorBox message={error} />}
           <div className="launch-footer">
             <span className="muted">创建实例将按 Lightsail 套餐计费。</span>
             <button
@@ -521,6 +519,7 @@ export default function Launch() {
               <dd>{userData.trim() ? "已配置，首次启动时执行" : "未配置"}</dd>
             </div>
           </dl>
+          {error && <ErrorBox message={error} />}
           <div className="modal-actions">
             <button
               className="button"

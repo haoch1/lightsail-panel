@@ -55,7 +55,7 @@ export function Modal({
           ["INPUT", "SELECT", "TEXTAREA"].includes(x.tagName) ||
           x.getAttribute("role") === "combobox",
       ) || controls[0]
-    )?.focus();
+    )?.focus({ preventScroll: true });
     const listener = (e: KeyboardEvent) => {
       if (modalStack.at(-1) !== identity) return;
       if (e.key === "Escape") {
@@ -68,14 +68,14 @@ export function Modal({
           last = a[a.length - 1];
         if (e.shiftKey && document.activeElement === first) {
           e.preventDefault();
-          last?.focus();
+          last?.focus({ preventScroll: true });
         } else if (
           !e.shiftKey &&
           (document.activeElement === last ||
             !ref.current?.contains(document.activeElement))
         ) {
           e.preventDefault();
-          first?.focus();
+          first?.focus({ preventScroll: true });
         }
       }
     };
@@ -85,7 +85,7 @@ export function Modal({
       document.removeEventListener("keydown", listener);
       modalStack.splice(modalStack.indexOf(identity), 1);
       if (!modalStack.length) document.body.style.overflow = originalOverflow;
-      if (old?.isConnected) old.focus();
+      if (old?.isConnected) old.focus({ preventScroll: true });
     };
   }, []);
   useEffect(() => {
@@ -103,7 +103,7 @@ export function Modal({
       controls.find((control) =>
         ["INPUT", "SELECT", "TEXTAREA"].includes(control.tagName),
       ) || controls[0]
-    )?.focus();
+    )?.focus({ preventScroll: true });
   }, [viewKey]);
   return createPortal(
     <div

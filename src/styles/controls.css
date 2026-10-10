@@ -27,22 +27,28 @@
   background: var(--surface-hover);
 }
 .pending-button-label {
-  display: grid;
-}
-.pending-button-label > span {
-  grid-area: 1 / 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  visibility: hidden;
 }
-.pending-button-label > .active {
-  visibility: visible;
+.pending-button-progress {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
 }
-.pending-button[aria-busy="true"]:disabled {
-  opacity: 1;
+.pending-button[aria-busy="true"] {
   cursor: progress;
+}
+.pending-button[aria-busy="true"] .pending-button-progress {
+  opacity: 1;
+  transition-delay: 0.15s;
+}
+.pending-button[aria-busy="true"] .pending-button-progress svg {
+  animation: refresh-turn 1s linear infinite;
 }
 .button.primary {
   background: var(--accent);
@@ -178,9 +184,6 @@
 .toast .icon-button {
   flex-shrink: 0;
 }
-.button:active:enabled {
-  transform: translateY(1px);
-}
 .button.danger:hover:enabled {
   background: #a42d3d;
 }
@@ -191,12 +194,7 @@
   position: relative;
 }
 .refresh-button[aria-disabled="true"] {
-  cursor: default;
-  opacity: 0.6;
-}
-.refresh-button[aria-disabled="true"]:hover {
-  background: var(--surface);
-  border-color: var(--border);
+  cursor: progress;
 }
 .search:focus-within {
   border-color: var(--focus);
@@ -270,6 +268,22 @@
 .select-trigger:disabled {
   background: var(--subtle);
   color: var(--muted);
+}
+/* A request locks editable controls without changing their rendered appearance. */
+.select-trigger[data-pending="true"],
+input[data-pending="true"]:disabled:not([type="checkbox"]):not([type="radio"]) {
+  background: var(--surface);
+  color: var(--text);
+  opacity: 1;
+  cursor: progress;
+}
+input[data-pending="true"]:disabled:is([type="checkbox"], [type="radio"]) {
+  opacity: 1;
+  color: var(--text);
+  cursor: progress;
+}
+.select-trigger[data-pending="true"]:hover {
+  border-color: var(--focus);
 }
 .select-icon {
   display: flex;

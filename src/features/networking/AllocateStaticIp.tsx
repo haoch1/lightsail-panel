@@ -30,7 +30,6 @@ export default function AllocateStaticIp({
   async function allocate() {
     if (busy || !accountId || !validRegion) return;
     setBusy(true);
-    setError("");
     try {
       const result = await api("/static-ips", {
         accountId,
@@ -59,7 +58,7 @@ export default function AllocateStaticIp({
           <Field label="AWS 账户">
             <Select
               required
-              disabled={busy}
+              pending={busy}
               aria-label="分配账户"
               value={accountId}
               onChange={(e) => {
@@ -79,7 +78,8 @@ export default function AllocateStaticIp({
           <Field label="区域">
             <Select
               required
-              disabled={busy || !accountId || regions.loading}
+              pending={busy}
+              disabled={!accountId || regions.loading}
               aria-label="分配区域"
               value={region}
               onChange={(e) => setRegion(e.target.value)}
@@ -104,6 +104,7 @@ export default function AllocateStaticIp({
         )}
         <Field label="静态 IP 名称">
           <input
+            data-pending={busy || undefined}
             required
             disabled={busy}
             aria-label="静态 IP 名称"
