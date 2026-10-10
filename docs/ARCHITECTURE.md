@@ -37,7 +37,7 @@ Lightsail Panel 采用浏览器前端与同源 HTTP API。React 负责资源展�
 
 AWS 返回的 `expiresAt` 为可选字段，仅在提供时预检到期时间；字段缺失不视为过期。证书自身的有效期由 OpenSSH 在认证时校验。
 
-实例操作菜单通过动态导入加载 xterm.js 与 FitAddon。固定尺寸弹窗保留终端实例，状态变化只更新工具栏；ResizeObserver 同步网页终端与服务端 PTY 尺寸，终端内的 Escape、Tab、Ctrl+C 交由终端处理。关闭窗口结束连接，断线保留输出供排查，重连建立新的会话。
+实例操作菜单通过动态导入加载 xterm.js 与 FitAddon。终端测量容器与外层边框、内边距分离，避免行数计算超出可用高度。全屏切换仅调整 SSH 弹窗布局，保留终端实例、输出与 WebSocket 连接；ResizeObserver 同步网页终端与服务端 PTY 尺寸。终端内的 Escape、Tab、Ctrl+C 交由终端处理。关闭窗口结束连接，断线保留输出供排查，重连建立新的会话。
 
 `POST /api/ssh/connect` 在登录、来源与 CSRF 校验后签发绑定当前会话的单次票据，有效期 45 秒。`/api/ssh/terminal` 只接受同源且持有有效登录 Cookie 的 WebSocket，票据通过第一帧提交并立即消费，不放入 URL。每个登录会话最多 4 个连接或待用票据，全局最多 16 个。
 

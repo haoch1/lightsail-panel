@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Clipboard, Copy, RotateCw, Unplug } from "lucide-react";
+import {
+  Clipboard,
+  Copy,
+  Maximize2,
+  Minimize2,
+  RotateCw,
+  Unplug,
+} from "lucide-react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
@@ -36,6 +43,7 @@ export default function SshTerminal({
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [fullscreen, setFullscreen] = useState(false);
   const { accountId, region, service, id } = targetOf(instance);
 
   useEffect(() => {
@@ -279,7 +287,8 @@ export default function SshTerminal({
       wide
       title="SSH 终端连接"
       description={instance.name + " · " + regionLabel(instance.region)}
-      className="ssh-modal"
+      className={"ssh-modal" + (fullscreen ? " fullscreen" : "")}
+      backdropClassName={fullscreen ? "ssh-fullscreen-backdrop" : ""}
       onClose={onClose}
     >
       <div className="ssh-toolbar">
@@ -313,6 +322,17 @@ export default function SshTerminal({
             <Clipboard size={14} />
             粘贴
           </button>
+          <button
+            className="button small"
+            aria-pressed={fullscreen}
+            onClick={() => {
+              setFullscreen((value) => !value);
+              terminalRef.current?.focus();
+            }}
+          >
+            {fullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            {fullscreen ? "退出全屏" : "全屏"}
+          </button>
           {status === "connected" || status === "connecting" ? (
             <button
               className="button small"
@@ -332,12 +352,14 @@ export default function SshTerminal({
           )}
         </div>
       </div>
-      <div
-        ref={element}
-        className="ssh-terminal"
-        aria-label="SSH 终端"
-        onKeyDown={(e) => e.stopPropagation()}
-      />
+      <div className="ssh-terminal-frame">
+        <div
+          ref={element}
+          className="ssh-terminal"
+          aria-label="SSH 终端"
+          onKeyDown={(e) => e.stopPropagation()}
+        />
+      </div>
       <div
         className={"ssh-footer" + (error ? " danger-text" : " muted")}
         role={error ? "alert" : undefined}
