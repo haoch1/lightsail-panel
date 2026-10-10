@@ -27,6 +27,7 @@ test("audit labels cover resource actions and preserve professional terms", () =
     "setup",
     "refresh",
     "add-account",
+    "verify-account",
     "delete-account",
     "launch",
     "launch-network",

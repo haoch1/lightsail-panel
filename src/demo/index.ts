@@ -1,5 +1,6 @@
 import { aggregateTraffic, trafficRange } from "../../shared/traffic.mjs";
 import { normalizePortRule, portRuleCovered } from "../../shared/firewall";
+import { auditDefaultDetail } from "../../shared/audit-actions";
 import type {
   Account,
   AuditEntry,
@@ -131,7 +132,7 @@ function audit(action: string, target: string) {
     action,
     target,
     status: "success",
-    detail: "演示模式 · 未调用 AWS",
+    detail: `${auditDefaultDetail(action, "success")}；演示模式 · 未调用 AWS`,
   });
 }
 export async function demoApi(
@@ -160,16 +161,24 @@ export async function demoApi(
         keyHint: "…DEMO",
       };
       accounts.push(a);
+      audit("add-account", a.name);
       return a;
     }
     return { items: accounts };
   }
   if (p.startsWith("/accounts/")) {
-    if (p.endsWith("/verify")) return { ok: true };
+    if (p.endsWith("/verify")) {
+      audit(
+        "verify-account",
+        accounts.find((a) => a.id === p.split("/")[2])?.name || p.split("/")[2],
+      );
+      return { ok: true };
+    }
     if (method === "DELETE") {
       const id = p.split("/")[2],
         index = accounts.findIndex((a) => a.id === id);
       if (index >= 0) accounts.splice(index, 1);
+      audit("delete-account", id);
       instances = instances.filter((i) => i.accountId !== id);
       addresses = addresses.filter((i) => i.accountId !== id);
       return { ok: true };

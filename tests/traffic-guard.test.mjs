@@ -9,6 +9,7 @@ import { AwsGateway } from "../server/aws.mjs";
 import { trafficRange } from "../shared/traffic.mjs";
 import { createApp } from "../server/app.mjs";
 import { trafficLimit } from "../server/validation.mjs";
+import { LaunchNetworkQueue } from "../server/launch-network.mjs";
 
 function fixture(t) {
   const dir = mkdtempSync(join(tmpdir(), "lightsail-panel-guard-"));
@@ -224,6 +225,35 @@ test("each instance uses its current regional bundle allowance; checks are five 
   f.advance();
   await f.guard.tick();
   assert.equal(f.stops, 1);
+});
+
+test("automatic stop updates its original audit row after confirming the stopped state", async (t) => {
+  const f = fixture(t);
+  const queue = new LaunchNetworkQueue(f.store, f.gateway);
+  f.guard.onStop = (target, result, auditId, auditDetail) =>
+    queue.watch({ ...target, auditDetail }, result, "instances", auditId);
+  await f.configure();
+  f.used = 99;
+  await f.guard.tick();
+  const original = f.store
+    .logs()
+    .find((entry) => entry.action === "traffic-auto-stop");
+  assert.equal(original.status, "submitted");
+  assert.match(original.detail, /99\.00%.*90%/);
+  const send = f.gateway.send;
+  f.gateway.send = async (...args) =>
+    args[3] === "GetOperation"
+      ? { operation: { status: "Succeeded" } }
+      : send(...args);
+  f.instance.state.name = "stopped";
+  await queue.tick();
+  const [final] = f.store
+    .logs()
+    .filter((entry) => entry.action === "traffic-auto-stop");
+  assert.equal(final.id, original.id);
+  assert.equal(final.status, "success");
+  assert.match(final.detail, /已停止.*99\.00%.*90%/);
+  assert.equal(f.store.logs().length, 2); // One configuration and one stop.
 });
 
 test("a disabled rule cancels a check already waiting for AWS metrics", async (t) => {

@@ -10,6 +10,7 @@ import {
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { auditDefaultDetail } from "../shared/audit-actions.ts";
 
 export class Store {
   onClose = new Set();
@@ -168,21 +169,33 @@ export class Store {
     status = "success",
     detail = "",
   }) {
+    const id = randomUUID();
     this.db
       .prepare("INSERT INTO audit VALUES(?,?,?,?,?,?,?)")
       .run(
-        randomUUID(),
+        id,
         new Date().toISOString(),
         account,
         action,
         target,
         status,
-        detail.slice(0, 4000),
+        (detail || auditDefaultDetail(action, status)).slice(0, 4000),
       );
     this.db.exec(
       "DELETE FROM audit WHERE id IN (SELECT id FROM audit ORDER BY at DESC LIMIT -1 OFFSET 5000)",
     );
     this.emit("audit");
+    return id;
+  }
+  updateAudit(id, { status, detail }) {
+    const text = (detail || auditDefaultDetail("", status)).slice(0, 4000);
+    const changed = this.db
+      .prepare(
+        "UPDATE audit SET status=?,detail=? WHERE id=? AND status='submitted' AND (status<>? OR detail<>?)",
+      )
+      .run(status, text, id, status, text).changes;
+    if (changed) this.emit("audit");
+    return Number(changed);
   }
   logs() {
     return this.db

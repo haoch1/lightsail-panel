@@ -111,6 +111,11 @@ export class SshSessions {
     const end = (reason) => {
       if (state.ended) return;
       state.ended = true;
+      if (state.auditId && !state.ready)
+        this.store.updateAudit(state.auditId, {
+          status: "failed",
+          detail: reason || "SSH 连接在建立前已关闭",
+        });
       clearTimeout(state.deadline);
       clearTimeout(state.connectTimeout);
       if (reason) send({ type: "error", message: reason });
@@ -158,6 +163,13 @@ export class SshSessions {
           this.tickets.delete(m.ticket);
           state.authenticated = true;
           state.target = ticket.target;
+          state.auditId = this.store.audit({
+            account: ticket.target.accountId,
+            action: "ssh-connect",
+            target: ticket.target.id,
+            status: "submitted",
+            detail: "正在建立 SSH 连接",
+          });
           clearTimeout(state.deadline);
           state.connectTimeout = setTimeout(
             () => end("SSH 连接超时，请检查实例状态与 SSH 端口"),
@@ -219,26 +231,21 @@ export class SshSessions {
                 username: opened.username,
                 host: opened.host,
               });
-              this.store.audit({
-                account: ticket.target.accountId,
-                action: "ssh-connect",
-                target: ticket.target.id,
+              this.store.updateAudit(state.auditId, {
+                status: "success",
+                detail: `SSH 连接已建立：${opened.username}@${opened.host}`,
               });
             }
             send({ type: "output", data });
           });
           opened.terminal.onExit(({ exitCode }) => {
             if (buffer) send({ type: "output", data: buffer });
-            if (!state.ready)
-              this.store.audit({
-                account: ticket.target.accountId,
-                action: "ssh-connect",
-                target: ticket.target.id,
-                status: "failed",
-                detail: `OpenSSH exited (${exitCode})`,
-              });
             send({ type: "exit", code: exitCode });
-            end();
+            end(
+              state.ready
+                ? undefined
+                : `SSH 连接未建立，OpenSSH 已退出（退出码 ${exitCode}）`,
+            );
           });
         } else {
           if (!state.opened) throw new Error();
@@ -251,14 +258,6 @@ export class SshSessions {
           e instanceof z.ZodError || e instanceof SyntaxError
             ? "终端请求格式无效"
             : scrubError(e);
-        if (state.target && !state.ended)
-          this.store.audit({
-            account: state.target.accountId,
-            action: "ssh-connect",
-            target: state.target.id,
-            status: "failed",
-            detail: reason,
-          });
         end(reason || "SSH 连接失败，请重新连接");
       }
     });

@@ -100,12 +100,12 @@ export default function Audit() {
                     {x.status === "success"
                       ? "成功"
                       : x.status === "submitted"
-                        ? "已提交"
+                        ? "处理中"
                         : "失败"}
                   </span>
                 </td>
                 <td data-label="详情" className="detail-cell">
-                  {x.detail || "—"}
+                  {x.detail || "该历史记录未保存执行详情"}
                 </td>
               </tr>
             ))}

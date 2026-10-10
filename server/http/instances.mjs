@@ -58,8 +58,8 @@ export function registerInstances(
     const v = V.action.parse(req.body);
     if (v.action === "terminate" && v.confirm !== v.id)
       return res.status(400).json({ error: "请输入实例 ID 确认终止" });
-    const result = await audited(v.action, v.id, v.accountId, () =>
-      launchNetwork.run(v, "instances", () => gateway.perform(v)),
+    const result = await audited(v.action, v.id, v.accountId, (auditId) =>
+      launchNetwork.run(v, "instances", () => gateway.perform(v), auditId),
     );
     res.json(result);
   });
@@ -101,11 +101,11 @@ export function registerInstances(
           .json({ error: "幂等令牌已用于其他创建参数，请重新打开创建页面" });
       return res.json(await existing.promise);
     }
-    const promise = audited("launch", v.name, v.accountId, async () => {
+    const promise = audited("launch", v.name, v.accountId, async (auditId) => {
       const result = await gateway.launch(v);
       return {
         ...result,
-        networkJob: launchNetwork.enqueue(v, result),
+        networkJob: launchNetwork.enqueue(v, result, auditId),
         notice: "创建请求已提交，实例就绪后将自动配置网络",
       };
     });

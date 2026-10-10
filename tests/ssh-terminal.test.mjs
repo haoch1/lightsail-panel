@@ -214,6 +214,10 @@ test("SSH certificate details remain server-side; marker fragments, input, contr
   assert.ok(!JSON.stringify(received).includes("temporary-certificate-secret"));
   assert.ok(!JSON.stringify(received).includes("READY"));
   assert.ok(!JSON.stringify(f.store.logs()).includes("whoami"));
+  const logs = f.store.logs().filter((entry) => entry.action === "ssh-connect");
+  assert.equal(logs.length, 1);
+  assert.equal(logs[0].status, "success");
+  assert.match(logs[0].detail, /SSH 连接已建立：admin@/);
   const duplicate = await f.connect(key);
   await waitFor(() => duplicate.received.some((m) => m.type === "error"));
   assert.equal(f.terminals.length, 1);
@@ -245,6 +249,26 @@ test("closing SSH while credentials/connect are pending cannot leave an orphan t
   ws.close();
   await waitFor(() => f.terminals.length && f.terminals[0].killed);
   assert.equal(f.app.locals.ssh.connections.size, 0);
+});
+
+test("SSH connection rejection updates its original processing entry with the failure reason", async (t) => {
+  const f = await fixture(t);
+  f.app.locals.ssh.gateway.instanceAccessDetails = async () => {
+    await new Promise((r) => setTimeout(r, 40));
+    throw Error("GetInstanceAccessDetails 权限不足");
+  };
+  const { received } = await f.connect(await f.ticket());
+  await waitFor(() =>
+    f.store.logs().some((entry) => entry.status === "submitted"),
+  );
+  const original = f.store.logs()[0];
+  await waitFor(() => received.some((message) => message.type === "error"));
+  const logs = f.store.logs();
+  assert.equal(logs.length, 1);
+  assert.equal(logs[0].id, original.id);
+  assert.equal(logs[0].status, "failed");
+  assert.match(logs[0].detail, /GetInstanceAccessDetails 权限不足/);
+  assert.equal(f.terminals.length, 0);
 });
 
 test("SSH gateway gates stopped instances and requests temporary SSH credentials for the target", async () => {

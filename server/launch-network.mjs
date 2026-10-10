@@ -1,7 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 import { error, mapLimit, scrubError } from "./aws/shared.mjs";
 import { portRuleCovered, portRulePresent } from "../shared/firewall.ts";
-import { auditActionLabel } from "../shared/audit-actions.ts";
+import {
+  operationAuditAction,
+  operationAuditDetail,
+} from "./audit-details.mjs";
 
 export const launchFingerprint = (input) =>
   createHash("sha256").update(JSON.stringify(input)).digest("hex");
@@ -74,9 +77,10 @@ export class LaunchNetworkQueue {
       .launchNetworks({ recentSince: Date.now() - 30 * 60 * 1000 })
       .map((job) => this.view(job));
   }
-  enqueue(input, result) {
+  enqueue(input, result, auditId) {
     const job = {
       id: input.token,
+      auditId,
       action: "launch",
       resources: [
         "instances",
@@ -110,7 +114,7 @@ export class LaunchNetworkQueue {
     this.save(job);
     return this.view(job);
   }
-  watch(input, result = {}, resource = "instances") {
+  watch(input, result = {}, resource = "instances", auditId) {
     if (result?.unchanged) return;
     const name = input.id || input.name;
     const previous = this.store
@@ -138,10 +142,19 @@ export class LaunchNetworkQueue {
           item.stage = "done";
           item.detail = "由后续资源操作接续跟踪";
         }
+        job.completedAt = Date.now();
+        this.completeAudit(job);
         this.save(job);
       }
     const job = {
       id: randomUUID(),
+      auditId,
+      auditNotice:
+        input.auditDetail ||
+        (input.action === "rotate-ip" &&
+          /已保留|释放失败/.test(result?.notice || ""))
+          ? scrubError({ message: input.auditDetail || result.notice })
+          : undefined,
       accountId: input.accountId,
       region: input.region,
       action: input.action || "observe",
@@ -181,7 +194,7 @@ export class LaunchNetworkQueue {
     this.save(job);
     return this.view(job);
   }
-  async run(input, resource, perform) {
+  async run(input, resource, perform, auditId) {
     const names = [input.id || input.name, input.instanceName].filter(Boolean);
     const keys = names.map(
       (name) => `${input.accountId}:${input.region}:${name}`,
@@ -200,11 +213,22 @@ export class LaunchNetworkQueue {
     for (const key of keys) this.locks.add(key);
     try {
       const result = await perform();
-      const networkJob = this.watch(input, result, resource);
+      const networkJob = this.watch(input, result, resource, auditId);
       return networkJob ? { ...result, networkJob } : result;
     } finally {
       for (const key of keys) this.locks.delete(key);
     }
+  }
+  completeAudit(job) {
+    const result = { status: job.status, detail: operationAuditDetail(job) };
+    if (job.auditId) this.store.updateAudit(job.auditId, result);
+    else
+      this.store.audit({
+        account: job.accountId,
+        action: operationAuditAction(job),
+        target: job.instances.map((item) => item.name).join(", "),
+        ...result,
+      });
   }
   async observe(job, item, send) {
     if (job.resource === "static-ips") {
@@ -478,21 +502,7 @@ export class LaunchNetworkQueue {
             ? "failed"
             : "success";
           job.completedAt = Date.now();
-          this.store.audit({
-            account: job.accountId,
-            action:
-              job.action && job.action !== "launch"
-                ? "operation-complete"
-                : "launch-network",
-            target: job.instances.map((item) => item.name).join(", "),
-            status: job.status,
-            detail: job.instances
-              .map(
-                (item) =>
-                  `${auditActionLabel(job.action || "launch")} · ${item.name}: ${item.detail || "资源状态已更新"}`,
-              )
-              .join("；"),
-          });
+          this.completeAudit(job);
         }
         if (
           job.status !== "pending" ||

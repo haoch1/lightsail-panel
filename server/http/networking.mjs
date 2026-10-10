@@ -21,8 +21,13 @@ export function registerNetworking(
       "static-ip-" + v.action,
       v.name,
       v.accountId,
-      () =>
-        launchNetwork.run(v, "static-ips", () => gateway.staticIpOperation(v)),
+      (auditId) =>
+        launchNetwork.run(
+          v,
+          "static-ips",
+          () => gateway.staticIpOperation(v),
+          auditId,
+        ),
     );
     res.json(result);
   });
@@ -38,11 +43,12 @@ export function registerNetworking(
       v.close ? "close-port" : "open-port",
       v.id,
       v.accountId,
-      () =>
+      (auditId) =>
         launchNetwork.run(
           { ...v, action: v.close ? "close-port" : "open-port" },
           "ports",
           () => gateway.updatePorts(v),
+          auditId,
         ),
     );
     res.json(result);

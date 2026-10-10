@@ -478,7 +478,7 @@ test("network queue waits for creation and all operations, then sets exact firew
       f.ips.get(item.staticIpName).attachedTo,
       `new-instance-${index + 1}`,
     );
-  assert.equal(f.store.logs()[0].action, "launch-network");
+  assert.equal(f.store.logs()[0].action, "launch");
   assert.ok(!JSON.stringify(job).includes("PRIVATE_SCRIPT"));
   assert.ok(!JSON.stringify(f.queue.view(job)).includes("fingerprint"));
 });

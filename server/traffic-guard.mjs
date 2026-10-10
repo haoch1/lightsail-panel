@@ -254,22 +254,19 @@ export class TrafficGuard {
       };
       const result = await this.gateway.perform(target);
       if (this.closed) return;
-      this.store.audit({
+      const detail = `本月入站＋出站达到 ${usedPercent.toFixed(2)}%，阈值 ${rule.thresholdPercent}%`;
+      const auditId = this.store.audit({
         account: rule.accountId,
         action: "traffic-auto-stop",
         target: rule.id,
-        detail:
-          "本月入站＋出站达到 " +
-          usedPercent.toFixed(2) +
-          "%，阈值 " +
-          rule.thresholdPercent +
-          "%",
+        status: "submitted",
+        detail: `${detail}；正在确认实例停止状态`,
       });
       this.saveProgress(rule, {
         lastStoppedAt: new Date(now).toISOString(),
         detail: "达到流量阈值，已提交停止请求",
       });
-      this.onStop(target, result);
+      this.onStop(target, result, auditId, detail);
     } catch (e) {
       if (!this.active(rule)) return;
       const denied = [

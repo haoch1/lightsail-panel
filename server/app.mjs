@@ -218,12 +218,21 @@ export function createApp(
   registerAccounts(app, services);
   registerInstances(app, services);
   registerSsh(app, services);
-  trafficGuard = new TrafficGuard(store, gateway, (target, result) => {
-    launchNetwork.watch({ ...target, action: "stop" }, result);
-    reads.invalidate((path) =>
-      matchesUpdate(path, { ...target, resources: ["instances"] }),
-    );
-  });
+  trafficGuard = new TrafficGuard(
+    store,
+    gateway,
+    (target, result, auditId, auditDetail) => {
+      launchNetwork.watch(
+        { ...target, action: "stop", auditDetail },
+        result,
+        "instances",
+        auditId,
+      );
+      reads.invalidate((path) =>
+        matchesUpdate(path, { ...target, resources: ["instances"] }),
+      );
+    },
+  );
   services.trafficGuard = trafficGuard;
   trafficGuard.start();
   registerMonitoring(app, services);

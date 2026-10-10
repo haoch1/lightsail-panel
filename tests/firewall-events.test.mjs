@@ -240,22 +240,28 @@ test("accepted writes remain submitted until resource confirmation and protect t
   const { store, gateway, target } = fixture(t);
   const queue = new LaunchNetworkQueue(store, gateway);
   const { audited } = routeContext(store);
-  const result = await audited("static-ip-attach", "ip", target.accountId, () =>
-    queue.run(
-      {
-        ...target,
-        id: undefined,
-        name: "ip",
-        instanceName: target.id,
-        action: "attach",
-      },
-      "static-ips",
-      async () => ({ operations: [{ id: "op", status: "Succeeded" }] }),
-    ),
+  const result = await audited(
+    "static-ip-attach",
+    "ip",
+    target.accountId,
+    (auditId) =>
+      queue.run(
+        {
+          ...target,
+          id: undefined,
+          name: "ip",
+          instanceName: target.id,
+          action: "attach",
+        },
+        "static-ips",
+        async () => ({ operations: [{ id: "op", status: "Succeeded" }] }),
+        auditId,
+      ),
   );
   assert.equal(result.networkJob.status, "pending");
   assert.equal(result.networkJob.targetInstance, target.id);
   assert.equal(store.logs()[0].status, "submitted");
+  const original = store.logs()[0];
   await assert.rejects(
     queue.run({ ...target, action: "stop" }, "instances", () => {
       throw Error("conflicting AWS write must not run");
@@ -269,6 +275,11 @@ test("accepted writes remain submitted until resource confirmation and protect t
   await queue.tick();
   assert.equal(store.launchNetwork(result.networkJob.id).status, "success");
   assert.equal(store.logs()[0].status, "success");
+  assert.equal(store.logs().length, 1);
+  assert.equal(store.logs()[0].id, original.id);
+  assert.equal(store.logs()[0].at, original.at);
+  assert.equal(store.logs()[0].action, "static-ip-attach");
+  assert.match(store.logs()[0].detail, new RegExp(target.id));
 });
 
 test("authenticated events immediately signal logs, cleanup and operation status without AWS polling", async (t) => {
