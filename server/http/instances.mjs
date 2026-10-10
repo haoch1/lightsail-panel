@@ -59,9 +59,8 @@ export function registerInstances(
     if (v.action === "terminate" && v.confirm !== v.id)
       return res.status(400).json({ error: "请输入实例 ID 确认终止" });
     const result = await audited(v.action, v.id, v.accountId, () =>
-      gateway.perform(v),
+      launchNetwork.run(v, "instances", () => gateway.perform(v)),
     );
-    launchNetwork.watch(v, result);
     res.json(result);
   });
 

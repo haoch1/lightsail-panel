@@ -13,7 +13,18 @@ export function routeContext(store) {
   async function audited(action, target, account, fn) {
     try {
       const result = await fn();
-      store.audit({ account, action, target });
+      const submitted =
+        result?.networkJob?.status === "pending" ||
+        result?.operations?.some(
+          (operation) => !["Succeeded", "Completed"].includes(operation.status),
+        );
+      store.audit({
+        account,
+        action,
+        target,
+        status: submitted ? "submitted" : "success",
+        detail: result?.unchanged ? result.notice : "",
+      });
       return result;
     } catch (e) {
       store.audit({

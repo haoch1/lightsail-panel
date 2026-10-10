@@ -158,7 +158,6 @@
 }
 .traffic-daily .table-wrap {
   height: 320px;
-  scrollbar-gutter: stable;
 }
 .amount-column.mono {
   font-family: inherit;

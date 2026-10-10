@@ -6,6 +6,7 @@ import { z } from "zod";
 import { scrubError } from "./aws.mjs";
 import { registerAccounts } from "./http/accounts.mjs";
 import { registerAudit } from "./http/audit.mjs";
+import { registerEvents } from "./http/events.mjs";
 import { routeContext } from "./http/context.mjs";
 import { registerInstances } from "./http/instances.mjs";
 import { registerMonitoring } from "./http/monitoring.mjs";
@@ -108,7 +109,7 @@ export function createApp(
     next();
   }
   app.get("/api/health", (_req, res) =>
-    res.json({ ok: true, version: "1.7.5", service: "lightsail" }),
+    res.json({ ok: true, version: "1.7.6", service: "lightsail" }),
   );
   app.get("/api/auth", (req, res) => {
     const s = store.session(token(req));
@@ -228,6 +229,7 @@ export function createApp(
   registerMonitoring(app, services);
   registerNetworking(app, services);
   registerAudit(app, services);
+  registerEvents(app, services);
   app.use("/api", (_req, res) => res.status(404).json({ error: "接口不存在" }));
   if (existsSync(dist)) {
     app.use(

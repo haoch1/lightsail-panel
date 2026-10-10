@@ -313,11 +313,12 @@ test("Lightsail port rules preserve IPv6 input and return operation IDs for back
     },
   });
   const result = await g.updatePorts(input);
-  assert.deepEqual(calls[0].p.portInfo.ipv6Cidrs, ["2001:db8::/64"]);
-  assert.equal(calls[0].p.instanceName, "my-server");
+  assert.equal(calls[0].c, "GetInstancePortStates");
+  assert.deepEqual(calls[1].p.portInfo.ipv6Cidrs, ["2001:db8::/64"]);
+  assert.equal(calls[1].p.instanceName, "my-server");
   assert.equal(
     calls.length,
-    1,
+    2,
     "submission must not block on AWS operation polling",
   );
   assert.deepEqual(result.operations, [{ id: "op" }]);

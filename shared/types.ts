@@ -119,6 +119,9 @@ export interface LaunchNetworkJob {
   action?: string;
   resources?: string[];
   status: "pending" | "success" | "failed";
+  completedAt?: number;
+  at?: number;
+  targetInstance?: string;
   instances: {
     name: string;
     stage: string;

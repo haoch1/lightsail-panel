@@ -1,5 +1,6 @@
 import type { PortInfo } from "../../../shared/types";
 import { buildPortRule } from "../firewall/model.ts";
+import { portRuleCovered } from "../../../shared/firewall.ts";
 
 export function defaultLaunchFirewall(network: string): PortInfo[] {
   return [
@@ -11,28 +12,7 @@ export function defaultLaunchFirewall(network: string): PortInfo[] {
 }
 
 function coversRule(broad: PortInfo, narrow: PortInfo): boolean {
-  if (broad.protocol !== "all") {
-    if (broad.protocol !== narrow.protocol) return false;
-    if (broad.protocol === "icmp" || broad.protocol === "icmpv6") {
-      if (broad.fromPort !== -1 && broad.fromPort !== narrow.fromPort)
-        return false;
-      if (broad.toPort !== -1 && broad.toPort !== narrow.toPort) return false;
-    } else if (broad.fromPort > narrow.fromPort || broad.toPort < narrow.toPort)
-      return false;
-  }
-  const sourcesCovered = (
-    wider: string[] = [],
-    smaller: string[] = [],
-    all?: string,
-  ) =>
-    smaller.every(
-      (source) => wider.includes(source) || (!!all && wider.includes(all)),
-    );
-  return (
-    sourcesCovered(broad.cidrs, narrow.cidrs, "0.0.0.0/0") &&
-    sourcesCovered(broad.ipv6Cidrs, narrow.ipv6Cidrs, "::/0") &&
-    sourcesCovered(broad.cidrListAliases, narrow.cidrListAliases)
-  );
+  return portRuleCovered([broad], narrow);
 }
 
 // Remove only rules fully covered in both protocol/ports and every source family.

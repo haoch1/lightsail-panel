@@ -88,7 +88,7 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <div className="table-wrap account-table">
-          <table>
+          <table className="responsive-table">
             <thead>
               <tr>
                 <th>账户</th>
@@ -100,15 +100,17 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
             <tbody>
               {accounts.map((account) => (
                 <tr key={account.id}>
-                  <td>
+                  <td data-label="账户">
                     <strong>{account.name}</strong>
                   </td>
-                  <td className="numeric">{account.awsAccountId}</td>
-                  <td>
+                  <td data-label="AWS Account ID" className="numeric">
+                    {account.awsAccountId}
+                  </td>
+                  <td data-label="凭证">
                     <KeyRound size={12} className="inline-icon" />
                     {account.keyHint}
                   </td>
-                  <td>
+                  <td data-label="操作">
                     <div className="row-actions">
                       <RefreshButton
                         text="验证"

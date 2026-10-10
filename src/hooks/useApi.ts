@@ -22,12 +22,26 @@ export function useApi<T>(
   const { version } = revision;
   const previous = useRef({ path, version });
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const auditUpdated = () => {
+      if (path !== "/audit") return;
+      clearTimeout(timer);
+      timer = setTimeout(
+        () => revise((r) => ({ version: r.version + 1, manual: false })),
+        50,
+      );
+    };
     const updated = (event: Event) => {
       if (path && matchesUpdate(path, (event as CustomEvent).detail))
         revise((r) => ({ version: r.version + 1, manual: false }));
     };
     window.addEventListener("panel:resources-updated", updated);
-    return () => window.removeEventListener("panel:resources-updated", updated);
+    window.addEventListener("panel:audit-updated", auditUpdated);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("panel:resources-updated", updated);
+      window.removeEventListener("panel:audit-updated", auditUpdated);
+    };
   }, [path]);
   const refresh = useCallback(
     () => revise((r) => ({ version: r.version + 1, manual: true })),

@@ -1,5 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { error, mapLimit, scrubError } from "./aws/shared.mjs";
+import { portRuleCovered, portRulePresent } from "../shared/firewall.ts";
+import { auditActionLabel } from "../shared/audit-actions.ts";
 
 export const launchFingerprint = (input) =>
   createHash("sha256").update(JSON.stringify(input)).digest("hex");
@@ -11,7 +13,10 @@ const transient = (e) =>
     "ThrottlingException",
     "ServiceException",
     "OperationInProgressException",
-  ].includes(e.name) || e.$metadata?.httpStatusCode >= 500;
+  ].includes(e.name) ||
+  (e.name === "OperationFailureException" &&
+    /another request is in progress/i.test(e.message)) ||
+  e.$metadata?.httpStatusCode >= 500;
 
 // Persist only network configuration and progress, never userData or credentials.
 export class LaunchNetworkQueue {
@@ -21,6 +26,7 @@ export class LaunchNetworkQueue {
     this.invalidate = invalidate;
     this.busy = false;
     this.stopped = false;
+    this.locks = new Set();
     this.stop = () => {
       this.stopped = true;
       clearInterval(this.timer);
@@ -52,6 +58,9 @@ export class LaunchNetworkQueue {
       action: job.action || "launch",
       resources: job.resources || ["instances", "static-ips", "ports"],
       status: job.status,
+      at: job.at,
+      completedAt: job.completedAt,
+      targetInstance: job.targetInstance,
       instances: job.instances.map(({ name, stage, detail, staticIpName }) => ({
         name,
         stage,
@@ -102,6 +111,7 @@ export class LaunchNetworkQueue {
     return this.view(job);
   }
   watch(input, result = {}, resource = "instances") {
+    if (result?.unchanged) return;
     const name = input.id || input.name;
     const previous = this.store
       .launchNetworks({ pendingOnly: true })
@@ -171,6 +181,31 @@ export class LaunchNetworkQueue {
     this.save(job);
     return this.view(job);
   }
+  async run(input, resource, perform) {
+    const names = [input.id || input.name, input.instanceName].filter(Boolean);
+    const keys = names.map(
+      (name) => `${input.accountId}:${input.region}:${name}`,
+    );
+    const pending = this.store
+      .launchNetworks({ pendingOnly: true })
+      .some(
+        (job) =>
+          job.accountId === input.accountId &&
+          job.region === input.region &&
+          (job.instances.some((item) => names.includes(item.name)) ||
+            names.includes(job.targetInstance)),
+      );
+    if (pending || keys.some((key) => this.locks.has(key)))
+      throw error("该资源的上一项操作尚未完成，请等待状态更新后再提交。", 409);
+    for (const key of keys) this.locks.add(key);
+    try {
+      const result = await perform();
+      const networkJob = this.watch(input, result, resource);
+      return networkJob ? { ...result, networkJob } : result;
+    } finally {
+      for (const key of keys) this.locks.delete(key);
+    }
+  }
   async observe(job, item, send) {
     if (job.resource === "static-ips") {
       let ip;
@@ -197,24 +232,13 @@ export class LaunchNetworkQueue {
       });
       const expected = job.expectedPort;
       if (expected) {
-        const matching = (result.portStates || []).filter(
-          (p) =>
-            p.state === "open" &&
-            p.protocol === expected.protocol &&
-            p.fromPort === expected.fromPort &&
-            p.toPort === expected.toPort,
+        const open = (result.portStates || []).filter(
+          (p) => p.state === "open",
         );
-        const sources = ["cidrs", "ipv6Cidrs", "cidrListAliases"].flatMap(
-          (field) => (expected[field] || []).map((value) => ({ field, value })),
-        );
-        const present = ({ field, value }) =>
-          matching.some((p) => p[field]?.includes(value));
         if (
           job.close
-            ? sources.length
-              ? sources.some(present)
-              : matching.length > 0
-            : !matching.length || !sources.every(present)
+            ? portRulePresent(open, expected)
+            : !portRuleCovered(open, expected)
         )
           return;
       }
@@ -453,6 +477,7 @@ export class LaunchNetworkQueue {
           job.status = job.instances.some((item) => item.stage === "failed")
             ? "failed"
             : "success";
+          job.completedAt = Date.now();
           this.store.audit({
             account: job.accountId,
             action:
@@ -462,7 +487,10 @@ export class LaunchNetworkQueue {
             target: job.instances.map((item) => item.name).join(", "),
             status: job.status,
             detail: job.instances
-              .map((item) => `${item.name}: ${item.detail || "资源状态已更新"}`)
+              .map(
+                (item) =>
+                  `${auditActionLabel(job.action || "launch")} · ${item.name}: ${item.detail || "资源状态已更新"}`,
+              )
               .join("；"),
           });
         }

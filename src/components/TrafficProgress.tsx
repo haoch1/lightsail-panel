@@ -70,7 +70,7 @@ export default function TrafficProgress({
         />
       </span>
       <span className="traffic-progress-caption">
-        {compact ? `共 ${allowanceLabel} / 月` : "本月入站＋出站 / 套餐月额度"}
+        {compact ? `${allowanceLabel} / 月` : "本月入站＋出站 / 套餐月额度"}
         {usage?.trafficError ? <span> · 数据不完整</span> : null}
       </span>
     </span>

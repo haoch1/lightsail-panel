@@ -13,6 +13,10 @@ import { DatabaseSync } from "node:sqlite";
 
 export class Store {
   onClose = new Set();
+  onEvent = new Set();
+  emit(type) {
+    for (const listener of this.onEvent) listener(type);
+  }
   constructor(dir) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     const keyPath = join(dir, "encryption.key");
@@ -178,6 +182,7 @@ export class Store {
     this.db.exec(
       "DELETE FROM audit WHERE id IN (SELECT id FROM audit ORDER BY at DESC LIMIT -1 OFFSET 5000)",
     );
+    this.emit("audit");
   }
   logs() {
     return this.db
@@ -185,12 +190,27 @@ export class Store {
       .all();
   }
   clearLogs() {
-    return Number(this.db.prepare("DELETE FROM audit").run().changes);
+    const deleted = Number(this.db.prepare("DELETE FROM audit").run().changes);
+    this.emit("audit");
+    return deleted;
   }
   saveLaunchNetwork(job) {
+    const progress = (value) =>
+      JSON.stringify(
+        value && [
+          value.status,
+          (value.instances || []).map((item) => [
+            item.name,
+            item.stage,
+            item.detail,
+          ]),
+        ],
+      );
+    const previous = progress(this.launchNetwork(job.id));
     this.db
       .prepare("INSERT OR REPLACE INTO launch_network VALUES(?,?)")
       .run(job.id, JSON.stringify(job));
+    if (previous !== progress(job)) this.emit("operations");
   }
   launchNetwork(id) {
     const row = this.db

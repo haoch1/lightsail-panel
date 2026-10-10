@@ -66,7 +66,7 @@ export default function Audit() {
       </div>
       {error && <ErrorBox message={error} retry={refresh} />}
       <div className="table-wrap">
-        <table>
+        <table className="responsive-table audit-table">
           <thead>
             <tr>
               <th>时间</th>
@@ -79,19 +79,34 @@ export default function Audit() {
           <tbody>
             {data?.items.map((x) => (
               <tr key={x.id}>
-                <td>{new Date(x.at).toLocaleString("zh-CN")}</td>
-                <td>{auditActionLabel(x.action)}</td>
-                <td className="mono">{x.target || "—"}</td>
-                <td>
+                <td data-label="时间">
+                  {new Date(x.at).toLocaleString("zh-CN")}
+                </td>
+                <td data-label="操作">{auditActionLabel(x.action)}</td>
+                <td data-label="目标资源" className="mono">
+                  {x.target || "—"}
+                </td>
+                <td data-label="结果">
                   <span
                     className={
-                      "state " + (x.status === "success" ? "green" : "red")
+                      "state " +
+                      (x.status === "success"
+                        ? "green"
+                        : x.status === "submitted"
+                          ? ""
+                          : "red")
                     }
                   >
-                    {x.status === "success" ? "成功" : "失败"}
+                    {x.status === "success"
+                      ? "成功"
+                      : x.status === "submitted"
+                        ? "已提交"
+                        : "失败"}
                   </span>
                 </td>
-                <td className="detail-cell">{x.detail || "—"}</td>
+                <td data-label="详情" className="detail-cell">
+                  {x.detail || "—"}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -1,4 +1,5 @@
 import { aggregateTraffic, trafficRange } from "../../shared/traffic.mjs";
+import { normalizePortRule, portRuleCovered } from "../../shared/firewall";
 import type {
   Account,
   AuditEntry,
@@ -310,6 +311,8 @@ export async function demoApi(
             accountId: body.accountId,
             region: body.region,
             status: "success",
+            completedAt: Date.now(),
+            at: Date.now(),
             instances: created,
           }
         : undefined;
@@ -431,7 +434,14 @@ export async function demoApi(
       );
     }
     if (!body) return { items: rules.get(key) };
-    const r = body.portInfo;
+    const r = normalizePortRule(body.portInfo);
+    if (!body.close && portRuleCovered(rules.get(key)!, r)) {
+      audit("open-port", body.id);
+      return {
+        unchanged: true,
+        notice: "现有防火墙规则已允许此协议、端口及来源，无需重复开放",
+      };
+    }
     if (body.close)
       rules.set(
         key,

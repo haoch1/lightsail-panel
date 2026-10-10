@@ -4,6 +4,7 @@ import type { Instance, PortInfo } from "../../../shared/types";
 import { Checkbox } from "../../components/ui";
 import PortRuleEditor from "../firewall/PortRuleEditor";
 import { portLabel } from "../firewall/presets";
+import { protocolLabel } from "../../../shared/firewall";
 import { addLaunchFirewallRule, defaultLaunchFirewall } from "./firewall-rules";
 
 export default function LaunchNetworkOptions({
@@ -51,7 +52,7 @@ export default function LaunchNetworkOptions({
       {firewall !== undefined && (
         <>
           <div className="table-wrap">
-            <table>
+            <table className="responsive-table">
               <thead>
                 <tr>
                   <th>协议</th>
@@ -63,16 +64,16 @@ export default function LaunchNetworkOptions({
               <tbody>
                 {firewall.map((rule, index) => (
                   <tr key={index}>
-                    <td>{rule.protocol.toUpperCase()}</td>
-                    <td>
+                    <td data-label="协议">{protocolLabel(rule.protocol)}</td>
+                    <td data-label="端口">
                       {portLabel(rule.protocol, rule.fromPort, rule.toPort)}
                     </td>
-                    <td>
+                    <td data-label="允许来源">
                       {[...(rule.cidrs || []), ...(rule.ipv6Cidrs || [])].join(
                         ", ",
                       )}
                     </td>
-                    <td>
+                    <td data-label="操作">
                       <button
                         type="button"
                         className="icon-button"

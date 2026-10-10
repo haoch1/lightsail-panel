@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssh-client 
     && rm -rf /var/lib/apt/lists/*
 LABEL org.opencontainers.image.source="https://github.com/haoch1/lightsail-panel" \
       org.opencontainers.image.title="Lightsail Panel" \
-      org.opencontainers.image.description="自托管的 Amazon Lightsail 管理面板，支持多 AWS 账户、跨区域资源管理、网页 SSH、流量进度与阈值自动关机，提供登录有效期设置。" \
+      org.opencontainers.image.description="Amazon Lightsail 自托管管理面板，支持多账户、跨区域资源管理、网页 SSH、流量监控、阈值自动关机及实时操作日志，适配桌面与移动端。" \
       org.opencontainers.image.licenses="MIT"
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8090 DATA_DIR=/app/data
 RUN mkdir /app/data && chown node:node /app/data

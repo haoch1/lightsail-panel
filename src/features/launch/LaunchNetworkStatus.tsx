@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOperationJobs } from "../../hooks/useResourceUpdates";
 import { usePanel } from "../../app/context";
 import type { Instance } from "../../../shared/types";
@@ -24,6 +24,22 @@ export default function LaunchNetworkStatus({
 }) {
   const panel = usePanel();
   const jobs = useOperationJobs();
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const expire = () => {
+      const current = Date.now();
+      setNow(current);
+      const expires = jobs
+        .filter((job) => job.status === "success" && job.completedAt)
+        .map((job) => job.completedAt! + 8000)
+        .filter((at) => at > current);
+      if (expires.length)
+        timer = setTimeout(expire, Math.min(...expires) - current + 1);
+    };
+    expire();
+    return () => clearTimeout(timer);
+  }, [jobs]);
   const [dismissed, setDismissed] = useState<string[]>(() => {
     try {
       const saved = JSON.parse(
@@ -44,10 +60,23 @@ export default function LaunchNetworkStatus({
             !dismissed.includes(job.id) &&
             (!job.resources || job.resources.includes(resource)) &&
             (!instance ||
+              job.targetInstance === instance.id ||
               job.instances.some((item) => item.name === instance.id)) &&
-            (job.action === "launch" ||
-              !job.action ||
-              job.status !== "success") &&
+            (job.status !== "success" ||
+              (!!job.completedAt && job.completedAt + 8000 > now)) &&
+            (job.status !== "success" ||
+              !jobs.some(
+                (other) =>
+                  (other.at || 0) > (job.at || 0) &&
+                  other.accountId === job.accountId &&
+                  other.region === job.region &&
+                  other.resources?.includes(resource) &&
+                  other.instances.some((item) =>
+                    job.instances.some(
+                      (previous) => previous.name === item.name,
+                    ),
+                  ),
+              )) &&
             ((instance?.accountId || panel.accountId) === "all" ||
               (instance?.accountId || panel.accountId) === job.accountId) &&
             ((instance?.region || panel.region) === "all" ||
@@ -71,9 +100,11 @@ export default function LaunchNetworkStatus({
                     : "实例已提交，等待创建及配置完成"
                   : job.status === "success"
                     ? job.action && job.action !== "launch"
-                      ? "资源操作已完成"
+                      ? resource === "ports"
+                        ? "防火墙规则已更新"
+                        : "资源操作已完成"
                       : "实例创建及配置已完成"
-                    : "操作未全部完成，请核对结果"}
+                    : "资源操作失败"}
               </strong>
               {job.instances.map((item) => (
                 <div key={item.name}>

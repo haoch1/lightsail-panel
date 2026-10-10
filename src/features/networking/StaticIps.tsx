@@ -21,8 +21,21 @@ import Select from "../../components/ui/Select";
 import { api } from "../../lib/api";
 import AllocateStaticIp from "./AllocateStaticIp";
 import LaunchNetworkStatus from "../launch/LaunchNetworkStatus";
+import { useOperationJobs } from "../../hooks/useResourceUpdates";
 export default function StaticIps() {
   const panel = usePanel();
+  const jobs = useOperationJobs();
+  const pending = (ip: ScopedStaticIp) =>
+    jobs.some(
+      (job) =>
+        job.status === "pending" &&
+        job.accountId === ip.accountId &&
+        job.region === ip.region &&
+        ((!!ip.attachedTo && job.targetInstance === ip.attachedTo) ||
+          job.instances.some(
+            (item) => item.name === ip.name || item.name === ip.attachedTo,
+          )),
+    );
   const { accountId, region, accounts } = panel;
   const scope = { accountId, region, accounts };
   const data = useResourceScan(scope, staticIpSource);
@@ -55,7 +68,8 @@ export default function StaticIps() {
         region: dialog.ip.region,
         action: dialog.action,
         name: dialog.ip.name,
-        instanceName: target,
+        instanceName:
+          dialog.action === "detach" ? dialog.ip.attachedTo : target,
         confirm,
       });
       panel.toast(result.notice || "静态 IP 操作已提交");
@@ -103,7 +117,7 @@ export default function StaticIps() {
       <ScanNotices scan={data.data} />
       <LaunchNetworkStatus resource="static-ips" />
       <div className="table-wrap">
-        <table>
+        <table className="responsive-table">
           <thead>
             <tr>
               <th>名称</th>
@@ -117,20 +131,21 @@ export default function StaticIps() {
           <tbody>
             {data.data?.items.map((ip) => (
               <tr key={`${ip.accountId}:${ip.region}:${ip.name}`}>
-                <td>{ip.name}</td>
-                <td>
+                <td data-label="名称">{ip.name}</td>
+                <td data-label="公网 IP">
                   <CopyText text={ip.ipAddress} toast={panel.toast} />
                 </td>
-                <td>{ip.attachedTo || "—"}</td>
-                <td>
+                <td data-label="绑定实例">{ip.attachedTo || "—"}</td>
+                <td data-label="账户 / 区域">
                   {ip.accountName}
                   <div className="subline">{regionLabel(ip.region)}</div>
                 </td>
-                <td>{ip.isAttached ? "已绑定" : "未绑定"}</td>
-                <td>
+                <td data-label="状态">{ip.isAttached ? "已绑定" : "未绑定"}</td>
+                <td data-label="操作">
                   <div className="row-actions">
                     <button
                       className="button small"
+                      disabled={pending(ip)}
                       onClick={() =>
                         open(ip.isAttached ? "detach" : "attach", ip)
                       }
@@ -139,7 +154,7 @@ export default function StaticIps() {
                     </button>
                     <button
                       className="button small danger-text"
-                      disabled={ip.isAttached}
+                      disabled={ip.isAttached || pending(ip)}
                       onClick={() => open("release", ip)}
                     >
                       释放

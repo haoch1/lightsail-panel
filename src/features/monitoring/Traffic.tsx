@@ -98,7 +98,7 @@ export default function Traffic({ instance }: { instance: Instance }) {
           <span className="muted">{timezone} 日期</span>
         </div>
         <div className="table-wrap">
-          <table>
+          <table className="traffic-daily-table">
             <thead>
               <tr>
                 <th>日期</th>
@@ -110,10 +110,14 @@ export default function Traffic({ instance }: { instance: Instance }) {
             <tbody>
               {data?.daily.map((d) => (
                 <tr key={d.date}>
-                  <td>{d.date}</td>
-                  <td className="amount-column mono">{size(d.inbound)}</td>
-                  <td className="amount-column mono">{size(d.outbound)}</td>
-                  <td className="amount-column mono">
+                  <td data-label="日期">{d.date}</td>
+                  <td data-label="入站" className="amount-column mono">
+                    {size(d.inbound)}
+                  </td>
+                  <td data-label="出站" className="amount-column mono">
+                    {size(d.outbound)}
+                  </td>
+                  <td data-label="合计" className="amount-column mono">
                     {size(
                       d.inbound !== null && d.outbound !== null
                         ? d.inbound + d.outbound

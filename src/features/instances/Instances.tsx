@@ -47,6 +47,7 @@ import {
 } from "../../components/ui";
 import Select from "../../components/ui/Select";
 import LaunchNetworkStatus from "../launch/LaunchNetworkStatus";
+import { useOperationJobs } from "../../hooks/useResourceUpdates";
 import { api } from "../../lib/api";
 import { whole } from "../../lib/format";
 import { memoryLabel } from "../../lib/bundle";
@@ -64,6 +65,16 @@ type Dialog = {
   action?: string;
 };
 export default function Instances() {
+  const jobs = useOperationJobs();
+  const pending = (i: Instance) =>
+    jobs.some(
+      (job) =>
+        job.status === "pending" &&
+        job.accountId === i.accountId &&
+        job.region === i.region &&
+        (job.targetInstance === i.id ||
+          job.instances.some((item) => item.name === i.id)),
+    );
   const service = "lightsail";
   const { accounts, accountId, region, toast, navigate, openAccounts } =
     usePanel();
@@ -119,11 +130,25 @@ export default function Instances() {
   useEffect(() => {
     if (!menu) return;
     const close = () => setMenu(null);
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
     const scrolled = (e: Event) => {
-      if (!menuElement.current?.contains(e.target as Node)) close();
+      if (menuElement.current?.contains(e.target as Node)) return;
+      if (menu.anchor && menuTrigger.current) {
+        const rect = menuTrigger.current.getBoundingClientRect();
+        if (
+          rect.right === menu.anchor.right &&
+          rect.top === menu.anchor.top &&
+          rect.bottom === menu.anchor.bottom
+        )
+          return;
+      } else if (window.scrollX === scrollX && window.scrollY === scrollY)
+        return;
+      close();
     };
     document.addEventListener("click", close);
     document.addEventListener("scroll", scrolled, true);
+    window.addEventListener("resize", close);
     const esc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         close();
@@ -134,6 +159,7 @@ export default function Instances() {
     return () => {
       document.removeEventListener("click", close);
       document.removeEventListener("scroll", scrolled, true);
+      window.removeEventListener("resize", close);
       document.removeEventListener("keydown", esc);
     };
   }, [menu]);
@@ -251,7 +277,7 @@ export default function Instances() {
         <ScanNotices scan={data} />
         <LaunchNetworkStatus />
         <div className="table-wrap">
-          <table className="instance-table">
+          <table className="instance-table responsive-table">
             <thead>
               <tr>
                 <th className="check-cell">
@@ -302,7 +328,7 @@ export default function Instances() {
                       }
                     />
                   </td>
-                  <td>
+                  <td data-label="实例">
                     <button
                       className="instance-name"
                       onClick={() =>
@@ -312,11 +338,11 @@ export default function Instances() {
                       {i.name}
                     </button>
                   </td>
-                  <td>
+                  <td data-label="状态">
                     <State value={i.state} />
                     <div className="subline">{i.platform}</div>
                   </td>
-                  <td>
+                  <td data-label="规格 / 价格">
                     <div>{i.instanceType}</div>
                     <div className="subline">
                       {i.cpu === undefined ? "—" : whole(i.cpu)} vCPU ·{" "}
@@ -324,7 +350,7 @@ export default function Instances() {
                     </div>
                     <InstanceRate usage={usage.values[instanceKey(i)]} />
                   </td>
-                  <td>
+                  <td data-label="本月流量">
                     <button
                       type="button"
                       className="traffic-link"
@@ -336,14 +362,14 @@ export default function Instances() {
                       <MonthlyTraffic usage={usage.values[instanceKey(i)]} />
                     </button>
                   </td>
-                  <td>
+                  <td data-label="网络">
                     <InstanceAddresses instance={i} toast={toast} />
                   </td>
-                  <td>
+                  <td data-label="账户 / 区域">
                     <span>{i.accountName}</span>
                     <div className="subline">{regionLabel(i.region)}</div>
                   </td>
-                  <td>
+                  <td data-label="操作">
                     <div className="row-actions instance-row-actions">
                       <button
                         className="button small instance-actions-button"
@@ -444,7 +470,9 @@ export default function Instances() {
           <div className="menu-power-actions">
             <button
               role="menuitem"
-              disabled={menu.instance.state !== "stopped"}
+              disabled={
+                pending(menu.instance) || menu.instance.state !== "stopped"
+              }
               onClick={() => command(menu.instance, "start")}
             >
               <Play />
@@ -452,7 +480,9 @@ export default function Instances() {
             </button>
             <button
               role="menuitem"
-              disabled={menu.instance.state !== "running"}
+              disabled={
+                pending(menu.instance) || menu.instance.state !== "running"
+              }
               onClick={() => command(menu.instance, "stop")}
             >
               <Square />
@@ -460,7 +490,9 @@ export default function Instances() {
             </button>
             <button
               role="menuitem"
-              disabled={menu.instance.state !== "running"}
+              disabled={
+                pending(menu.instance) || menu.instance.state !== "running"
+              }
               onClick={() => command(menu.instance, "reboot")}
             >
               <RotateCw />
@@ -483,6 +515,7 @@ export default function Instances() {
             role="menuitem"
             disabled={
               menu.instance.state !== "running" ||
+              pending(menu.instance) ||
               menu.instance.ipAddressType === "ipv6"
             }
             onClick={() => command(menu.instance, "rotate-ip")}
@@ -532,6 +565,7 @@ export default function Instances() {
           </button>
           <button
             role="menuitem"
+            disabled={pending(menu.instance)}
             onClick={() =>
               command(
                 menu.instance,
@@ -556,6 +590,7 @@ export default function Instances() {
           <button
             role="menuitem"
             className="danger-text"
+            disabled={pending(menu.instance)}
             onClick={() => command(menu.instance, "terminate")}
           >
             <Trash2 />

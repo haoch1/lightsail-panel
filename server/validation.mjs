@@ -1,5 +1,6 @@
 import { isIP } from "node:net";
 import { z } from "zod";
+import { normalizeProtocol } from "../shared/firewall.ts";
 export const region = z.string().regex(/^[a-z]{2}(?:-[a-z]+)+-\d$/);
 export const service = z.literal("lightsail").default("lightsail");
 export const target = z.object({
@@ -139,7 +140,10 @@ export const publicPorts = target
   .extend({
     close: z.boolean().default(false),
     portInfo: z.object({
-      protocol: z.enum(["tcp", "udp", "all", "icmp", "icmpv6"]),
+      protocol: z
+        .union([z.string(), z.number()])
+        .transform(normalizeProtocol)
+        .pipe(z.enum(["tcp", "udp", "all", "icmp", "icmpv6"])),
       fromPort: z.number().int().min(-1).max(65535),
       toPort: z.number().int().min(-1).max(65535),
       cidrs: z.array(z.string()).max(60).optional(),

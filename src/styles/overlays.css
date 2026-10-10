@@ -130,7 +130,6 @@
 .account-manager-modal .modal-body {
   display: flex;
   flex-direction: column;
-  scrollbar-gutter: stable;
 }
 .traffic-limit-modal form {
   display: flex;

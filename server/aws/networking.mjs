@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { error, paginate, scrubError } from "./shared.mjs";
+import {
+  normalizePortRule,
+  portRuleCovered,
+  portRulePresent,
+} from "../../shared/firewall.ts";
 
 export async function rotateIp(gateway, account, service, region, id) {
   if (service !== "lightsail") throw error("此面板仅支持 Lightsail");
@@ -185,18 +190,33 @@ export async function ports(gateway, t) {
     { instanceName: t.id },
   );
   return {
-    items: (result.portStates || []).filter((x) => x.state === "open"),
+    items: (result.portStates || [])
+      .filter((x) => x.state === "open")
+      .map(normalizePortRule),
   };
 }
 
 export async function updatePorts(gateway, input) {
   const account = gateway.store.account(input.accountId);
+  const portInfo = normalizePortRule(input.portInfo);
+  const current = await ports(gateway, input);
+  if (
+    input.close
+      ? !portRulePresent(current.items, portInfo)
+      : portRuleCovered(current.items, portInfo)
+  )
+    return {
+      unchanged: true,
+      notice: input.close
+        ? "该防火墙规则已关闭"
+        : "现有防火墙规则已允许此协议、端口及来源，无需重复开放",
+    };
   const result = await gateway.send(
     account,
     "lightsail",
     input.region,
     input.close ? "CloseInstancePublicPorts" : "OpenInstancePublicPorts",
-    { instanceName: input.id, portInfo: input.portInfo },
+    { instanceName: input.id, portInfo },
   );
   return {
     operations:

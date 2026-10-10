@@ -23,7 +23,7 @@ export function duration(seconds: number) {
       : `${decimal.format(seconds)} 秒`;
 }
 export function bytes(value = 0) {
-  const units = ["B", "KiB", "MiB", "GiB", "TiB"];
+  const units = ["B", "KB", "MB", "GB", "TB"];
   const index = Math.min(
     4,
     Math.max(0, Math.floor(Math.log2(Math.max(1, Math.abs(value))) / 10)),
@@ -32,7 +32,14 @@ export function bytes(value = 0) {
 }
 export function when(value?: string) {
   return value
-    ? new Date(value).toLocaleString("zh-CN", { hour12: false })
+    ? new Date(value).toLocaleString("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
     : "—";
 }
 export function chartDate(value: string, mode: "date" | "time", full = false) {

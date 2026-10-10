@@ -379,7 +379,6 @@
 .firewall-table {
   height: 320px;
   min-height: 240px;
-  scrollbar-gutter: stable;
 }
 .firewall-modal .firewall-table {
   height: auto;

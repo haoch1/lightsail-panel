@@ -15,6 +15,8 @@ import { api, query } from "../../lib/api";
 import PortRuleEditor from "./PortRuleEditor";
 import { applicationLabel, portLabel } from "./presets";
 import LaunchNetworkStatus from "../launch/LaunchNetworkStatus";
+import { normalizePortRule, protocolLabel } from "../../../shared/firewall";
+import { useOperationJobs } from "../../hooks/useResourceUpdates";
 export default function Ports({ instance }: { instance: Instance }) {
   const panel = usePanel(),
     target = targetOf(instance),
@@ -24,6 +26,14 @@ export default function Ports({ instance }: { instance: Instance }) {
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const submitting = useRef(false);
+  const pending = useOperationJobs().some(
+    (job) =>
+      job.status === "pending" &&
+      job.accountId === instance.accountId &&
+      job.region === instance.region &&
+      (job.targetInstance === instance.id ||
+        job.instances.some((item) => item.name === instance.id)),
+  );
   async function submit(portInfo: PortInfo, close = false) {
     if (submitting.current) return;
     if (!close && instance.ipAddressType === "ipv6" && portInfo.cidrs?.length) {
@@ -51,6 +61,7 @@ export default function Ports({ instance }: { instance: Instance }) {
           <RefreshButton loading={data.loading} onClick={data.refresh} />
           <button
             className="button primary"
+            disabled={pending}
             onClick={() => {
               setError("");
               setAdd(true);
@@ -67,7 +78,7 @@ export default function Ports({ instance }: { instance: Instance }) {
       {data.error && <ErrorBox message={data.error} retry={data.refresh} />}
       <LaunchNetworkStatus resource="ports" instance={instance} />
       <div className="table-wrap firewall-table">
-        <table>
+        <table className="responsive-table">
           <thead>
             <tr>
               <th>应用程序</th>
@@ -78,25 +89,33 @@ export default function Ports({ instance }: { instance: Instance }) {
             </tr>
           </thead>
           <tbody>
-            {data.data?.items.map((r, index) => (
+            {data.data?.items.map(normalizePortRule).map((r, index) => (
               <tr key={index}>
-                <td>
+                <td data-label="应用程序">
                   <strong>
                     {applicationLabel(r.protocol, r.fromPort, r.toPort)}
                   </strong>
                 </td>
-                <td>{r.protocol.toUpperCase()}</td>
-                <td>{portLabel(r.protocol, r.fromPort, r.toPort)}</td>
-                <td className="firewall-sources">
+                <td data-label="协议">{protocolLabel(r.protocol)}</td>
+                <td data-label="端口">
+                  {portLabel(r.protocol, r.fromPort, r.toPort)}
+                </td>
+                <td data-label="允许来源" className="firewall-sources">
                   {[
                     ...(r.cidrs || []),
                     ...(r.ipv6Cidrs || []),
                     ...(r.cidrListAliases || []),
                   ].join(", ") || "AWS 默认来源"}
                 </td>
-                <td>
+                <td data-label="操作">
                   <button
                     className="button small danger-text"
+                    disabled={
+                      pending ||
+                      !["tcp", "udp", "all", "icmp", "icmpv6"].includes(
+                        r.protocol,
+                      )
+                    }
                     onClick={() => {
                       setError("");
                       setRemove(r);
@@ -126,8 +145,9 @@ export default function Ports({ instance }: { instance: Instance }) {
       {remove && (
         <Modal title="确认关闭端口" busy={busy} onClose={() => setRemove(null)}>
           <div className="notice danger-notice">
-            关闭 {remove.protocol.toUpperCase()} {remove.fromPort}–
-            {remove.toPort} 后，相关公网连接可能中断。
+            关闭 {protocolLabel(remove.protocol)}{" "}
+            {portLabel(remove.protocol, remove.fromPort, remove.toPort)}{" "}
+            后，相关公网连接可能中断。
           </div>
           {error && <ErrorBox message={error} />}
           <div className="modal-actions">

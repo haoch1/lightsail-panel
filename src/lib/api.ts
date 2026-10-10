@@ -1,7 +1,12 @@
 import { resourceCache } from "./resource-cache";
 import { matchesUpdate, mutationUpdate } from "../../shared/resource-update";
 import { ApiError } from "./api-error";
+export function invalidateAudit() {
+  resourceCache.invalidate((key) => key === "/audit");
+  window.dispatchEvent(new Event("panel:audit-updated"));
+}
 function changed(path: string, body: unknown) {
+  invalidateAudit();
   if (path === "/audit") {
     resourceCache.invalidate((key) => key === path);
     return;
@@ -118,6 +123,7 @@ export async function api<T = any>(
     .json()
     .catch(() => ({ error: "服务器返回了无效响应" }));
   if (!result.ok) {
+    if (requestMethod !== "GET") invalidateAudit();
     if (requestMethod !== "GET" && mutationUpdate(path, body))
       changed(path, body);
     if (result.status === 401 && !path.startsWith("/login")) {

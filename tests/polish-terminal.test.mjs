@@ -252,7 +252,7 @@ test("chart geometry uses explicit gaps and steps without inventing values or sm
 });
 test("monitoring formatting uses percentage, byte, duration, and integer-count units", () => {
   assert.equal(percent(18.25), "18.25%");
-  assert.equal(bytes(1024), "1.00 KiB");
+  assert.equal(bytes(1024), "1.00 KB");
   assert.equal(bytes(0), "0.00 B");
   assert.equal(bytes(0.6), "0.60 B");
   assert.equal(duration(7200), "2.00 小时");

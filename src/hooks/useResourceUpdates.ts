@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { LaunchNetworkJob } from "../../shared/types";
-import { api } from "../lib/api";
+import { api, invalidateAudit } from "../lib/api";
 import { resourceCache } from "../lib/resource-cache";
 import { matchesUpdate } from "../../shared/resource-update";
 let jobs: LaunchNetworkJob[] = [];
@@ -97,14 +97,34 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
       void load();
     };
     const visible = () => {
-      if (!document.hidden) void load();
+      if (!document.hidden) {
+        invalidateAudit();
+        void load();
+      }
     };
+    const events = demo ? undefined : new EventSource("/api/events");
+    let streaming = false;
+    if (events) {
+      events.onmessage = ({ data }) => {
+        streaming = true;
+        if (data === "audit" || data === "ready") invalidateAudit();
+        if (data === "operations" || data === "ready") void load();
+      };
+      events.onerror = () => {
+        streaming = false;
+      };
+    }
+    const fallback = setInterval(() => {
+      if (!demo && !streaming && !document.hidden) invalidateAudit();
+    }, 30000);
     window.addEventListener("panel:mutation", changed);
     document.addEventListener("visibilitychange", visible);
     void load();
     return () => {
       live = false;
       clearTimeout(timer);
+      clearInterval(fallback);
+      events?.close();
       window.removeEventListener("panel:mutation", changed);
       document.removeEventListener("visibilitychange", visible);
     };
