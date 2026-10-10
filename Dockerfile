@@ -11,7 +11,7 @@ FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
 LABEL org.opencontainers.image.source="https://github.com/haoch1/lightsail-panel" \
       org.opencontainers.image.title="Lightsail Panel" \
-      org.opencontainers.image.description="Self-hosted Amazon Lightsail management panel" \
+      org.opencontainers.image.description="自托管的 Amazon Lightsail 管理面板，支持多 AWS 账户、跨区域资源管理、流量进度与阈值自动关机，提供登录有效期设置。" \
       org.opencontainers.image.licenses="MIT"
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8090 DATA_DIR=/app/data
 RUN mkdir /app/data && chown node:node /app/data
