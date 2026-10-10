@@ -223,8 +223,8 @@
   .account-manager-toolbar
   > .button:disabled,
 .account-manager-modal[aria-busy="true"] .row-actions > .icon-button:disabled {
-  opacity: 1;
-  cursor: progress;
+  opacity: 0.6;
+  cursor: default;
 }
 .toasts {
   position: fixed;
