@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Instance } from "../../../shared/types";
-import { Checkbox, Field, Modal } from "../../components/ui";
+import { Checkbox, Field, Modal, PendingButton } from "../../components/ui";
 import { actionNames } from "./actions";
 export default function ActionDialog({
   instance,
@@ -46,6 +46,7 @@ export default function ActionDialog({
       {changesBundle && (
         <Checkbox
           checked={acceptBundleUpdate}
+          disabled={busy}
           onChange={(e) => setAcceptBundleUpdate(e.target.checked)}
         >
           我确认切换为含 IPv4 的套餐，并接受 AWS 调整套餐和费用
@@ -55,6 +56,7 @@ export default function ActionDialog({
         <Field label="输入实例 ID 确认">
           <input
             autoComplete="off"
+            disabled={busy}
             placeholder={instance.id}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
@@ -65,19 +67,20 @@ export default function ActionDialog({
         <button className="button" onClick={onClose} disabled={busy}>
           取消
         </button>
-        <button
+        <PendingButton
+          busy={busy}
+          pendingLabel="正在提交…"
           className={
             "button " + (action === "terminate" ? "danger" : "primary")
           }
           disabled={
-            busy ||
             (action === "terminate" && confirm !== instance.id) ||
             (changesBundle && !acceptBundleUpdate)
           }
           onClick={() => onConfirm(confirm, acceptBundleUpdate)}
         >
-          {busy ? "正在提交…" : "确认" + actionNames[action]}
-        </button>
+          {"确认" + actionNames[action]}
+        </PendingButton>
       </div>
     </Modal>
   );

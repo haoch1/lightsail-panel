@@ -24,10 +24,6 @@
   word-break: break-word;
   min-width: 0;
 }
-.launch-page {
-  margin: 0 auto;
-  max-width: 920px;
-}
 .form-panel {
   border: 1px solid var(--border);
   background: var(--surface);

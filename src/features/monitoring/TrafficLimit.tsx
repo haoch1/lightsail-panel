@@ -8,6 +8,7 @@ import {
   ErrorBox,
   Field,
   Modal,
+  PendingButton,
   targetOf,
 } from "../../components/ui";
 import TrafficProgress from "../../components/TrafficProgress";
@@ -100,6 +101,7 @@ function TrafficLimitForm({
     <form
       onSubmit={async (e) => {
         e.preventDefault();
+        if (busy) return;
         setBusy(true);
         setError("");
         try {
@@ -168,9 +170,9 @@ function TrafficLimitForm({
         >
           取消
         </button>
-        <button className="button primary" disabled={busy}>
-          {busy ? "正在保存…" : "保存"}
-        </button>
+        <PendingButton busy={busy} pendingLabel="正在保存…">
+          保存
+        </PendingButton>
       </div>
     </form>
   );

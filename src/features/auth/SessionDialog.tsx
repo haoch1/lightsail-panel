@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api } from "../../lib/api";
-import { ErrorBox, Modal, when } from "../../components/ui";
+import { ErrorBox, Modal, PendingButton, when } from "../../components/ui";
 import SessionDuration from "./SessionDuration";
 export default function SessionDialog({
   expires,
@@ -28,6 +28,7 @@ export default function SessionDialog({
       <form
         onSubmit={async (e) => {
           e.preventDefault();
+          if (busy) return;
           setBusy(true);
           setError("");
           try {
@@ -56,9 +57,9 @@ export default function SessionDialog({
           >
             取消
           </button>
-          <button className="button primary" disabled={busy}>
-            {busy ? "正在保存…" : "保存"}
-          </button>
+          <PendingButton busy={busy} pendingLabel="正在保存…">
+            保存
+          </PendingButton>
         </div>
       </form>
     </Modal>

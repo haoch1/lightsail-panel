@@ -1,7 +1,13 @@
 import { regionLabel } from "../../../shared/regions";
 import { useState } from "react";
 import type { Instance, PortInfo } from "../../../shared/types";
-import { Checkbox, ErrorBox, Field, Modal } from "../../components/ui";
+import {
+  Checkbox,
+  ErrorBox,
+  Field,
+  Modal,
+  PendingButton,
+} from "../../components/ui";
 import Select from "../../components/ui/Select";
 import { buildPortRule, sourceTokens, toggleSource } from "./model";
 import { firewallPresets } from "./presets";
@@ -46,6 +52,7 @@ export default function PortRuleEditor({
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (busy) return;
           setLocalError("");
           try {
             onSubmit(
@@ -173,12 +180,17 @@ export default function PortRuleEditor({
         )}
         {(localError || error) && <ErrorBox message={localError || error} />}
         <div className="modal-actions">
-          <button className="button" type="button" onClick={onClose}>
+          <button
+            className="button"
+            type="button"
+            disabled={busy}
+            onClick={onClose}
+          >
             取消
           </button>
-          <button className="button primary" disabled={busy}>
-            {busy ? "正在提交…" : "确认开放"}
-          </button>
+          <PendingButton busy={busy} pendingLabel="正在提交…">
+            确认开放
+          </PendingButton>
         </div>
       </form>
     </Modal>

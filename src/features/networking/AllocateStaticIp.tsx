@@ -2,7 +2,7 @@ import { regionLabel } from "../../../shared/regions";
 import { useState } from "react";
 import type { Region } from "../../../shared/types";
 import { useApi, usePanel } from "../../app/context";
-import { ErrorBox, Field, Modal } from "../../components/ui";
+import { ErrorBox, Field, Modal, PendingButton } from "../../components/ui";
 import Select from "../../components/ui/Select";
 import { api, query } from "../../lib/api";
 
@@ -127,12 +127,14 @@ export default function AllocateStaticIp({
           >
             取消
           </button>
-          <button
+          <PendingButton
             className="button primary"
-            disabled={busy || !accountId || !validRegion}
+            busy={busy}
+            pendingLabel="正在分配…"
+            disabled={!accountId || !validRegion}
           >
-            {busy ? "正在分配…" : "确认分配"}
-          </button>
+            确认分配
+          </PendingButton>
         </div>
       </form>
     </Modal>

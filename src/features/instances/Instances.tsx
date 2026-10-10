@@ -35,6 +35,7 @@ import {
   Empty,
   ErrorBox,
   Modal,
+  PendingButton,
   RefreshButton,
   SearchInput,
   State,
@@ -92,6 +93,7 @@ export default function Instances() {
   const menuTrigger = useRef<HTMLButtonElement | null>(null);
   const [bulk, setBulk] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
   const keyOf = (i: Instance) => `${i.accountId}:${i.region}:${i.id}`;
   const items = (data?.items || []).filter(
     (i) =>
@@ -162,6 +164,8 @@ export default function Instances() {
     confirm = "",
     acceptBundleUpdate = false,
   ) {
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     try {
       const r = await api("/instances/action", {
@@ -175,10 +179,12 @@ export default function Instances() {
     } catch (e) {
       toast((e as Error).message, "error");
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
   function command(i: Instance, action: string) {
+    if (submitting.current) return;
     setMenu(null);
     if (action === "start") void run(i, action);
     else setDialog({ kind: "action", instance: i, action });
@@ -594,13 +600,20 @@ export default function Instances() {
         >
           <p className="muted">{chosen.map((i) => i.name).join("、")}</p>
           <div className="modal-actions">
-            <button className="button" onClick={() => setBulk(null)}>
+            <button
+              className="button"
+              disabled={busy}
+              onClick={() => setBulk(null)}
+            >
               取消
             </button>
-            <button
+            <PendingButton
               className="button primary"
-              disabled={busy}
+              busy={busy}
+              pendingLabel="正在提交…"
               onClick={async () => {
+                if (submitting.current) return;
+                submitting.current = true;
                 setBusy(true);
                 let success = 0;
                 const failures: string[] = [];
@@ -620,13 +633,14 @@ export default function Instances() {
                   failures.length ? "error" : "success",
                 );
                 if (failures.length) toast(failures.join("；"), "error");
+                submitting.current = false;
                 setBusy(false);
                 setBulk(null);
                 setSelected([]);
               }}
             >
               确认{actionNames[bulk]}
-            </button>
+            </PendingButton>
           </div>
         </Modal>
       )}

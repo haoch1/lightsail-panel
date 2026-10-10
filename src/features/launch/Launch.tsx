@@ -9,6 +9,7 @@ import {
   ErrorBox,
   Field,
   Modal,
+  PendingButton,
   RefreshButton,
 } from "../../components/ui";
 import Select from "../../components/ui/Select";
@@ -53,6 +54,7 @@ export default function Launch() {
   const zones = catalog.data?.zones || [];
   const zone = zones.includes(chosenZone) ? chosenZone : zones[0] || "";
   const submission = useRef({ fingerprint: "", token: crypto.randomUUID() });
+  const submitting = useRef(false);
   useEffect(() => {
     if (panel.accountId !== "all") setAccount(panel.accountId);
     else if (!accountId && panel.accounts[0]) {
@@ -93,6 +95,8 @@ export default function Launch() {
     allocateStaticIp,
   };
   async function create() {
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     setError("");
     const fingerprint = JSON.stringify(body);
@@ -112,6 +116,7 @@ export default function Launch() {
       setError(creationRegionError(region, (e as Error).message));
       setConfirm(false);
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
@@ -524,9 +529,13 @@ export default function Launch() {
             >
               取消
             </button>
-            <button className="button primary" disabled={busy} onClick={create}>
-              {busy ? "正在创建…" : "确认创建"}
-            </button>
+            <PendingButton
+              busy={busy}
+              pendingLabel="正在创建…"
+              onClick={create}
+            >
+              确认创建
+            </PendingButton>
           </div>
         </Modal>
       )}

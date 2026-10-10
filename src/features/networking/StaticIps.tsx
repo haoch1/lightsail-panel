@@ -14,6 +14,7 @@ import {
   ErrorBox,
   Field,
   Modal,
+  PendingButton,
   RefreshButton,
 } from "../../components/ui";
 import Select from "../../components/ui/Select";
@@ -46,7 +47,7 @@ export default function StaticIps() {
     setDialog({ action, ip });
   }
   async function run() {
-    if (!dialog?.ip || dialog.action === "allocate") return;
+    if (busy || !dialog?.ip || dialog.action === "allocate") return;
     setBusy(true);
     setError("");
     try {
@@ -194,6 +195,7 @@ export default function StaticIps() {
               <>
                 <Field label="目标实例">
                   <Select
+                    disabled={busy}
                     required
                     value={target}
                     onChange={(e) => setTarget(e.target.value)}
@@ -228,6 +230,7 @@ export default function StaticIps() {
                 </div>
                 <Field label="输入名称确认释放">
                   <input
+                    disabled={busy}
                     required
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
@@ -246,18 +249,19 @@ export default function StaticIps() {
               >
                 取消
               </button>
-              <button
+              <PendingButton
+                busy={busy}
+                pendingLabel="正在提交…"
                 className={
                   "button " +
                   (dialog.action === "release" ? "danger" : "primary")
                 }
                 disabled={
-                  busy ||
-                  (dialog.action === "release" && confirm !== dialog.ip?.name)
+                  dialog.action === "release" && confirm !== dialog.ip?.name
                 }
               >
-                {busy ? "正在提交…" : "确认"}
-              </button>
+                确认
+              </PendingButton>
             </div>
           </form>
         </Modal>

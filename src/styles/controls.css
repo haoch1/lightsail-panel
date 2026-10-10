@@ -26,6 +26,24 @@
 .button:hover:enabled {
   background: var(--surface-hover);
 }
+.pending-button-label {
+  display: grid;
+}
+.pending-button-label > span {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  visibility: hidden;
+}
+.pending-button-label > .active {
+  visibility: visible;
+}
+.pending-button[aria-busy="true"]:disabled {
+  opacity: 1;
+  cursor: progress;
+}
 .button.primary {
   background: var(--accent);
   border-color: var(--accent);

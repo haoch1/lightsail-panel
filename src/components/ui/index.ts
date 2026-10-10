@@ -7,6 +7,7 @@ export { Empty } from "./Empty";
 export { ErrorBox } from "./ErrorBox";
 export { Field } from "./Field";
 export { Modal } from "./Modal";
+export { PendingButton } from "./PendingButton";
 export { RefreshButton } from "./RefreshButton";
 export { SearchInput } from "./SearchInput";
 export { State } from "./State";

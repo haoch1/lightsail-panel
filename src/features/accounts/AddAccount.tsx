@@ -1,7 +1,7 @@
 import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { usePanel } from "../../app/context";
-import { ErrorBox, Field } from "../../components/ui";
+import { ErrorBox, Field, PendingButton } from "../../components/ui";
 import { api } from "../../lib/api";
 
 export default function AddAccount({
@@ -85,10 +85,10 @@ export default function AddAccount({
         >
           取消
         </button>
-        <button className="button primary" disabled={busy}>
+        <PendingButton busy={busy} pendingLabel="正在验证 AWS…">
           <ShieldCheck size={15} />
-          {busy ? "正在验证 AWS…" : demo ? "添加示例账户" : "验证并保存"}
-        </button>
+          {demo ? "添加示例账户" : "验证并保存"}
+        </PendingButton>
       </div>
     </form>
   );

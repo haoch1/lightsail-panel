@@ -2,7 +2,12 @@ import { KeyRound, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Account } from "../../../shared/types";
 import { usePanel } from "../../app/context";
-import { Empty, Modal, RefreshButton } from "../../components/ui";
+import {
+  Empty,
+  Modal,
+  PendingButton,
+  RefreshButton,
+} from "../../components/ui";
 import { api } from "../../lib/api";
 import AddAccount from "./AddAccount";
 
@@ -45,10 +50,12 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
           <button className="button" disabled={!!busy} onClick={closeView}>
             取消
           </button>
-          <button
+          <PendingButton
             className="button danger"
-            disabled={!!busy}
+            busy={!!busy}
+            pendingLabel="正在移除…"
             onClick={async () => {
+              if (busy) return;
               setBusy("remove");
               try {
                 await api("/accounts/" + remove.id, undefined, "DELETE");
@@ -63,7 +70,7 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
             }}
           >
             确认移除
-          </button>
+          </PendingButton>
         </div>
       </>
     );

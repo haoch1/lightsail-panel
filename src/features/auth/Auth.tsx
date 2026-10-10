@@ -1,7 +1,7 @@
 import { ArrowUpRight, Cloud, FlaskConical, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { ThemeControl } from "../../app/theme";
-import { ErrorBox, Field } from "../../components/ui";
+import { ErrorBox, Field, PendingButton } from "../../components/ui";
 import { api, setCsrf } from "../../lib/api";
 import SessionDuration from "./SessionDuration";
 
@@ -33,6 +33,7 @@ export default function Auth({
         <form
           onSubmit={async (e) => {
             e.preventDefault();
+            if (busy) return;
             setError("");
             if (!initialized && password !== confirm) {
               setError("两次输入的密码不一致");
@@ -80,9 +81,13 @@ export default function Auth({
           )}
           <SessionDuration hours={hours} onChange={setHours} disabled={busy} />
           {error && <ErrorBox message={error} />}
-          <button className="button primary full" disabled={busy}>
-            {busy ? "正在验证…" : initialized ? "登录" : "创建管理员并进入"}
-          </button>
+          <PendingButton
+            className="button primary full"
+            busy={busy}
+            pendingLabel="正在验证…"
+          >
+            {initialized ? "登录" : "创建管理员并进入"}
+          </PendingButton>
         </form>
         <a className="demo-entry" href="/lightsail?demo=1">
           <FlaskConical size={15} />

@@ -7,6 +7,7 @@ import {
   Empty,
   ErrorBox,
   Modal,
+  PendingButton,
   RefreshButton,
   targetOf,
 } from "../../components/ui";
@@ -131,16 +132,21 @@ export default function Ports({ instance }: { instance: Instance }) {
           </div>
           {error && <ErrorBox message={error} />}
           <div className="modal-actions">
-            <button className="button" onClick={() => setRemove(null)}>
+            <button
+              className="button"
+              disabled={busy}
+              onClick={() => setRemove(null)}
+            >
               取消
             </button>
-            <button
+            <PendingButton
               className="button danger"
-              disabled={busy}
+              busy={busy}
+              pendingLabel="正在提交…"
               onClick={() => submit(remove, true)}
             >
-              {busy ? "正在提交…" : "确认关闭"}
-            </button>
+              确认关闭
+            </PendingButton>
           </div>
         </Modal>
       )}

@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 import { useRef, useState } from "react";
 import { usePanel } from "../../app/context";
 import { api } from "../../lib/api";
+import { PendingButton } from "../../components/ui";
 
 export function DefaultKeyDownload({
   accountId,
@@ -44,16 +45,17 @@ export function DefaultKeyDownload({
   }
   return (
     <div className="ssh-download">
-      <button
+      <PendingButton
         type="button"
         className="button small"
-        disabled={demo || busy || !accountId}
+        disabled={demo || !accountId}
         onClick={download}
-        aria-busy={busy}
+        busy={busy}
+        pendingLabel="正在下载…"
       >
         <Download size={14} />
-        {busy ? "正在下载…" : "下载默认私钥 (.pem)"}
-      </button>
+        下载默认私钥 (.pem)
+      </PendingButton>
       <p className="muted">
         {demo
           ? "演示模式不提供真实私钥；连接 AWS 后可下载。"

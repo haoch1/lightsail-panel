@@ -217,6 +217,11 @@
   margin-top: 24px;
   padding-top: 20px;
 }
+.modal[aria-busy="true"] .modal-actions > .button:disabled,
+.modal[aria-busy="true"] .modal-head > .icon-button:disabled {
+  opacity: 1;
+  cursor: progress;
+}
 .toasts {
   position: fixed;
   bottom: 22px;
