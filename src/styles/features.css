@@ -337,6 +337,9 @@
   margin: 14px 0 20px;
   min-height: 18px;
 }
+.traffic-content[data-today="true"] .traffic-range {
+  margin-bottom: 0;
+}
 .traffic-daily {
   display: flex;
   flex-direction: column;
@@ -355,9 +358,6 @@
 .traffic-modal .traffic-content,
 .firewall-modal .ports-content {
   height: 100%;
-}
-.traffic-content .table-footer {
-  margin-top: 0;
 }
 .traffic-modal .traffic-daily,
 .firewall-modal .firewall-table {

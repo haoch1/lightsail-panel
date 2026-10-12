@@ -33,20 +33,29 @@ function TrafficTotal({
 }
 export default function Traffic({ instance }: { instance?: Instance }) {
   const [range, setRange] = useState("month");
-  const { data, error, loading, previousData, refresh } = useApi<TrafficData>(
-    instance
-      ? "/traffic?" +
-          query({
-            ...targetOf(instance),
-            range,
-            utcOffsetMinutes: -new Date().getTimezoneOffset(),
-          })
-      : null,
-    {
-      retainKey: instance ? "traffic:" + query(targetOf(instance)) : undefined,
-    },
-  );
+  const { data, dataPath, error, loading, previousData, refresh } =
+    useApi<TrafficData>(
+      instance
+        ? "/traffic?" +
+            query({
+              ...targetOf(instance),
+              range,
+              utcOffsetMinutes: -new Date().getTimezoneOffset(),
+            })
+        : null,
+      {
+        retainKey: instance
+          ? "traffic:" + query(targetOf(instance))
+          : undefined,
+      },
+    );
   const initialLoading = !instance || (loading && !data);
+  const today = dataPath
+    ? new URLSearchParams(dataPath.split("?")[1]).get("range") === "today"
+    : range === "today";
+  const daily = data?.daily
+    .slice()
+    .sort((a, b) => b.date.localeCompare(a.date));
   const offset = data?.utcOffsetMinutes ?? -new Date().getTimezoneOffset();
   const displayTime = (iso: string) =>
     new Date(new Date(iso).getTime() + offset * 60000)
@@ -56,8 +65,18 @@ export default function Traffic({ instance }: { instance?: Instance }) {
   const timezone = offset
     ? `UTC${offset < 0 ? "−" : "+"}${String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0")}:${String(Math.abs(offset) % 60).padStart(2, "0")}`
     : "UTC";
+  const startTime = data ? displayTime(data.start) : "";
+  const endTime = data ? displayTime(data.end) : "";
+  const rangeEnd =
+    startTime.slice(0, 10) === endTime.slice(0, 10)
+      ? endTime.slice(11)
+      : endTime;
   return (
-    <div className="traffic-content" aria-busy={initialLoading || loading}>
+    <div
+      className="traffic-content"
+      data-today={today}
+      aria-busy={initialLoading || loading}
+    >
       <div className="toolbar">
         <div className="periods">
           {Object.entries({
@@ -89,73 +108,69 @@ export default function Traffic({ instance }: { instance?: Instance }) {
         <TrafficTotal label="合计流量" value={data?.totals.combined ?? null} />
       </section>
       <div className="traffic-range">
-        <span>
-          {data
-            ? `${displayTime(data.start)} → ${displayTime(data.end)}（${timezone}）`
-            : "—"}
+        <span title={data ? `上次查询：${when(data.at)}` : undefined}>
+          {data ? `${startTime} → ${rangeEnd}（${timezone}）` : "—"}
         </span>
         <span className="sr-only" role="status">
           {previousData ? "正在更新查询结果…" : ""}
         </span>
       </div>
-      <section className="panel traffic-daily">
-        <div className="section-heading">
-          <h2>按日流量</h2>
-          <span className="muted">{timezone} 日期</span>
-        </div>
-        <div className="table-wrap">
-          <table className="traffic-daily-table">
-            <thead>
-              <tr>
-                <th>日期</th>
-                <th className="amount-column">入站</th>
-                <th className="amount-column">出站</th>
-                <th className="amount-column">合计</th>
-              </tr>
-            </thead>
-            <tbody>
-              {initialLoading && (
-                <TableLoading columns={["日期", "入站", "出站", "合计"]} />
-              )}
-              {data?.daily.map((d) => (
-                <tr className="resource-row" key={d.date}>
-                  <td data-label="日期">{d.date}</td>
-                  <td data-label="入站" className="amount-column mono">
-                    {size(d.inbound)}
-                  </td>
-                  <td data-label="出站" className="amount-column mono">
-                    {size(d.outbound)}
-                  </td>
-                  <td data-label="合计" className="amount-column mono">
-                    {size(
-                      d.inbound !== null && d.outbound !== null
-                        ? d.inbound + d.outbound
-                        : null,
-                    )}
-                  </td>
+      {!today && (
+        <section className="panel traffic-daily">
+          <div className="section-heading">
+            <h2>按日流量</h2>
+          </div>
+          <div className="table-wrap">
+            <table className="traffic-daily-table">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th className="amount-column">入站</th>
+                  <th className="amount-column">出站</th>
+                  <th className="amount-column">合计</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {!initialLoading &&
-            !loading &&
-            !error &&
-            data &&
-            !data.daily.length && (
-              <Empty
-                title="此时间范围暂无流量数据"
-                description="刚创建、已停止的实例可能没有指标；缺失数据不会补成零。"
-              />
-            )}
-        </div>
-      </section>
+              </thead>
+              <tbody>
+                {initialLoading && (
+                  <TableLoading columns={["日期", "入站", "出站", "合计"]} />
+                )}
+                {daily?.map((d) => (
+                  <tr className="resource-row" key={d.date}>
+                    <td data-label="日期">{d.date}</td>
+                    <td data-label="入站" className="amount-column mono">
+                      {size(d.inbound)}
+                    </td>
+                    <td data-label="出站" className="amount-column mono">
+                      {size(d.outbound)}
+                    </td>
+                    <td data-label="合计" className="amount-column mono">
+                      {size(
+                        d.inbound !== null && d.outbound !== null
+                          ? d.inbound + d.outbound
+                          : null,
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {!initialLoading &&
+              !loading &&
+              !error &&
+              data &&
+              !data.daily.length && (
+                <Empty
+                  title="此时间范围暂无流量数据"
+                  description="刚创建、已停止的实例可能没有指标；缺失数据不会补成零。"
+                />
+              )}
+          </div>
+        </section>
+      )}
       <p className="traffic-note">
         统计全部网卡的入站、出站字节数。流量使用量不等同于 AWS
         计费流量或套餐剩余额度；近期指标可能延迟。
       </p>
-      <div className="table-footer">
-        <span>上次查询 {data ? when(data.at) : "—"}</span>
-      </div>
     </div>
   );
 }

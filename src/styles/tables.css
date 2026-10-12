@@ -130,11 +130,6 @@
   font-size: 12px;
   margin-top: 13px;
 }
-.table-footer.resource-times {
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: 6px 20px;
-}
 .row-actions {
   display: flex;
   align-items: center;
