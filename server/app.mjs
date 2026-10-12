@@ -1,6 +1,6 @@
 import express from "express";
 import helmet from "helmet";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";
 import packageInfo from "../package.json" with { type: "json" };
@@ -241,6 +241,32 @@ export function createApp(
   if (collectResources) reads.start();
   app.use("/api", (_req, res) => res.status(404).json({ error: "接口不存在" }));
   if (existsSync(dist)) {
+    const template = readFileSync(resolve(dist, "index.html"), "utf8");
+    function entry(req, res) {
+      const session = store.session(token(req));
+      // Only verified sessions receive account metadata; credentials never enter HTML.
+      const bootstrap = {
+        initialized: !!store.config("admin"),
+        authenticated: !!session,
+        ...(session && {
+          csrf: session.csrf,
+          expires: session.expires,
+          accounts: store.accounts(),
+        }),
+      };
+      const json = JSON.stringify(bootstrap).replace(/</g, "\\u003c");
+      res
+        .set("Cache-Control", "no-store")
+        .type("html")
+        .send(
+          template.replace(
+            "<!--panel-bootstrap-->",
+            () =>
+              `<script id="panel-bootstrap" type="application/json">${json}</script>`,
+          ),
+        );
+    }
+    app.get("/index.html", entry);
     app.use(
       "/assets",
       express.static(resolve(dist, "assets"), {
@@ -264,11 +290,7 @@ export function createApp(
           ),
       }),
     );
-    app.get("/{*path}", (_req, res) =>
-      res
-        .set("Cache-Control", "no-store")
-        .sendFile(resolve(dist, "index.html")),
-    );
+    app.get("/{*path}", entry);
   }
   app.use((e, _req, res, _next) => {
     if (e instanceof z.ZodError)

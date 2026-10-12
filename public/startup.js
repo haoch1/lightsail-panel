@@ -3,6 +3,7 @@
     var message = document.getElementById("startup-message");
     var help = document.getElementById("startup-help");
     if (!message || !help) return;
+    document.getElementById("panel-startup").hidden = false;
     message.textContent = "页面脚本加载失败";
     help.textContent =
       "可能是旧页面缓存或浏览器代理阻止了资源加载。请重新加载页面；仍失败时，将浏览器控制台的报错反馈给维护者。";

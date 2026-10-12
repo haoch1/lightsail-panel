@@ -11,17 +11,18 @@
     <script src="/startup.js" defer></script>
   </head>
   <body>
+    <!--panel-bootstrap-->
     <div id="root">
-      <div id="panel-startup" role="status">
+      <div id="panel-startup" role="status" hidden>
         <div class="startup-card">
           <h1>Lightsail Panel</h1>
-          <p id="startup-message">正在加载面板…</p>
-          <p id="startup-help">首次打开可能需要几秒钟。</p>
+          <p id="startup-message">页面脚本加载失败</p>
+          <p id="startup-help">请重新加载页面。</p>
           <a id="startup-retry" href="">重新加载页面</a>
-          <noscript><p>浏览器需要启用 JavaScript 才能使用面板。</p></noscript>
         </div>
       </div>
     </div>
+    <noscript><p>浏览器需要启用 JavaScript 才能使用面板。</p></noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

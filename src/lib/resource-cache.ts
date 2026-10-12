@@ -79,6 +79,12 @@ export class ResourceCache {
     return deadlines.length ? Math.min(...deadlines) : undefined;
   }
 
+  seed(key: string, value: unknown) {
+    this.entries.set(key, { value, expires: this.now() + this.ttl });
+    this.failures.delete(key);
+    this.persist();
+  }
+
   peek<T>(key: string, allowStale = false): T | undefined {
     const entry = this.entries.get(key);
     return entry && (allowStale || entry.expires > this.now())

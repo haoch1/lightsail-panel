@@ -12,12 +12,14 @@ export function useApi<T>(
   options: { retainKey?: string } = {},
 ) {
   const { retainKey } = options;
-  const [snapshot, setSnapshot] = useState<ApiSnapshot<T>>({
-    path,
-    retainKey,
-    error: "",
-    loading: !!path,
-  });
+  const [snapshot, setSnapshot] = useState<ApiSnapshot<T>>(() =>
+    nextSnapshot(
+      { path, retainKey, error: "", loading: !!path },
+      path,
+      retainKey,
+      path ? resourceCache.peek<T>(path) : undefined,
+    ),
+  );
   const [revision, revise] = useState({ version: 0, manual: false });
   const { version } = revision;
   const previous = useRef({ path, version });

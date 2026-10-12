@@ -421,6 +421,66 @@ test("HTML is never cached and missing versioned scripts are not replaced by HTM
   assert.equal(stale.headers.get("cache-control"), "no-store");
   assert.doesNotMatch(stale.headers.get("content-type"), /html/);
 });
+test("entry bootstraps only verified session metadata, escapes HTML, and never calls AWS", async (t) => {
+  const { store, dir } = fixture(t);
+  const dist = join(dir, "dist");
+  mkdirSync(dist);
+  writeFileSync(
+    join(dist, "index.html"),
+    '<!doctype html><!--panel-bootstrap--><div id="root"></div>',
+  );
+  const name = '</script><script>alert("account")</script>';
+  store.saveAccount(
+    { name, region: "us-east-1", authType: "keys" },
+    { accessKeyId: "test-key", secretAccessKey: "bootstrap-secret" },
+  );
+  store.setPassword("bootstrap-test-password");
+  const session = store.createSession();
+  const app = createApp(store, {}, { dist });
+  const server = app.listen(0, "127.0.0.1");
+  await new Promise((r) => server.once("listening", r));
+  t.after(() => new Promise((r) => server.close(r)));
+  const origin = "http://127.0.0.1:" + server.address().port;
+  async function read(path, cookie) {
+    const response = await fetch(origin + path, {
+      headers: cookie ? { Cookie: cookie } : {},
+    });
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.match(
+      response.headers.get("content-security-policy"),
+      /script-src 'self'/,
+    );
+    const html = await response.text();
+    assert.ok(!html.includes("bootstrap-secret"));
+    assert.ok(!html.includes(session.token));
+    const raw = html.match(
+      /<script id="panel-bootstrap" type="application\/json">(.*?)<\/script>/s,
+    )?.[1];
+    assert.ok(raw);
+    return { html, data: JSON.parse(raw) };
+  }
+  for (const path of ["/lightsail", "/audit", "/index.html"]) {
+    const anonymous = await read(path);
+    assert.deepEqual(anonymous.data, {
+      initialized: true,
+      authenticated: false,
+    });
+    assert.ok(!anonymous.html.includes("account"));
+    const signedIn = await read(path, "panel_session=" + session.token);
+    assert.equal(signedIn.data.authenticated, true);
+    assert.equal(signedIn.data.csrf, session.csrf);
+    assert.equal(signedIn.data.accounts[0].name, name);
+    assert.ok(!signedIn.html.includes(name));
+    assert.equal(signedIn.data.accounts[0].credentials, undefined);
+  }
+  store.deleteSession(session.token);
+  assert.equal(
+    (await read("/lightsail", "panel_session=" + session.token)).data
+      .authenticated,
+    false,
+  );
+});
+
 test("API authentication, CSRF, origins, encrypted credential output, and removed scheduler routes", async (t) => {
   const { store } = fixture(t);
   const gateway = {

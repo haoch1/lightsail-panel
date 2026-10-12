@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Account, Region, ToastFn } from "../../shared/types";
-import { Busy, ErrorBox } from "../components/ui";
+import { ErrorBox } from "../components/ui";
 import Select from "../components/ui/Select";
 import Accounts from "../features/accounts/Accounts";
 import Audit from "../features/audit/Audit";
@@ -34,6 +34,7 @@ import { api, isDemo, setCsrf } from "../lib/api";
 import { PanelContext, useApi } from "./context";
 import { ThemeControl } from "./theme";
 import { useResourceUpdates } from "../hooks/useResourceUpdates";
+import { bootstrap } from "../lib/bootstrap";
 const nav = [
   { path: "/lightsail", label: "Lightsail 实例", icon: Cloud },
   { path: "/lightsail/launch", label: "创建实例", icon: Rocket },
@@ -53,7 +54,7 @@ export default function App() {
     initialized: boolean;
     authenticated: boolean;
     expires?: number;
-  } | null>(demo ? { initialized: true, authenticated: true } : null);
+  } | null>(demo ? { initialized: true, authenticated: true } : bootstrap);
   const [path, setPath] = useState(initialPath);
   const [accountId, setAccountId] = useState("all");
   const [region, setRegion] = useState("all");
@@ -88,13 +89,20 @@ export default function App() {
       setAccountId("all");
   }, [accountData.data, accountId]);
   useEffect(() => {
-    if (demo) return;
+    if (demo || bootstrap) return;
+    let active = true;
     api("/auth")
       .then((a) => {
+        if (!active) return;
         setCsrf(a.csrf || "");
         setAuth(a);
       })
-      .catch((e) => setAuthError(e.message));
+      .catch((e) => {
+        if (active) setAuthError(e.message);
+      });
+    return () => {
+      active = false;
+    };
   }, [demo]);
   useEffect(() => {
     const listener = () => {
@@ -115,18 +123,7 @@ export default function App() {
     setMobile(false);
     window.scrollTo(0, 0);
   }
-  if (!auth) {
-    return (
-      <div className="auth-wrap">
-        {authError ? (
-          <ErrorBox message={authError} retry={() => location.reload()} />
-        ) : (
-          <Busy text="连接面板后端…" />
-        )}
-      </div>
-    );
-  }
-  if (!auth.authenticated)
+  if (auth && !auth.authenticated)
     return (
       <Auth
         initialized={auth.initialized}
@@ -137,9 +134,28 @@ export default function App() {
       />
     );
   let page;
-  if (accountData.loading && !accountData.data)
-    page = <Busy text="加载账户…" />;
-  else if (path === "/lightsail/launch") page = <Launch />;
+  const entering = !auth || (!accountData.data && !accountData.error);
+  if (entering) {
+    const current = nav.find((n) => n.path === path)!;
+    page = (
+      <div className="entry-content" aria-busy={!authError}>
+        <div className="page-heading">
+          <div>
+            <h1>
+              <current.icon size={23} />
+              {current.label}
+            </h1>
+            {path === "/lightsail" && (
+              <p>管理 Lightsail 实例、运行状态与公网 IP</p>
+            )}
+          </div>
+        </div>
+        {authError && (
+          <ErrorBox message={authError} retry={() => location.reload()} />
+        )}
+      </div>
+    );
+  } else if (path === "/lightsail/launch") page = <Launch />;
   else if (path === "/lightsail/ips") page = <StaticIps />;
   else if (path === "/lightsail/firewall") page = <Firewall />;
   else if (path === "/lightsail/traffic") page = <TrafficPage />;
@@ -212,6 +228,7 @@ export default function App() {
             <div className="top-control">
               <span className="top-label">区域范围</span>
               <Select
+                disabled={entering}
                 className="region-select"
                 icon={<Globe size={15} />}
                 aria-label="区域范围"
@@ -233,6 +250,7 @@ export default function App() {
               <div className="top-control account-control">
                 <span className="top-label">账户</span>
                 <Select
+                  disabled={entering}
                   className="account-select"
                   icon={<Cloud size={15} />}
                   aria-label="AWS 账户"
@@ -240,7 +258,7 @@ export default function App() {
                   onChange={(e) => setAccountId(e.target.value)}
                 >
                   <option value="all">
-                    {accounts.length ? "全部账户" : "未添加账户"}
+                    {entering || accounts.length ? "全部账户" : "未添加账户"}
                   </option>
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -250,6 +268,7 @@ export default function App() {
                 </Select>
               </div>
               <button
+                disabled={entering}
                 className="button account-manager-button"
                 aria-label="AWS 账户管理"
                 onClick={() => setManageAccounts(true)}
@@ -258,6 +277,7 @@ export default function App() {
               </button>
               {!demo && (
                 <button
+                  disabled={entering}
                   className="icon-button"
                   aria-label="登录有效期"
                   title="登录有效期"
@@ -272,6 +292,7 @@ export default function App() {
                 </a>
               ) : (
                 <button
+                  disabled={entering}
                   className="icon-button"
                   aria-label="退出登录"
                   title="退出登录"
@@ -312,7 +333,7 @@ export default function App() {
         </div>
         {sessionDialog && (
           <SessionDialog
-            expires={auth.expires}
+            expires={auth?.expires}
             onClose={() => setSessionDialog(false)}
             onSaved={(expires) => {
               setAuth((a) => (a ? { ...a, expires } : a));

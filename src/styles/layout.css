@@ -1,3 +1,15 @@
+#root > .shell,
+#root > .auth-wrap {
+  animation: entry-appear 140ms ease-out;
+}
+@keyframes entry-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .shell {
   display: flex;
   min-height: 100vh;
