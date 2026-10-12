@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Instance, TrafficData } from "../../../shared/types";
 import { useApi } from "../../app/context";
 import {
-  Busy,
+  TableLoading,
   Empty,
   ErrorBox,
   RefreshButton,
@@ -31,18 +31,23 @@ function TrafficTotal({
     </div>
   );
 }
-export default function Traffic({ instance }: { instance: Instance }) {
+export default function Traffic({ instance }: { instance?: Instance }) {
   const [range, setRange] = useState("month");
   const { data, error, loading, previousData, refresh } = useApi<TrafficData>(
-    "/traffic?" +
-      query({
-        ...targetOf(instance),
-        range,
-        utcOffsetMinutes: -new Date().getTimezoneOffset(),
-      }),
-    { retainKey: "traffic:" + query(targetOf(instance)) },
+    instance
+      ? "/traffic?" +
+          query({
+            ...targetOf(instance),
+            range,
+            utcOffsetMinutes: -new Date().getTimezoneOffset(),
+          })
+      : null,
+    {
+      retainKey: instance ? "traffic:" + query(targetOf(instance)) : undefined,
+    },
   );
-  const offset = data?.utcOffsetMinutes || 0;
+  const initialLoading = !instance || (loading && !data);
+  const offset = data?.utcOffsetMinutes ?? -new Date().getTimezoneOffset();
   const displayTime = (iso: string) =>
     new Date(new Date(iso).getTime() + offset * 60000)
       .toISOString()
@@ -52,7 +57,7 @@ export default function Traffic({ instance }: { instance: Instance }) {
     ? `UTC${offset < 0 ? "−" : "+"}${String(Math.floor(Math.abs(offset) / 60)).padStart(2, "0")}:${String(Math.abs(offset) % 60).padStart(2, "0")}`
     : "UTC";
   return (
-    <div className="traffic-content" aria-busy={loading}>
+    <div className="traffic-content" aria-busy={initialLoading || loading}>
       <div className="toolbar">
         <div className="periods">
           {Object.entries({
@@ -65,13 +70,14 @@ export default function Traffic({ instance }: { instance: Instance }) {
               key={key}
               className={"button " + (key === range ? "primary" : "")}
               aria-pressed={key === range}
+              disabled={!instance}
               onClick={() => setRange(key)}
             >
               {text}
             </button>
           ))}
         </div>
-        <RefreshButton loading={loading} onClick={refresh} />
+        <RefreshButton loading={initialLoading || loading} onClick={refresh} />
       </div>
       {error && <ErrorBox message={error} retry={refresh} />}
       {data?.warnings.map((w, n) => (
@@ -108,8 +114,11 @@ export default function Traffic({ instance }: { instance: Instance }) {
               </tr>
             </thead>
             <tbody>
+              {initialLoading && (
+                <TableLoading columns={["日期", "入站", "出站", "合计"]} />
+              )}
               {data?.daily.map((d) => (
-                <tr key={d.date}>
+                <tr className="resource-row" key={d.date}>
                   <td data-label="日期">{d.date}</td>
                   <td data-label="入站" className="amount-column mono">
                     {size(d.inbound)}
@@ -128,13 +137,16 @@ export default function Traffic({ instance }: { instance: Instance }) {
               ))}
             </tbody>
           </table>
-          {loading && !data && <Busy text="查询实例流量…" />}
-          {!loading && !data?.daily.length && (
-            <Empty
-              title="此时间范围暂无流量数据"
-              description="刚创建、已停止的实例可能没有指标；缺失数据不会补成零。"
-            />
-          )}
+          {!initialLoading &&
+            !loading &&
+            !error &&
+            data &&
+            !data.daily.length && (
+              <Empty
+                title="此时间范围暂无流量数据"
+                description="刚创建、已停止的实例可能没有指标；缺失数据不会补成零。"
+              />
+            )}
         </div>
       </section>
       <p className="traffic-note">

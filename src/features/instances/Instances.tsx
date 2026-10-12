@@ -33,7 +33,7 @@ import { instanceKey } from "../../lib/instance-usage";
 import { menuPosition } from "../../lib/menu-position";
 import { InstanceRate, MonthlyTraffic } from "./UsageCells";
 import {
-  Busy,
+  TableLoading,
   Checkbox,
   Empty,
   ErrorBox,
@@ -272,7 +272,13 @@ export default function Instances() {
         </div>
         <div className="table-caption">
           <span>点击实例右侧“操作”可管理网络与流量。</span>
-          <span>{data ? "共 " + data.items.length + " 个实例" : ""}</span>
+          <span>
+            {loading && !data?.items.length
+              ? "读取实例中…"
+              : data
+                ? "共 " + data.items.length + " 个实例"
+                : "\u00a0"}
+          </span>
         </div>
         <ScanNotices scan={data} />
         <LaunchNetworkStatus />
@@ -302,10 +308,28 @@ export default function Instances() {
               </tr>
             </thead>
             <tbody>
+              {loading && !data?.items.length && (
+                <TableLoading
+                  columns={[
+                    "",
+                    "实例",
+                    "状态",
+                    "规格 / 价格",
+                    "本月流量",
+                    "网络",
+                    "账户 / 区域",
+                    "操作",
+                  ]}
+                  lines={[1, 1, 2, 3, 3, 3, 2, 1]}
+                />
+              )}
               {items.map((i) => (
                 <tr
                   key={keyOf(i)}
-                  className={selected.includes(keyOf(i)) ? "selected" : ""}
+                  className={
+                    "resource-row " +
+                    (selected.includes(keyOf(i)) ? "selected" : "")
+                  }
                   onContextMenu={(e) => {
                     e.preventDefault();
                     setMenu({
@@ -400,7 +424,6 @@ export default function Instances() {
               ))}
             </tbody>
           </table>
-          {loading && !data && <Busy />}
           {!loading && !data?.errors.length && items.length === 0 && (
             <Empty
               title={

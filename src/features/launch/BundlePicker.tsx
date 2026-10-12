@@ -6,9 +6,15 @@ type Props = {
   bundles: Catalog["types"];
   value: string;
   onChange: (value: string) => void;
+  loading?: boolean;
 };
 
-export default function BundlePicker({ bundles, value, onChange }: Props) {
+export default function BundlePicker({
+  bundles,
+  value,
+  onChange,
+  loading,
+}: Props) {
   return (
     <Select
       aria-label="实例套餐"
@@ -17,10 +23,11 @@ export default function BundlePicker({ bundles, value, onChange }: Props) {
       menuClassName="bundle-menu"
       openFromStart
       value={value}
+      disabled={!bundles.length}
       onChange={(event) => onChange(event.target.value)}
     >
       <option value="" disabled>
-        选择套餐
+        {loading ? "加载实例套餐…" : "选择套餐"}
       </option>
       {bundles.map((bundle) => (
         <option key={bundle.id} value={bundle.id}>

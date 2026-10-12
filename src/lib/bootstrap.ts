@@ -6,6 +6,8 @@ export type Bootstrap = {
   csrf?: string;
   expires?: number;
   accounts?: Account[];
+  resources?: [string, unknown][];
+  audit?: { items: import("../../shared/types").AuditEntry[] };
 };
 
 /** Server-verified entry data. Development/static hosting falls back to /api/auth. */
@@ -21,7 +23,9 @@ function readBootstrap(): Bootstrap | null {
         (typeof data.csrf !== "string" ||
           typeof data.expires !== "number" ||
           data.expires <= Date.now() ||
-          !Array.isArray(data.accounts)))
+          !Array.isArray(data.accounts))) ||
+      (data.resources !== undefined && !Array.isArray(data.resources)) ||
+      (data.audit !== undefined && !Array.isArray(data.audit?.items))
     )
       return null;
     return data;

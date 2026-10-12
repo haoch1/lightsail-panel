@@ -22,6 +22,7 @@ export type InstanceUsage = {
   priceError?: string;
   trafficError?: string;
   trafficAt?: string;
+  trafficPeriod?: string;
 };
 const schedule = requestPool(4);
 
@@ -103,8 +104,6 @@ export function useInstanceUsage(instances: Instance[]) {
         })
         .catch((error: Error) =>
           publish(key, {
-            price: null,
-            allowance: null,
             priceError: error.message,
           }),
         );
@@ -122,16 +121,49 @@ export function useInstanceUsage(instances: Instance[]) {
             inbound: data.totals.inbound,
             outbound: data.totals.outbound,
             trafficAt: data.at,
+            trafficPeriod: month,
             trafficError: data.warnings.join("；") || undefined,
           }),
         )
-        .catch((error: Error) =>
-          publish(key, { traffic: null, trafficError: error.message }),
-        );
+        .catch((error: Error) => publish(key, { trafficError: error.message }));
     }
     return () => {
       active = false;
     };
   }, [rowsKey, version, offset, month]);
-  return { values, refresh };
+  const displayed = { ...values };
+  for (const instance of instances) {
+    const key = instanceKey(instance);
+    if (displayed[key]?.trafficPeriod && displayed[key].trafficPeriod !== month)
+      displayed[key] = {
+        ...displayed[key],
+        traffic: undefined,
+        inbound: undefined,
+        outbound: undefined,
+        trafficAt: undefined,
+        trafficError: undefined,
+      };
+    const catalog = resourceCache.peek<Pick<Catalog, "types">>(
+      pricePath(instance),
+    );
+    const traffic = resourceCache.peek<TrafficData>(
+      monthlyTrafficPath(instance, offset),
+    );
+    const bundle = catalog && instanceBundle(catalog, instance);
+    displayed[key] = {
+      ...displayed[key],
+      ...(catalog && {
+        price: bundle?.price ?? null,
+        allowance: bundle?.transfer ? bundle.transfer * 1024 ** 3 : null,
+      }),
+      ...(traffic && {
+        traffic: traffic.totals.combined,
+        inbound: traffic.totals.inbound,
+        outbound: traffic.totals.outbound,
+        trafficAt: traffic.at,
+        trafficError: traffic.warnings.join("；") || undefined,
+      }),
+    };
+  }
+  return { values: displayed, refresh };
 }

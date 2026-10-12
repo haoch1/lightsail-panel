@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import type { Instance, PortInfo } from "../../../shared/types";
 import { useApi, usePanel } from "../../app/context";
 import {
-  Busy,
+  TableLoading,
   Empty,
   ErrorBox,
   Modal,
@@ -17,10 +17,13 @@ import { applicationLabel, portLabel } from "./presets";
 import LaunchNetworkStatus from "../launch/LaunchNetworkStatus";
 import { normalizePortRule, protocolLabel } from "../../../shared/firewall";
 import { useOperationJobs } from "../../hooks/useResourceUpdates";
-export default function Ports({ instance }: { instance: Instance }) {
+export default function Ports({ instance }: { instance?: Instance }) {
   const panel = usePanel(),
-    target = targetOf(instance),
-    data = useApi<{ items: PortInfo[] }>("/ports?" + query(target));
+    target = instance ? targetOf(instance) : null,
+    data = useApi<{ items: PortInfo[] }>(
+      target ? "/ports?" + query(target) : null,
+    );
+  const initialLoading = !instance || (data.loading && !data.data);
   const [add, setAdd] = useState(false),
     [remove, setRemove] = useState<PortInfo | null>(null),
     [error, setError] = useState(""),
@@ -29,13 +32,14 @@ export default function Ports({ instance }: { instance: Instance }) {
   const pending = useOperationJobs().some(
     (job) =>
       job.status === "pending" &&
+      !!instance &&
       job.accountId === instance.accountId &&
       job.region === instance.region &&
       (job.targetInstance === instance.id ||
         job.instances.some((item) => item.name === instance.id)),
   );
   async function submit(portInfo: PortInfo, close = false) {
-    if (submitting.current) return;
+    if (submitting.current || !instance || !target) return;
     if (!close && instance.ipAddressType === "ipv6" && portInfo.cidrs?.length) {
       setError("仅 IPv6 实例请使用 IPv6 来源网段，例如 ::/0 或 2001:db8::/64");
       return;
@@ -55,13 +59,16 @@ export default function Ports({ instance }: { instance: Instance }) {
     }
   }
   return (
-    <div className="ports-content" aria-busy={data.loading}>
+    <div className="ports-content" aria-busy={initialLoading || data.loading}>
       <div className="toolbar">
         <div className="toolbar-actions">
-          <RefreshButton loading={data.loading} onClick={data.refresh} />
+          <RefreshButton
+            loading={initialLoading || data.loading}
+            onClick={data.refresh}
+          />
           <button
             className="button primary"
-            disabled={pending}
+            disabled={pending || initialLoading}
             onClick={() => {
               setError("");
               setAdd(true);
@@ -76,7 +83,7 @@ export default function Ports({ instance }: { instance: Instance }) {
         规则控制 Lightsail 实例的公网访问；实例内部的系统防火墙需单独配置。
       </div>
       {data.error && <ErrorBox message={data.error} retry={data.refresh} />}
-      <LaunchNetworkStatus resource="ports" instance={instance} />
+      {instance && <LaunchNetworkStatus resource="ports" instance={instance} />}
       <div className="table-wrap firewall-table">
         <table className="responsive-table">
           <thead>
@@ -89,8 +96,13 @@ export default function Ports({ instance }: { instance: Instance }) {
             </tr>
           </thead>
           <tbody>
+            {initialLoading && (
+              <TableLoading
+                columns={["应用程序", "协议", "端口", "允许来源", "操作"]}
+              />
+            )}
             {data.data?.items.map(normalizePortRule).map((r, index) => (
-              <tr key={index}>
+              <tr className="resource-row" key={index}>
                 <td data-label="应用程序">
                   <strong>
                     {applicationLabel(r.protocol, r.fromPort, r.toPort)}
@@ -128,12 +140,13 @@ export default function Ports({ instance }: { instance: Instance }) {
             ))}
           </tbody>
         </table>
-        {data.loading && !data.data && <Busy />}
-        {!data.loading && !data.data?.items.length && (
-          <Empty title="暂无开放的公网端口" />
-        )}
+        {!initialLoading &&
+          !data.loading &&
+          !data.error &&
+          data.data &&
+          !data.data.items.length && <Empty title="暂无开放的公网端口" />}
       </div>
-      {add && (
+      {add && instance && (
         <PortRuleEditor
           instance={instance}
           busy={busy}

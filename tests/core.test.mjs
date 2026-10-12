@@ -430,10 +430,25 @@ test("entry bootstraps only verified session metadata, escapes HTML, and never c
     '<!doctype html><!--panel-bootstrap--><div id="root"></div>',
   );
   const name = '</script><script>alert("account")</script>';
-  store.saveAccount(
+  const account = store.saveAccount(
     { name, region: "us-east-1", authType: "keys" },
     { accessKeyId: "test-key", secretAccessKey: "bootstrap-secret" },
   );
+  store.saveSnapshot(
+    "/instances?accountId=" +
+      account.id +
+      "&region=us-east-1&service=lightsail",
+    account.id,
+    Date.now(),
+    Date.now() + 300000,
+    { items: [{ id: "known-instance", name }], errors: [], scanned: 1 },
+  );
+  store.audit({
+    action: "start",
+    target: "known-instance",
+    status: "success",
+    detail: name,
+  });
   store.setPassword("bootstrap-test-password");
   const session = store.createSession();
   const app = createApp(store, {}, { dist });
@@ -472,6 +487,12 @@ test("entry bootstraps only verified session metadata, escapes HTML, and never c
     assert.equal(signedIn.data.accounts[0].name, name);
     assert.ok(!signedIn.html.includes(name));
     assert.equal(signedIn.data.accounts[0].credentials, undefined);
+    assert.equal(signedIn.data.resources[0][1].items[0].id, "known-instance");
+    assert.equal(signedIn.data.resources[0][1].items[0].name, name);
+    assert.equal(
+      signedIn.data.audit?.items.length,
+      path === "/audit" ? 1 : undefined,
+    );
   }
   store.deleteSession(session.token);
   assert.equal(

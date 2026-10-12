@@ -17,7 +17,12 @@ export function useApi<T>(
       { path, retainKey, error: "", loading: !!path },
       path,
       retainKey,
-      path ? resourceCache.peek<T>(path) : undefined,
+      path
+        ? resourceCache.peek<T>(
+            path,
+            isResourcePath(path) && !path.startsWith("/traffic?"),
+          )
+        : undefined,
     ),
   );
   const [revision, revise] = useState({ version: 0, manual: false });
@@ -67,7 +72,12 @@ export function useApi<T>(
       setSnapshot({ path, retainKey, error: "", loading: false });
       return;
     }
-    const cached = force ? undefined : resourceCache.peek<T>(path);
+    const cached = force
+      ? undefined
+      : resourceCache.peek<T>(
+          path,
+          isResourcePath(path) && !path.startsWith("/traffic?"),
+        );
     setSnapshot((current) => nextSnapshot(current, path, retainKey, cached));
     resourceCache
       .load(path, () => api<T>(refreshPath(path, force)), force)
@@ -109,7 +119,12 @@ export function useApi<T>(
           snapshot,
           path,
           retainKey,
-          path ? resourceCache.peek<T>(path) : undefined,
+          path
+            ? resourceCache.peek<T>(
+                path,
+                isResourcePath(path) && !path.startsWith("/traffic?"),
+              )
+            : undefined,
         );
   return {
     ...current,

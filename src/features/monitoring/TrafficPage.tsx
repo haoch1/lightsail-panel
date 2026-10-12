@@ -5,7 +5,7 @@ import { ArrowDownUp } from "lucide-react";
 import { useState } from "react";
 import type { Scan } from "../../../shared/types";
 import { usePanel } from "../../app/context";
-import { Busy, Empty, Field } from "../../components/ui";
+import { Empty, Field } from "../../components/ui";
 import Select from "../../components/ui/Select";
 import Traffic from "./Traffic";
 export default function TrafficPage() {
@@ -16,6 +16,7 @@ export default function TrafficPage() {
     [i.accountId, i.region, i.id].join(":");
   const instance =
     scan.data?.items.find((i) => key(i) === selected) || scan.data?.items[0];
+  const initialLoading = scan.loading && !instance;
   return (
     <>
       <div className="page-heading">
@@ -30,6 +31,7 @@ export default function TrafficPage() {
       <section className="form-panel">
         <Field label="统计实例">
           <Select
+            disabled={initialLoading}
             value={instance ? key(instance) : ""}
             onChange={(e) => setSelected(e.target.value)}
           >
@@ -45,16 +47,17 @@ export default function TrafficPage() {
         </Field>
       </section>
       <ScanNotices scan={scan.data} />
-      {scan.loading && !scan.data ? (
-        <Busy />
-      ) : instance ? (
-        <Traffic instance={instance} />
-      ) : (
+      {instance || initialLoading ? (
+        <Traffic
+          key={instance ? key(instance) : "pending"}
+          instance={instance}
+        />
+      ) : !scan.data?.errors.length ? (
         <Empty
           title="当前范围没有实例"
           description="先连接账户或切换区域，再选择实例。"
         />
-      )}
+      ) : null}
     </>
   );
 }

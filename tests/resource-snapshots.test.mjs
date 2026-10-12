@@ -36,6 +36,66 @@ const deferred = () => {
   return { promise, resolve };
 };
 
+test("entry hydration reads bounded authorized snapshots without AWS, excludes old traffic periods, and prioritizes existing instances", async (t) => {
+  const { store, account } = fixture(t);
+  const now = Date.parse("2026-10-12T01:00:00Z");
+  const cache = new ResourceSnapshots(store, {}, { now: () => now });
+  const query = { accountId: account.id, region: "us-east-1" };
+  const add = (path, value, extra = {}) =>
+    cache.entries.set(snapshotKey(path, { ...query, ...extra }), {
+      value,
+      expires: now - 1,
+    });
+  add("/instances", { items: [], errors: [] }, { region: "empty" });
+  add("/instances", { items: [{ id: "one" }], errors: [] });
+  add("/ports", { items: [{ protocol: "tcp" }] }, { id: "one" });
+  add("/catalog", { images: [], types: [], zones: [] });
+  add(
+    "/traffic",
+    { start: "2026-09-01T00:00:00.000Z", totals: {} },
+    { id: "one", range: "month", utcOffsetMinutes: "0" },
+  );
+  add(
+    "/traffic",
+    {
+      start: trafficRange("7d", new Date(now), 0).start.toISOString(),
+      totals: {},
+    },
+    { id: "one", range: "7d", utcOffsetMinutes: "0" },
+  );
+  add(
+    "/instances",
+    { items: [{ id: "unauthorized" }] },
+    { accountId: "removed" },
+  );
+  add("/ssh-access", { privateKey: "NEVER_EMBED" });
+  const rows = cache.initial("/lightsail");
+  assert.equal(rows[0][1].items[0].id, "one");
+  assert.ok(rows[0][1].snapshotStale);
+  assert.equal(cache.active, 0);
+  assert.equal(cache.queue.length, 0);
+  assert.ok(!JSON.stringify(rows).includes("unauthorized"));
+  assert.ok(!JSON.stringify(rows).includes("NEVER_EMBED"));
+  assert.ok(
+    !rows.some(
+      ([key]) => key.startsWith("/catalog?") || key.startsWith("/traffic?"),
+    ),
+  );
+  assert.ok(
+    cache
+      .initial("/lightsail/launch")
+      .some(([key]) => key.startsWith("/catalog?")),
+  );
+  assert.ok(
+    cache
+      .initial("/lightsail/traffic")
+      .some(([key]) => key.startsWith("/traffic?")),
+  );
+  const bytes = Buffer.byteLength(JSON.stringify(rows[0]));
+  assert.equal(cache.initial("/lightsail", bytes).length, 1);
+  assert.deepEqual(cache.initial("/lightsail", 1), []);
+});
+
 test("durable snapshots serve expired data immediately, deduplicate refreshes, and survive a service restart", async (t) => {
   const { store, account, dir, stores } = fixture(t);
   let now = Date.parse("2026-10-12T01:01:00Z"),

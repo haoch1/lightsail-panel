@@ -11,3 +11,4 @@ export { PendingButton } from "./PendingButton";
 export { RefreshButton } from "./RefreshButton";
 export { SearchInput } from "./SearchInput";
 export { State } from "./State";
+export { TableLoading } from "./TableLoading";

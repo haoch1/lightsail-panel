@@ -252,6 +252,8 @@ export function createApp(
           csrf: session.csrf,
           expires: session.expires,
           accounts: store.accounts(),
+          resources: reads.initial(req.path),
+          ...(req.path === "/audit" && { audit: { items: store.logs() } }),
         }),
       };
       const json = JSON.stringify(bootstrap).replace(/</g, "\\u003c");

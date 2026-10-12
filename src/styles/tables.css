@@ -1,3 +1,36 @@
+.table-placeholder {
+  display: block;
+  width: 72%;
+  max-width: 160px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--border);
+  opacity: 0.55;
+  margin: 6px 0;
+}
+.table-loading-row .check-cell .table-placeholder {
+  width: 14px;
+}
+.table-loading-row .table-placeholder:nth-of-type(2) {
+  width: 55%;
+}
+.table-loading-row .table-placeholder:nth-of-type(3) {
+  width: 64%;
+}
+.resource-row {
+  animation: resource-appear 140ms ease-out;
+}
+.instance-table .table-loading-row {
+  height: 96px;
+}
+@keyframes resource-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .table-caption {
   display: flex;
   justify-content: space-between;

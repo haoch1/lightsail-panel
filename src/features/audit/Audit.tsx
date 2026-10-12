@@ -4,7 +4,7 @@ import { auditActionLabel } from "../../../shared/audit-actions";
 import type { AuditEntry } from "../../../shared/types";
 import { useApi, usePanel } from "../../app/context";
 import {
-  Busy,
+  TableLoading,
   ErrorBox,
   Modal,
   PendingButton,
@@ -77,8 +77,13 @@ export default function Audit() {
             </tr>
           </thead>
           <tbody>
+            {loading && !data && (
+              <TableLoading
+                columns={["时间", "操作", "目标资源", "结果", "详情"]}
+              />
+            )}
             {data?.items.map((x) => (
-              <tr key={x.id}>
+              <tr className="resource-row" key={x.id}>
                 <td data-label="时间">
                   {new Date(x.at).toLocaleString("zh-CN")}
                 </td>
@@ -111,8 +116,7 @@ export default function Audit() {
             ))}
           </tbody>
         </table>
-        {loading && !data && <Busy />}
-        {!loading && !data?.items.length && (
+        {!loading && !error && data && !data.items.length && (
           <div className="empty">暂无操作记录</div>
         )}
       </div>

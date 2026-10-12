@@ -31,8 +31,8 @@ export default function Launch() {
       ? "/catalog?" + query({ accountId, region, service: "lightsail" })
       : null,
   );
-  const [imageId, setImage] = useState(""),
-    [instanceType, setType] = useState("");
+  const [chosenImage, setImage] = useState(""),
+    [chosenType, setType] = useState("");
   const [name, setName] = useState("my-lightsail"),
     [count, setCount] = useState("1"),
     [userData, setUserData] = useState(defaultStartupScript);
@@ -61,9 +61,10 @@ export default function Launch() {
       setAccount(panel.accounts[0].id);
     }
   }, [panel.accountId, panel.accounts.length]);
-  const platform = catalog.data?.images.find((x) => x.id === imageId)?.platform;
-  const selectedImage = catalog.data?.images.find((x) => x.id === imageId);
   const images = [...(catalog.data?.images || [])].sort(compareImages);
+  const selectedImage = images.find((x) => x.id === chosenImage) || images[0];
+  const imageId = selectedImage?.id || "";
+  const platform = selectedImage?.platform;
   const types =
     catalog.data?.types.filter(
       (x) =>
@@ -74,12 +75,9 @@ export default function Launch() {
           x.power >= selectedImage.minPower) &&
         (network === "ipv6" ? x.ipv4 === false : x.ipv4 !== false),
     ) || [];
-  useEffect(() => {
-    const c = catalog.data;
-    if (!c) return;
-    if (!images.some((x) => x.id === imageId)) setImage(images[0]?.id || "");
-    if (!types.some((x) => x.id === instanceType)) setType(types[0]?.id || "");
-  }, [catalog.data, imageId, instanceType, network]);
+  const instanceType = types.some((x) => x.id === chosenType)
+    ? chosenType
+    : types[0]?.id || "";
   const body = {
     accountId,
     region,
@@ -217,7 +215,7 @@ export default function Launch() {
                   aria-label="可用区"
                   required
                   value={zone}
-                  disabled={!zones.length || catalog.loading}
+                  disabled={!zones.length}
                   onChange={(e) => setZone(e.target.value)}
                 >
                   {!zones.length && (
@@ -288,7 +286,11 @@ export default function Launch() {
             </fieldset>
             <Field
               label="系统镜像"
-              help={`当前区域 ${catalog.data?.images.length || 0} 个可用 Debian / Ubuntu / CentOS 镜像；名称、版本与蓝图 ID 均来自 AWS。`}
+              help={
+                catalog.data
+                  ? `当前区域 ${catalog.data.images.length} 个可用 Debian / Ubuntu / CentOS 镜像；名称、版本与蓝图 ID 均来自 AWS。`
+                  : "镜像目录来自当前账户和区域。"
+              }
             >
               <Select
                 aria-label="系统镜像"
@@ -323,6 +325,7 @@ export default function Launch() {
               <BundlePicker
                 bundles={types}
                 value={instanceType}
+                loading={catalog.loading && !catalog.data}
                 onChange={setType}
               />
             </Field>

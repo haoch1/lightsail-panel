@@ -2,6 +2,7 @@ import { resourceCache } from "./resource-cache";
 import { matchesUpdate, mutationUpdate } from "../../shared/resource-update";
 import { ApiError } from "./api-error";
 import { bootstrap } from "./bootstrap";
+import { entryResources } from "./entry-resources";
 export function invalidateAudit() {
   resourceCache.invalidate((key) => key === "/audit");
   window.dispatchEvent(new Event("panel:audit-updated"));
@@ -57,7 +58,17 @@ export const setCsrf = (value: string) => {
 };
 if (!demo && bootstrap?.authenticated) {
   setCsrf(bootstrap.csrf!);
-  resourceCache.seed("/accounts", { items: bootstrap.accounts });
+  resourceCache.seedAll([
+    ["/accounts", { items: bootstrap.accounts }],
+    ...entryResources(
+      bootstrap.resources,
+      bootstrap.accounts!,
+      -new Date().getTimezoneOffset(),
+    ),
+    ...(bootstrap.audit
+      ? [["/audit", bootstrap.audit] as [string, unknown]]
+      : []),
+  ]);
 }
 export const setDemo = (value: boolean) => {
   if (value !== demo) {

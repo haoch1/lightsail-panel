@@ -8,7 +8,7 @@ import { useInstances } from "../../hooks/useInstances";
 import { useResourceScan } from "../../hooks/useResourceScan";
 import { staticIpSource } from "../../lib/static-ip-scan";
 import {
-  Busy,
+  TableLoading,
   CopyText,
   Empty,
   ErrorBox,
@@ -129,8 +129,24 @@ export default function StaticIps() {
             </tr>
           </thead>
           <tbody>
+            {data.loading && !data.data?.items.length && (
+              <TableLoading
+                columns={[
+                  "名称",
+                  "公网 IP",
+                  "绑定实例",
+                  "账户 / 区域",
+                  "状态",
+                  "操作",
+                ]}
+                lines={2}
+              />
+            )}
             {data.data?.items.map((ip) => (
-              <tr key={`${ip.accountId}:${ip.region}:${ip.name}`}>
+              <tr
+                className="resource-row"
+                key={`${ip.accountId}:${ip.region}:${ip.name}`}
+              >
                 <td data-label="名称">{ip.name}</td>
                 <td data-label="公网 IP">
                   <CopyText text={ip.ipAddress} toast={panel.toast} />
@@ -165,17 +181,18 @@ export default function StaticIps() {
             ))}
           </tbody>
         </table>
-        {data.loading && !data.data && <Busy />}
-        {!data.loading && !data.data?.items.length && (
-          <Empty
-            title={accounts.length ? "暂无静态 IP" : "先添加 AWS 账户"}
-            description={
-              accounts.length
-                ? "可以为 Lightsail 实例分配一个固定公网地址。"
-                : "通过顶部的“AWS 账户管理”添加并验证账户。"
-            }
-          />
-        )}
+        {!data.loading &&
+          !data.data?.errors.length &&
+          !data.data?.items.length && (
+            <Empty
+              title={accounts.length ? "暂无静态 IP" : "先添加 AWS 账户"}
+              description={
+                accounts.length
+                  ? "可以为 Lightsail 实例分配一个固定公网地址。"
+                  : "通过顶部的“AWS 账户管理”添加并验证账户。"
+              }
+            />
+          )}
       </div>
       <div className="notice">
         未绑定到实例的静态 IP 可能产生费用。释放后不能保证再次获得相同地址。

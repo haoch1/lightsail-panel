@@ -576,6 +576,10 @@
     padding-left: 30px;
     font-weight: 600;
   }
+  .instance-table .table-loading-row {
+    height: auto;
+    min-height: 480px;
+  }
   .instance-table td[data-label="实例"]::before {
     display: none;
   }

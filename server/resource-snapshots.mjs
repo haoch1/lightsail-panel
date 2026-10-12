@@ -86,6 +86,51 @@ export class ResourceSnapshots {
       snapshotError: entry.error || undefined,
     };
   }
+  initial(path, budget = 512 * 1024) {
+    const accounts = new Set(this.store.accounts().map((a) => a.id));
+    const resources = [];
+    let size = 0;
+    const priority = (key, entry) =>
+      key.startsWith("/instances?") && entry.value?.items?.length
+        ? 0
+        : key.startsWith("/regions?")
+          ? 1
+          : key.startsWith("/bundles?")
+            ? 2
+            : 3;
+    const entries = [...this.entries].sort(
+      (a, b) => priority(...a) - priority(...b),
+    );
+    for (const [key, entry] of entries) {
+      const [resource, query] = key.split("?");
+      const q = new URLSearchParams(query);
+      if (
+        !accounts.has(q.get("accountId")) ||
+        !this.usable(key, entry) ||
+        ![
+          "/instances",
+          "/regions",
+          "/bundles",
+          "/static-ips",
+          "/ports",
+          "/traffic",
+          "/catalog",
+        ].includes(resource) ||
+        (resource === "/catalog" && path !== "/lightsail/launch") ||
+        (resource === "/traffic" &&
+          q.get("range") !== "month" &&
+          path !== "/lightsail/traffic")
+      )
+        continue;
+      // HTML reads existing snapshots only; they never start or await an AWS request.
+      const row = [key, this.view(key, entry)];
+      const bytes = Buffer.byteLength(JSON.stringify(row));
+      if (size + bytes > budget || resources.length >= 512) continue;
+      resources.push(row);
+      size += bytes;
+    }
+    return resources;
+  }
   schedule(task, key, priority) {
     return new Promise((resolve, reject) => {
       this.queue[priority ? "unshift" : "push"]({ task, key, resolve, reject });

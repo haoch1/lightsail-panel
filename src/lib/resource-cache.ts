@@ -80,8 +80,19 @@ export class ResourceCache {
   }
 
   seed(key: string, value: unknown) {
-    this.entries.set(key, { value, expires: this.now() + this.ttl });
-    this.failures.delete(key);
+    this.seedAll([[key, value]]);
+  }
+  seedAll(entries: [string, unknown][]) {
+    for (const [key, value] of entries) {
+      const deadline = (value as { cacheExpiresAt?: number } | null)
+        ?.cacheExpiresAt;
+      this.entries.set(key, {
+        value,
+        expires:
+          typeof deadline === "number" ? deadline : this.now() + this.ttl,
+      });
+      this.failures.delete(key);
+    }
     this.persist();
   }
 

@@ -5,7 +5,7 @@ import { Shield } from "lucide-react";
 import { useState } from "react";
 import type { Scan } from "../../../shared/types";
 import { usePanel } from "../../app/context";
-import { Busy, Empty, Field } from "../../components/ui";
+import { Empty, Field } from "../../components/ui";
 import Select from "../../components/ui/Select";
 import Ports from "./Ports";
 export default function Firewall() {
@@ -16,6 +16,7 @@ export default function Firewall() {
     [i.accountId, i.region, i.id].join(":");
   const instance =
     data.data?.items.find((i) => key(i) === selected) || data.data?.items[0];
+  const initialLoading = data.loading && !instance;
   return (
     <>
       <div className="page-heading">
@@ -30,6 +31,7 @@ export default function Firewall() {
       <section className="form-panel">
         <Field label="防火墙目标实例">
           <Select
+            disabled={initialLoading}
             value={instance ? key(instance) : ""}
             onChange={(e) => setSelected(e.target.value)}
           >
@@ -45,16 +47,14 @@ export default function Firewall() {
         </Field>
       </section>
       <ScanNotices scan={data.data} />
-      {data.loading && !data.data ? (
-        <Busy />
-      ) : instance ? (
-        <Ports key={key(instance)} instance={instance} />
-      ) : (
+      {instance || initialLoading ? (
+        <Ports key={instance ? key(instance) : "pending"} instance={instance} />
+      ) : !data.data?.errors.length ? (
         <Empty
           title="当前范围没有实例"
           description="先添加账户或切换区域，再选择需要配置的实例。"
         />
-      )}
+      ) : null}
     </>
   );
 }

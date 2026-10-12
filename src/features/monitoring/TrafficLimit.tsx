@@ -3,7 +3,6 @@ import type { Instance, TrafficLimitRule } from "../../../shared/types";
 import { regionLabel } from "../../../shared/regions";
 import { useApi, usePanel } from "../../app/context";
 import {
-  Busy,
   Checkbox,
   ErrorBox,
   Field,
@@ -61,7 +60,39 @@ export default function TrafficLimit({
       <div className="traffic-limit-usage">
         <TrafficProgress usage={currentUsage} />
       </div>
-      {loading && !data ? <Busy /> : null}
+      {loading && !data ? (
+        <div
+          className="traffic-limit-placeholder"
+          role="status"
+          aria-label="正在读取自动关机设置"
+        >
+          <div className="check-field">
+            <div className="check-label">
+              <span className="table-placeholder" />
+            </div>
+            <p className="check-description">
+              按本月入站＋出站合计计算，达到阈值后停止此实例。
+            </p>
+          </div>
+          <Field
+            label="套餐流量阈值（%）"
+            help="相对于此实例当前套餐的月流量额度，支持 0.1–100%。"
+          >
+            <div className="input-placeholder">
+              <span className="table-placeholder" />
+            </div>
+          </Field>
+          <TrafficLimitNotice />
+          <div className="modal-actions">
+            <button type="button" className="button" onClick={onClose}>
+              取消
+            </button>
+            <button className="button primary" disabled>
+              保存
+            </button>
+          </div>
+        </div>
+      ) : null}
       {error && !data ? <ErrorBox message={error} retry={refresh} /> : null}
       {data ? (
         <TrafficLimitForm
@@ -93,7 +124,7 @@ function TrafficLimitForm({
   setBusy: (value: boolean) => void;
   onClose: () => void;
 }) {
-  const { toast, demo } = usePanel();
+  const { toast } = usePanel();
   const [enabled, setEnabled] = useState(rule?.enabled || false);
   const [percent, setPercent] = useState(rule?.thresholdPercent || 90);
   const [error, setError] = useState("");
@@ -144,13 +175,7 @@ function TrafficLimitForm({
           onChange={(e) => setPercent(e.target.valueAsNumber)}
         />
       </Field>
-      <div className="notice">
-        <span>
-          每 5 分钟后台检查。
-          {demo ? "演示设置不会调用 AWS。" : "关闭浏览器后继续执行。"}
-          AWS 指标可能延迟；停止后套餐仍会计费，下月不会自动启动。
-        </span>
-      </div>
+      <TrafficLimitNotice />
       {rule?.enabled &&
       (rule.detail ||
         ["stopping", "stopped", "paused", "uncertain", "error"].includes(
@@ -175,5 +200,18 @@ function TrafficLimitForm({
         </PendingButton>
       </div>
     </form>
+  );
+}
+
+function TrafficLimitNotice() {
+  const { demo } = usePanel();
+  return (
+    <div className="notice">
+      <span>
+        每 5 分钟后台检查。
+        {demo ? "演示设置不会调用 AWS。" : "关闭浏览器后继续执行。"}AWS
+        指标可能延迟；停止后套餐仍会计费，下月不会自动启动。
+      </span>
+    </div>
   );
 }
