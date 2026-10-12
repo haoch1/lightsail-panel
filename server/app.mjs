@@ -14,7 +14,7 @@ import { registerMonitoring } from "./http/monitoring.mjs";
 import { registerNetworking } from "./http/networking.mjs";
 import { registerSsh } from "./http/ssh.mjs";
 import { SshSessions } from "./ssh/sessions.mjs";
-import { ReadCache } from "./read-cache.mjs";
+import { ResourceSnapshots } from "./resource-snapshots.mjs";
 import { LaunchNetworkQueue } from "./launch-network.mjs";
 import { TrafficGuard } from "./traffic-guard.mjs";
 import { sessionHours } from "./validation.mjs";
@@ -27,10 +27,12 @@ export function createApp(
     publicOrigin = process.env.PUBLIC_ORIGIN || "",
     dist = resolve("dist"),
     sshOpener,
+    collectResources = false,
   } = {},
 ) {
   const app = express();
-  const reads = new ReadCache();
+  const reads = new ResourceSnapshots(store, gateway);
+  app.locals.snapshots = reads;
   const ssh = new SshSessions(store, gateway, {
     publicOrigin,
     opener: sshOpener,
@@ -184,14 +186,10 @@ export function createApp(
       const path = req.path;
       const update = mutationUpdate(path, req.body);
       res.on("finish", () => {
-        if (update) reads.invalidate((path) => matchesUpdate(path, update));
-        else if (
-          res.statusCode < 400 &&
-          path !== "/traffic-limit" &&
-          path !== "/audit" &&
-          !path.startsWith("/ssh/")
-        )
-          reads.clear();
+        if (update && res.statusCode < 400)
+          reads.invalidate((path) => matchesUpdate(path, update));
+        else if (res.statusCode < 400 && path.startsWith("/accounts"))
+          reads.accountsChanged();
       });
     }
     next();
@@ -240,6 +238,7 @@ export function createApp(
   registerNetworking(app, services);
   registerAudit(app, services);
   registerEvents(app, services);
+  if (collectResources) reads.start();
   app.use("/api", (_req, res) => res.status(404).json({ error: "接口不存在" }));
   if (existsSync(dist)) {
     app.use(

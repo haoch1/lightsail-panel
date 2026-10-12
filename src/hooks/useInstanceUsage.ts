@@ -5,6 +5,7 @@ import { resourceCache } from "../lib/resource-cache";
 import { requestPool } from "../lib/resource-scan";
 import { AUTO_REFRESH_MS, refreshPath } from "../../shared/refresh-policy";
 import { useAutoRefresh } from "./useAutoRefresh";
+import { matchesUpdate } from "../../shared/resource-update";
 import {
   instanceBundle,
   instanceKey,
@@ -42,6 +43,18 @@ export function useInstanceUsage(instances: Instance[]) {
   const paths = new Set(
     instances.flatMap((i) => [pricePath(i), monthlyTrafficPath(i, offset)]),
   );
+  useEffect(() => {
+    const updated = (event: Event) => {
+      if (
+        [...paths].some((path) =>
+          matchesUpdate(path, (event as CustomEvent).detail),
+        )
+      )
+        revise((r) => ({ version: r.version + 1, manual: false }));
+    };
+    window.addEventListener("panel:resources-updated", updated);
+    return () => window.removeEventListener("panel:resources-updated", updated);
+  }, [rowsKey, offset]);
   useAutoRefresh(
     () => revise((r) => ({ version: r.version + 1, manual: false })),
     resourceCache.nextExpiry((key) => paths.has(key)),
@@ -57,17 +70,20 @@ export function useInstanceUsage(instances: Instance[]) {
           [key]: { ...current[key], ...value },
         }));
     };
-    const catalogs = new Map<string, Promise<Catalog>>();
+    const catalogs = new Map<string, Promise<Pick<Catalog, "types">>>();
     for (const i of instances) {
       const key = instanceKey(i);
       const catalogPath = pricePath(i);
-      // Shared catalog keys deduplicate prices for all instances in a region.
+      // Price reads share the lightweight regional bundle snapshot.
       if (!catalogs.has(catalogPath))
         catalogs.set(
           catalogPath,
           resourceCache.load(
             catalogPath,
-            () => schedule(() => api<Catalog>(refreshPath(catalogPath, force))),
+            () =>
+              schedule(() =>
+                api<Pick<Catalog, "types">>(refreshPath(catalogPath, force)),
+              ),
             force,
             AUTO_REFRESH_MS,
           ),

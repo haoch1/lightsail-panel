@@ -245,6 +245,7 @@ export async function demoApi(
     audit(body.action, i.name);
     return { notice: "演示状态已更新" };
   }
+  if (p === "/bundles") return { types: demoCatalog.types };
   if (p === "/catalog")
     return {
       ...demoCatalog,

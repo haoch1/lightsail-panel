@@ -8,7 +8,7 @@ const stopIdentity = startRuntimeIdentity();
 if (existsSync(resolve(".env"))) process.loadEnvFile(resolve(".env"));
 const store = new Store(resolve(process.env.DATA_DIR || "data"));
 const gateway = new AwsGateway(store);
-const app = createApp(store, gateway);
+const app = createApp(store, gateway, { collectResources: true });
 const host = process.env.HOST || "127.0.0.1";
 const port = Number(process.env.PORT || 8090);
 const server = app.listen(port, host, () =>
@@ -17,6 +17,7 @@ const server = app.listen(port, host, () =>
 app.locals.ssh.attach(server);
 function close() {
   stopIdentity();
+  app.locals.snapshots.stop();
   app.locals.ssh.close();
   gateway.invalidate();
   server.close(() => {

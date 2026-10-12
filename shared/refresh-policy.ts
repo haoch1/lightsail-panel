@@ -4,7 +4,7 @@ export const AUTO_REFRESH_MS = 5 * 60_000;
 export const nextRefreshAt = (now: number, interval = AUTO_REFRESH_MS) =>
   (Math.floor(now / interval) + 1) * interval;
 export const isResourcePath = (path: string) =>
-  /^\/(?:accounts|regions|instances|catalog|static-ips|traffic-limit|traffic|ports)(?:\?|$)/.test(
+  /^\/(?:accounts|regions|instances|bundles|catalog|static-ips|traffic-limit|traffic|ports)(?:\?|$)/.test(
     path,
   );
 export const refreshPath = (path: string, force: boolean) =>

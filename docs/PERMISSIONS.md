@@ -16,6 +16,7 @@
 | 静态 IP           | `GetStaticIps`、`GetStaticIp`、`AllocateStaticIp`、`AttachStaticIp`、`DetachStaticIp`、`ReleaseStaticIp` |
 | 公网防火墙        | `GetInstancePortStates`、`OpenInstancePublicPorts`、`PutInstancePublicPorts`、`CloseInstancePublicPorts` |
 | 流量统计          | `GetInstanceMetricData`                                                                                  |
+| 后台资源同步      | `GetRegions`、`GetInstances`、`GetStaticIps`、`GetBundles`、`GetInstanceMetricData`                      |
 | SSH 终端          | `GetInstance`、`GetInstanceAccessDetails`                                                                |
 | 默认 SSH 私钥下载 | `DownloadDefaultKeyPair`                                                                                 |
 | 自动关机          | `GetInstance`、`GetBundles`、`GetInstanceMetricData`、`StopInstance`                                     |

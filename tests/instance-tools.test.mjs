@@ -167,6 +167,7 @@ test("fresh databases contain only current resource, session and audit tables", 
     "audit",
     "config",
     "launch_network",
+    "resource_snapshots",
     "sessions",
     "traffic_limits",
   ]);

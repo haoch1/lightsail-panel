@@ -38,6 +38,9 @@ export class AwsGateway {
   catalog(...args) {
     return catalog.catalog(this, ...args);
   }
+  bundles(...args) {
+    return catalog.bundles(this, ...args);
+  }
   instances(...args) {
     return instances.instances(this, ...args);
   }

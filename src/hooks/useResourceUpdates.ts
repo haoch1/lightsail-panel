@@ -104,11 +104,57 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
     };
     const events = demo ? undefined : new EventSource("/api/events");
     let streaming = false;
+    const snapshotChanges = new Map<
+      string,
+      { accountId: string; region: string; resources: string[] }
+    >();
+    let snapshotTimer: ReturnType<typeof setTimeout> | undefined;
+    const snapshotsUpdated = () => {
+      snapshotTimer = undefined;
+      if (!live) return;
+      for (const update of snapshotChanges.values()) {
+        resourceCache.invalidate((path) => matchesUpdate(path, update));
+        window.dispatchEvent(
+          new CustomEvent("panel:resources-updated", { detail: update }),
+        );
+      }
+      snapshotChanges.clear();
+    };
+    const snapshotChanged = (key: string) => {
+      const [path, search] = key.split("?");
+      const q = new URLSearchParams(search);
+      const accountId = q.get("accountId") || "all",
+        region = q.get("region") || "all";
+      const scope = accountId + ":" + region;
+      const change = snapshotChanges.get(scope) || {
+        accountId,
+        region,
+        resources: [],
+      };
+      if (!change.resources.includes(path.slice(1)))
+        change.resources.push(path.slice(1));
+      snapshotChanges.set(scope, change);
+      snapshotTimer ||= setTimeout(snapshotsUpdated, 100);
+    };
     if (events) {
       events.onmessage = ({ data }) => {
         streaming = true;
         if (data === "audit" || data === "ready") invalidateAudit();
         if (data === "operations" || data === "ready") void load();
+        if (data.startsWith("snapshot:"))
+          snapshotChanged(decodeURIComponent(data.slice(9)));
+        if (data === "ready")
+          for (const prefix of [
+            "/instances?",
+            "/regions?",
+            "/bundles?",
+            "/catalog?",
+            "/traffic?",
+            "/static-ips?",
+            "/ports?",
+          ])
+            for (const [key] of resourceCache.matching(prefix, true))
+              snapshotChanged(key);
       };
       events.onerror = () => {
         streaming = false;
@@ -124,6 +170,7 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
       live = false;
       clearTimeout(timer);
       clearInterval(fallback);
+      clearTimeout(snapshotTimer);
       events?.close();
       window.removeEventListener("panel:mutation", changed);
       document.removeEventListener("visibilitychange", visible);

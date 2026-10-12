@@ -49,16 +49,7 @@ export async function catalog(gateway, accountId, service, region) {
       "nextPageToken",
       "pageToken",
     ),
-    paginate(
-      (p) =>
-        gateway.send(account, service, region, "GetBundles", {
-          ...p,
-          includeInactive: false,
-        }),
-      "bundles",
-      "nextPageToken",
-      "pageToken",
-    ),
+    bundles(gateway, accountId, service, region),
     gateway.regions(account, service, region),
   ]);
   return {
@@ -83,6 +74,26 @@ export async function catalog(gateway, accountId, service, region) {
         minPower: x.minPower,
       }))
       .sort(compareImages),
+    types: types.types,
+    zones: regions.find((r) => r.id === region)?.zones || [],
+    warnings,
+  };
+}
+
+export async function bundles(gateway, accountId, service, region) {
+  if (service !== "lightsail") throw error("此面板仅支持 Lightsail");
+  const account = gateway.store.account(accountId);
+  const types = await paginate(
+    (p) =>
+      gateway.send(account, service, region, "GetBundles", {
+        ...p,
+        includeInactive: false,
+      }),
+    "bundles",
+    "nextPageToken",
+    "pageToken",
+  );
+  return {
     types: types
       .filter((x) => x.isActive && x.supportedPlatforms?.includes("LINUX_UNIX"))
       .map((x) => ({
@@ -109,7 +120,5 @@ export async function catalog(gateway, accountId, service, region) {
         disk: x.diskSizeInGb,
         transfer: x.transferPerMonthInGb,
       })),
-    zones: regions.find((r) => r.id === region)?.zones || [],
-    warnings,
   };
 }

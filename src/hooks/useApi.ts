@@ -76,7 +76,13 @@ export function useApi<T>(
             retainKey,
             dataPath: path,
             data,
-            error: "",
+            error:
+              data &&
+              typeof data === "object" &&
+              "snapshotError" in data &&
+              typeof data.snapshotError === "string"
+                ? data.snapshotError
+                : "",
             loading: false,
           });
       })

@@ -37,6 +37,7 @@ export class Store {
       CREATE TABLE IF NOT EXISTS accounts(id TEXT PRIMARY KEY,meta TEXT NOT NULL,secret TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(hash TEXT PRIMARY KEY,csrf TEXT NOT NULL,expires INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS traffic_limits(id TEXT PRIMARY KEY,body TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS resource_snapshots(key TEXT PRIMARY KEY,account_id TEXT NOT NULL,at INTEGER NOT NULL,expires INTEGER NOT NULL,value TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS launch_network(id TEXT PRIMARY KEY,body TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS launch_network_status ON launch_network(json_extract(body, '$.status'));
       CREATE INDEX IF NOT EXISTS launch_network_at ON launch_network(json_extract(body, '$.at'));
@@ -158,9 +159,43 @@ export class Store {
     this.db.prepare("DELETE FROM accounts WHERE id=?").run(id);
     this.db
       .prepare(
+        "DELETE FROM resource_snapshots WHERE account_id=? OR account_id='all'",
+      )
+      .run(id);
+    this.db
+      .prepare(
         "DELETE FROM traffic_limits WHERE json_extract(body, '$.accountId')=?",
       )
       .run(id);
+  }
+  snapshots() {
+    return this.db
+      .prepare("SELECT * FROM resource_snapshots ORDER BY at DESC LIMIT 5000")
+      .all()
+      .map((row) => ({ ...row, value: JSON.parse(row.value) }));
+  }
+  saveSnapshot(key, accountId, at, expires, value) {
+    // Removed accounts must never be restored by an earlier in-flight read.
+    if (
+      accountId !== "all" &&
+      !this.db.prepare("SELECT id FROM accounts WHERE id=?").get(accountId)
+    )
+      return false;
+    this.db
+      .prepare("INSERT OR REPLACE INTO resource_snapshots VALUES(?,?,?,?,?)")
+      .run(key, accountId, at, expires, JSON.stringify(value));
+    this.db.exec(
+      "DELETE FROM resource_snapshots WHERE key IN (SELECT key FROM resource_snapshots ORDER BY at DESC LIMIT -1 OFFSET 5000)",
+    );
+    return true;
+  }
+  expireSnapshot(key) {
+    this.db
+      .prepare("UPDATE resource_snapshots SET expires=0 WHERE key=?")
+      .run(key);
+  }
+  deleteSnapshot(key) {
+    this.db.prepare("DELETE FROM resource_snapshots WHERE key=?").run(key);
   }
   audit({
     account = "",

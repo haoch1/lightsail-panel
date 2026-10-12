@@ -3,7 +3,7 @@ import type { Catalog, Instance } from "../../shared/types";
 export const instanceKey = (i: Instance) =>
   `${i.accountId}:${i.region}:${i.id}`;
 export const pricePath = (i: Instance) =>
-  "/catalog?" +
+  "/bundles?" +
   new URLSearchParams({
     accountId: i.accountId,
     region: i.region,
@@ -19,5 +19,5 @@ export const monthlyTrafficPath = (i: Instance, utcOffsetMinutes: number) =>
     range: "month",
     utcOffsetMinutes: String(utcOffsetMinutes),
   });
-export const instanceBundle = (catalog: Catalog, i: Instance) =>
+export const instanceBundle = (catalog: Pick<Catalog, "types">, i: Instance) =>
   catalog.types.find((bundle) => bundle.id === i.instanceType);

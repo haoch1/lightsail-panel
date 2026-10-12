@@ -71,6 +71,13 @@ export function registerInstances(
     );
   });
 
+  app.get("/api/bundles", async (req, res) => {
+    const q = { ...context(req), service: V.service.parse(req.query.service) };
+    res.json(
+      await read(req, () => gateway.bundles(q.accountId, q.service, q.region)),
+    );
+  });
+
   app.get("/api/launch/network", (_req, res) =>
     res.json({ items: launchNetwork.recent() }),
   );
