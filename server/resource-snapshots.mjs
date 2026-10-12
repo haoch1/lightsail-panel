@@ -322,7 +322,22 @@ export class ResourceSnapshots {
     tick();
   }
   async collect() {
-    if (this.stopped || this.collecting) return this.collecting;
+    if (this.stopped) return;
+    if (this.collecting) {
+      // Discovery in a slow region must not hold already known resources at an
+      // old timestamp for an entire collection cycle. The worker queue remains
+      // bounded, and pending reads still share their existing promise.
+      for (const [key, entry] of this.entries)
+        if (!entry.pending && entry.expires <= this.now())
+          void this.load(
+            key,
+            undefined,
+            false,
+            key.startsWith("/traffic?") ||
+              (key.startsWith("/instances?") && !!entry.value?.items?.length),
+          ).catch(() => {});
+      return this.collecting;
+    }
     if (
       typeof this.gateway.scan !== "function" ||
       typeof this.gateway.bundles !== "function"

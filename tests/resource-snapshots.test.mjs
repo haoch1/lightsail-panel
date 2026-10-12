@@ -214,6 +214,67 @@ test("background collection discovers all regions, warms prices and traffic with
   assert.ok(store.snapshots().some((s) => s.key.startsWith("/traffic?")));
 });
 
+test("a slow discovery region does not prevent the next collection deadline from refreshing known instances and traffic", async (t) => {
+  const { store, account } = fixture(t);
+  let now = Date.parse("2026-10-12T10:42:00Z"),
+    generation = 1;
+  const held = deferred(),
+    started = deferred();
+  t.after(() =>
+    held.resolve({ items: [], errors: [], at: new Date(now).toISOString() }),
+  );
+  const gateway = {
+    regions: async () => [{ id: account.region }, { id: "slow-region" }],
+    scan: async (_ids, _service, region) => {
+      if (region === "slow-region") {
+        started.resolve();
+        return held.promise;
+      }
+      return {
+        items: [{ id: "one", generation }],
+        errors: [],
+        at: new Date(now).toISOString(),
+      };
+    },
+    bundles: async () => ({ types: [] }),
+    traffic: async (_target, range, _date, offset) => ({
+      totals: { combined: generation },
+      warnings: [],
+      start: trafficRange(range, new Date(now), offset).start.toISOString(),
+      at: new Date(now).toISOString(),
+    }),
+  };
+  const cache = new ResourceSnapshots(store, gateway, { now: () => now });
+  const running = cache.collect();
+  await started.promise;
+  assert.ok(cache.collecting);
+  generation = 2;
+  now = Date.parse("2026-10-12T10:50:00Z");
+  const next = cache.collect();
+  const known = [...cache.entries].filter(
+    ([key]) =>
+      /^(?:\/instances|\/traffic)\?/.test(key) && !key.includes("slow-region"),
+  );
+  await Promise.all(known.map(([, entry]) => entry.pending));
+  const instance = cache.entries.get(
+    snapshotKey("/instances", {
+      accountId: account.id,
+      region: account.region,
+    }),
+  );
+  assert.equal(instance.value.items[0].generation, 2);
+  assert.equal(instance.value.at, new Date(now).toISOString());
+  assert.ok(
+    [...cache.entries]
+      .filter(([key]) => key.startsWith("/traffic?"))
+      .every(([, entry]) => entry.value.totals.combined === 2),
+  );
+  assert.ok(cache.collecting); // Slow discovery is still pending; fresh resources are available.
+  assert.ok(cache.active <= 4);
+  held.resolve({ items: [], errors: [], at: new Date(now).toISOString() });
+  await Promise.all([running, next]);
+});
+
 test("traffic snapshots are isolated by timezone and replaced when the calendar period changes", async (t) => {
   const { store, account } = fixture(t);
   let now = Date.parse("2026-10-31T23:00:00Z");

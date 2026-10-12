@@ -455,8 +455,9 @@ export default function Instances() {
           )}
         </div>
         {data?.at && (
-          <div className="table-footer">
-            <span>上次刷新 {when(data.at)}</span>
+          <div className="table-footer resource-times">
+            <span>实例更新 {when(data.itemsAt || data.at)}</span>
+            {usage.at && <span>流量更新 {when(usage.at)}</span>}
           </div>
         )}
       </>

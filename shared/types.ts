@@ -75,6 +75,7 @@ export interface ResourceScan<T> {
   unavailable?: { account: string; region: string; message: string }[];
   at: string;
   scanned: number;
+  itemsAt?: string;
 }
 export type Scan = ResourceScan<Instance>;
 export interface TrafficData {

@@ -99,11 +99,13 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
     const visible = () => {
       if (!document.hidden) {
         invalidateAudit();
+        revalidateSnapshots();
         void load();
       }
     };
     const events = demo ? undefined : new EventSource("/api/events");
     let streaming = false;
+    let lastEventAt = 0;
     const snapshotChanges = new Map<
       string,
       { accountId: string; region: string; resources: string[] }
@@ -136,32 +138,42 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
       snapshotChanges.set(scope, change);
       snapshotTimer ||= setTimeout(snapshotsUpdated, 100);
     };
+    const revalidateSnapshots = () => {
+      for (const prefix of [
+        "/instances?",
+        "/regions?",
+        "/bundles?",
+        "/catalog?",
+        "/traffic?",
+        "/static-ips?",
+        "/ports?",
+      ])
+        for (const [key] of resourceCache.matching(prefix, true))
+          snapshotChanged(key);
+    };
     if (events) {
       events.onmessage = ({ data }) => {
         streaming = true;
+        lastEventAt = Date.now();
         if (data === "audit" || data === "ready") invalidateAudit();
         if (data === "operations" || data === "ready") void load();
         if (data.startsWith("snapshot:"))
           snapshotChanged(decodeURIComponent(data.slice(9)));
-        if (data === "ready")
-          for (const prefix of [
-            "/instances?",
-            "/regions?",
-            "/bundles?",
-            "/catalog?",
-            "/traffic?",
-            "/static-ips?",
-            "/ports?",
-          ])
-            for (const [key] of resourceCache.matching(prefix, true))
-              snapshotChanged(key);
+        if (data === "ready") revalidateSnapshots();
       };
       events.onerror = () => {
         streaming = false;
       };
     }
     const fallback = setInterval(() => {
-      if (!demo && !streaming && !document.hidden) invalidateAudit();
+      if (
+        !demo &&
+        (!streaming || Date.now() - lastEventAt > 45000) &&
+        !document.hidden
+      ) {
+        invalidateAudit();
+        revalidateSnapshots();
+      }
     }, 30000);
     window.addEventListener("panel:mutation", changed);
     document.addEventListener("visibilitychange", visible);

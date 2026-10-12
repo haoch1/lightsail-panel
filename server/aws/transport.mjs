@@ -13,6 +13,7 @@ export function options(gateway, account, region) {
   options.requestHandler = new NodeHttpHandler({
     connectionTimeout: 5000,
     requestTimeout: 25000,
+    throwOnRequestTimeout: true,
   });
   return options;
 }

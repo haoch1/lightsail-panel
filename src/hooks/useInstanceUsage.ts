@@ -165,5 +165,9 @@ export function useInstanceUsage(instances: Instance[]) {
       }),
     };
   }
-  return { values: displayed, refresh };
+  const at = instances
+    .map((instance) => displayed[instanceKey(instance)]?.trafficAt)
+    .filter((value): value is string => !!value)
+    .sort()[0];
+  return { values: displayed, refresh, at };
 }

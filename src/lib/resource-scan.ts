@@ -85,6 +85,13 @@ function combine<T>(
     scanned: scans.reduce((total, scan) => total + scan.scanned, 0),
     // Mixed cached/fresh results must not claim every region was refreshed now.
     at: scans.map((scan) => scan.at).sort()[0] || "",
+    // Visible resources have their own freshness; an empty or unavailable
+    // region must not make refreshed instances appear to have stopped updating.
+    itemsAt: scans
+      .filter((scan) => scan.items.length)
+      .map((scan) => scan.at)
+      .filter(Boolean)
+      .sort()[0],
   };
 }
 

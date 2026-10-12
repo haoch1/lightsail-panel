@@ -30,6 +30,32 @@ const deferred = () => {
   return { promise, resolve };
 };
 
+test("visible instance freshness is independent from old empty and unavailable regions", () => {
+  const cache = new ResourceCache();
+  const selected = scope("sg", "all");
+  const seed = (region, value) =>
+    cache.seed(
+      "/instances?" +
+        new URLSearchParams({ accountId: "sg", region, service: "lightsail" }),
+      value,
+    );
+  const fresh = "2026-10-12T11:05:00Z";
+  const old = "2026-10-12T10:42:00Z";
+  seed("ap-southeast-1", { ...scan("sg", "ap-southeast-1"), at: fresh });
+  seed("us-east-1", { ...scan("sg", "us-east-1", []), at: old });
+  seed("ap-east-1", {
+    ...scan("sg", "ap-east-1", []),
+    at: old,
+    errors: [{ account: "SG", region: "ap-east-1", message: "OptInRequired" }],
+  });
+  let result = cachedInstanceScan(cache, selected);
+  assert.equal(result.at, old); // The full discovery scope remains conservative.
+  assert.equal(result.itemsAt, fresh);
+  seed("us-east-1", { ...scan("sg", "us-east-1", ["second"]), at: old });
+  result = cachedInstanceScan(cache, selected);
+  assert.equal(result.itemsAt, old); // Never hide an older visible resource.
+});
+
 test("all accounts publish ready instances before a slow account finishes and share pending requests", async () => {
   const cache = new ResourceCache();
   const slow = deferred();
