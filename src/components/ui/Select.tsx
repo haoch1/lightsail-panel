@@ -71,7 +71,7 @@ export default function Select({
   onChange,
   className = "",
   icon,
-  placement = "down",
+  placement = "auto",
   openFromStart = false,
   renderOption,
   renderValue,
@@ -127,12 +127,6 @@ export default function Select({
   };
   function show(initial?: number) {
     if (disabled) return;
-    if (
-      placement === "down" &&
-      trigger.current &&
-      innerHeight - trigger.current.getBoundingClientRect().bottom < 140
-    )
-      trigger.current.scrollIntoView({ block: "center", behavior: "instant" });
     const selectedIndex = options.findIndex(
       (o) => o.value === current && !o.disabled,
     );
@@ -155,8 +149,8 @@ export default function Select({
         setOpen(false);
         return;
       }
-      const below = innerHeight - rect.bottom - 12,
-        above = rect.top - 12;
+      const below = Math.max(0, innerHeight - rect.bottom - 12),
+        above = Math.max(0, rect.top - 12);
       const height = Math.min(
         320,
         Math.max(below, above),
@@ -164,17 +158,14 @@ export default function Select({
           16 +
           new Set(options.map((o) => o.group).filter(Boolean)).size * 28,
       );
-      const upward =
-        placement === "auto" && below < Math.min(height, 180) && above > below;
+      const upward = placement === "auto" && below < height && above > below;
+      const width = Math.min(rect.width, innerWidth - 16);
       setPosition({
-        left: Math.max(8, Math.min(rect.left, innerWidth - rect.width - 8)),
+        left: Math.max(8, Math.min(rect.left, innerWidth - width - 8)),
         top: upward ? undefined : rect.bottom + 5,
         bottom: upward ? innerHeight - rect.top + 5 : undefined,
-        width: rect.width,
-        maxHeight: Math.max(
-          80,
-          upward ? Math.min(height, above) : Math.min(height, below),
-        ),
+        width,
+        maxHeight: upward ? Math.min(height, above) : Math.min(height, below),
       });
     };
     update();

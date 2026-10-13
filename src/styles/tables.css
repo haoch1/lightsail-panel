@@ -164,8 +164,8 @@
   text-align: left;
 }
 .instance-addresses .copy-text span {
-  white-space: normal;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow-wrap: normal;
   max-width: 230px;
 }
 .instance-actions-button {
@@ -199,6 +199,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 160px;
+  max-width: 280px;
 }
 .instance-addresses > div {
   display: flex;
@@ -208,8 +210,37 @@
 }
 .instance-addresses > div > span {
   min-width: 30px;
+  flex-shrink: 0;
   color: var(--muted);
   font-size: 11px;
+}
+.instance-addresses .copy-text {
+  flex-shrink: 0;
+}
+.instance-ipv6 .copy-text {
+  flex-shrink: 1;
+  min-width: 0;
+}
+.instance-ipv6 .copy-text span {
+  white-space: normal;
+  overflow-wrap: normal;
+}
+@media (min-width: 951px) and (max-width: 1400px) {
+  .instance-addresses {
+    min-width: 192px;
+  }
+  .instance-table td[data-label="账户 / 区域"] .subline {
+    white-space: normal;
+  }
+  .instance-actions-column {
+    width: 96px;
+    min-width: 96px;
+  }
+  .instance-table th:not(.check-cell),
+  .instance-table td:not(.check-cell) {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 }
 .instance-addresses .private-address {
   color: var(--muted);
@@ -219,4 +250,8 @@
   color: var(--muted);
   font-size: 11px;
   padding-left: 40px;
+}
+.instance-region span {
+  display: inline-block;
+  white-space: nowrap;
 }

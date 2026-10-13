@@ -114,6 +114,9 @@
 .sidebar-mask {
   display: none;
 }
+.sidebar .sidebar-close {
+  display: none;
+}
 .demo-bar {
   display: flex;
   align-items: center;

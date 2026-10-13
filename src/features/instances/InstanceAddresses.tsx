@@ -14,9 +14,9 @@ export default function InstanceAddresses({
         <span>IPv4</span>
         <CopyText text={instance.publicIp} toast={toast} />
       </div>
-      <div>
+      <div className="instance-ipv6">
         <span>IPv6</span>
-        <CopyText text={instance.ipv6?.[0]} toast={toast} />
+        <CopyText text={instance.ipv6?.[0]} toast={toast} wrapAt=":" />
       </div>
       <div className="private-address">
         <span>私网</span>

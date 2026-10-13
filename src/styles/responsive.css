@@ -94,6 +94,20 @@
     visibility: visible;
     pointer-events: auto;
   }
+  .sidebar .brand {
+    padding-left: 16px;
+    padding-right: 40px;
+    gap: 7px;
+  }
+  .sidebar .brand strong {
+    font-size: 15px;
+  }
+  .sidebar .sidebar-close {
+    display: flex;
+    position: absolute;
+    top: 14px;
+    right: 6px;
+  }
   .sidebar-mask {
     display: block;
     position: fixed;
@@ -548,7 +562,16 @@
     white-space: normal;
   }
   .responsive-table .copy-text span {
+    white-space: normal;
     overflow-wrap: anywhere;
+  }
+  .responsive-table .instance-addresses .copy-text {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+  .responsive-table .instance-addresses {
+    min-width: 0;
+    max-width: none;
   }
   .responsive-table .instance-ipv6 .copy-text {
     max-width: none;

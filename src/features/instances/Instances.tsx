@@ -1,5 +1,5 @@
 import ScanNotices from "../../components/ScanNotices";
-import { regionLabel } from "../../../shared/regions";
+import { regionLabel, regionNames } from "../../../shared/regions";
 import {
   ArrowDownUp,
   ArrowLeftRight,
@@ -391,7 +391,15 @@ export default function Instances() {
                   </td>
                   <td data-label="账户 / 区域">
                     <span>{i.accountName}</span>
-                    <div className="subline">{regionLabel(i.region)}</div>
+                    <div className="subline instance-region">
+                      {regionNames[i.region] && (
+                        <>
+                          <span>{regionNames[i.region]}</span>
+                          {" · "}
+                        </>
+                      )}
+                      <span>{i.region}</span>
+                    </div>
                   </td>
                   <td data-label="操作">
                     <div className="row-actions instance-row-actions">

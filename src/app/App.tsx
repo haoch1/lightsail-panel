@@ -34,6 +34,7 @@ import { api, isDemo, setCsrf } from "../lib/api";
 import { PanelContext, useApi } from "./context";
 import { ThemeControl } from "./theme";
 import { useResourceUpdates } from "../hooks/useResourceUpdates";
+import { useMobileNavigation } from "../hooks/useMobileNavigation";
 import { bootstrap } from "../lib/bootstrap";
 const nav = [
   { path: "/lightsail", label: "Lightsail 实例", icon: Cloud },
@@ -59,6 +60,7 @@ export default function App() {
   const [accountId, setAccountId] = useState("all");
   const [region, setRegion] = useState("all");
   const [mobile, setMobile] = useState(false);
+  const navigation = useMobileNavigation(mobile, () => setMobile(false));
   const [sessionDialog, setSessionDialog] = useState(false);
   const [manageAccounts, setManageAccounts] = useState(false);
   const [notices, setNotices] = useState<
@@ -179,11 +181,19 @@ export default function App() {
         {mobile && (
           <button
             className="sidebar-mask"
-            aria-label="关闭导航"
+            aria-label="关闭导航遮罩"
+            tabIndex={-1}
             onClick={() => setMobile(false)}
           />
         )}
-        <aside className={"sidebar " + (mobile ? "open" : "")}>
+        <aside
+          id="panel-navigation"
+          ref={navigation.sidebar}
+          className={"sidebar " + (mobile ? "open" : "")}
+          role={mobile ? "dialog" : undefined}
+          aria-modal={mobile || undefined}
+          aria-label={mobile ? "主导航" : undefined}
+        >
           <a
             className="brand"
             href={"/lightsail" + (demo ? "?demo=1" : "")}
@@ -195,7 +205,14 @@ export default function App() {
             <Cloud size={21} />
             <strong>Lightsail Panel</strong>
           </a>
-          <div className="side-nav">
+          <button
+            className="icon-button sidebar-close"
+            aria-label="关闭导航"
+            onClick={() => setMobile(false)}
+          >
+            <X size={18} />
+          </button>
+          <nav className="side-nav" aria-label="主导航">
             {nav.map((n) => (
               <a
                 key={n.path}
@@ -211,16 +228,19 @@ export default function App() {
                 <span>{n.label}</span>
               </a>
             ))}
-          </div>
+          </nav>
           <div className="side-appearance">
             <ThemeControl compact />
           </div>
         </aside>
-        <div className="workspace">
+        <div className="workspace" inert={mobile}>
           <header className="topbar">
             <button
+              ref={navigation.opener}
               className="icon-button mobile-menu"
               aria-label="打开导航"
+              aria-expanded={mobile}
+              aria-controls="panel-navigation"
               onClick={() => setMobile(true)}
             >
               <Menu size={20} />
