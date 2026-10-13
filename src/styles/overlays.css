@@ -113,19 +113,6 @@
 }
 .traffic-modal {
   height: min(780px, calc(100dvh - var(--modal-inset)));
-  transition: height 160ms ease-out;
-}
-.modal-backdrop:has(.traffic-modal) {
-  align-items: flex-start;
-  padding-top: max(24px, calc((100dvh - 780px) / 2));
-}
-.traffic-modal:has(.traffic-content[data-today="true"]) {
-  height: min(400px, calc(100dvh - var(--modal-inset)));
-}
-@media (prefers-reduced-motion: reduce) {
-  .traffic-modal {
-    transition: none;
-  }
 }
 .firewall-modal {
   height: min(660px, calc(100dvh - var(--modal-inset)));

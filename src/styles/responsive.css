@@ -416,9 +416,6 @@
   .modal.wide.firewall-modal {
     width: 100%;
   }
-  .traffic-modal:has(.traffic-content[data-today="true"]) {
-    height: min(480px, calc(100dvh - var(--modal-inset)));
-  }
   .traffic-modal .traffic-content,
   .firewall-modal .ports-content {
     height: auto;
@@ -430,7 +427,7 @@
   }
   .traffic-content .periods {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     width: 100%;
     gap: 5px;
   }
