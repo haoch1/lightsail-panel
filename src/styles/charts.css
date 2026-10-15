@@ -265,8 +265,6 @@
 }
 .daily-chart-tooltip {
   position: absolute;
-  top: 52px;
-  right: 20px;
   max-width: calc(100% - 40px);
   width: 190px;
   z-index: 2;
@@ -319,8 +317,5 @@
   }
   .daily-bar-date {
     font-size: 11px;
-  }
-  .daily-chart-tooltip {
-    right: 12px;
   }
 }

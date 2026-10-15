@@ -1,7 +1,8 @@
-import { useState, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import type { TrafficData } from "../../../shared/types";
 import { bytes } from "../../components/ui";
 import { dailyTrafficChart } from "../../lib/daily-traffic";
+import { chartTooltipPosition } from "../../lib/chart-tooltip";
 
 const amount = (value: number | null) =>
   value === null ? "暂无数据" : bytes(value);
@@ -15,13 +16,36 @@ export default function DailyTrafficChart({
 }) {
   const bars = dailyTrafficChart(daily);
   const [selected, setSelected] = useState<string | null>(null);
+  const chartRef = useRef<HTMLElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ left: 8, top: 8 });
+  function select(date: string, x: number, y: number) {
+    const chart = chartRef.current;
+    if (!chart) return;
+    setSelected(date);
+    setPosition(
+      chartTooltipPosition(
+        { x, y },
+        chart.getBoundingClientRect(),
+        {
+          width: tooltipRef.current?.offsetWidth ?? 190,
+          height: tooltipRef.current?.offsetHeight ?? 124,
+        },
+        { width: window.innerWidth, height: window.innerHeight },
+      ),
+    );
+  }
   const active = bars.find((day) => day.date === selected);
   return (
     <section
+      ref={chartRef}
       className="daily-chart"
       aria-label="每日流量图表"
-      onMouseLeave={(event) => {
-        if (!event.currentTarget.contains(document.activeElement))
+      onPointerLeave={(event) => {
+        if (
+          !event.currentTarget.contains(document.activeElement) ||
+          !document.activeElement?.matches(":focus-visible")
+        )
           setSelected(null);
       }}
       onBlur={(event) => {
@@ -34,7 +58,25 @@ export default function DailyTrafficChart({
         <span>入站 + 出站</span>
       </div>
       {bars.length ? (
-        <div className="daily-chart-scroll">
+        <div
+          className="daily-chart-scroll"
+          onScroll={(event) => {
+            const focused =
+              event.currentTarget.querySelector<HTMLButtonElement>(
+                ".daily-bar:focus-visible",
+              );
+            if (!focused?.dataset.date) {
+              setSelected(null);
+              return;
+            }
+            const rect = focused.getBoundingClientRect();
+            select(
+              focused.dataset.date,
+              rect.left + rect.width / 2,
+              rect.top + rect.height / 2,
+            );
+          }}
+        >
           <div
             className="daily-bars"
             style={{ "--days": bars.length } as CSSProperties}
@@ -50,10 +92,28 @@ export default function DailyTrafficChart({
                     : -1
                 }
                 data-active={active?.date === day.date || undefined}
+                data-date={day.date}
                 data-missing={day.total === null || undefined}
-                onMouseEnter={() => setSelected(day.date)}
-                onFocus={() => setSelected(day.date)}
-                onClick={() => setSelected(day.date)}
+                onPointerMove={(event) => {
+                  if (event.pointerType !== "touch")
+                    select(day.date, event.clientX, event.clientY);
+                }}
+                onFocus={(event) => {
+                  const rect = event.currentTarget.getBoundingClientRect();
+                  select(
+                    day.date,
+                    rect.left + rect.width / 2,
+                    rect.top + rect.height / 2,
+                  );
+                }}
+                onClick={(event) => {
+                  const rect = event.currentTarget.getBoundingClientRect();
+                  select(
+                    day.date,
+                    event.detail ? event.clientX : rect.left + rect.width / 2,
+                    event.detail ? event.clientY : rect.top + rect.height / 2,
+                  );
+                }}
                 onKeyDown={(event) => {
                   const next =
                     event.key === "ArrowLeft"
@@ -95,25 +155,28 @@ export default function DailyTrafficChart({
           {loading ? "正在读取流量…" : "暂无流量数据"}
         </div>
       )}
-      {active && (
-        <div className="daily-chart-tooltip" aria-hidden="true">
-          <strong>{active.date}</strong>
-          <dl>
-            <div>
-              <dt>入站</dt>
-              <dd>{amount(active.inbound)}</dd>
-            </div>
-            <div>
-              <dt>出站</dt>
-              <dd>{amount(active.outbound)}</dd>
-            </div>
-            <div>
-              <dt>合计</dt>
-              <dd>{amount(active.total)}</dd>
-            </div>
-          </dl>
-        </div>
-      )}
+      <div
+        ref={tooltipRef}
+        className="daily-chart-tooltip"
+        style={{ ...position, visibility: active ? "visible" : "hidden" }}
+        aria-hidden="true"
+      >
+        <strong>{active?.date ?? "\u00a0"}</strong>
+        <dl>
+          <div>
+            <dt>入站</dt>
+            <dd>{amount(active?.inbound ?? null)}</dd>
+          </div>
+          <div>
+            <dt>出站</dt>
+            <dd>{amount(active?.outbound ?? null)}</dd>
+          </div>
+          <div>
+            <dt>合计</dt>
+            <dd>{amount(active?.total ?? null)}</dd>
+          </div>
+        </dl>
+      </div>
     </section>
   );
 }

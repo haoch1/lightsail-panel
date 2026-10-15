@@ -106,7 +106,7 @@ export default function Traffic({ instance }: { instance?: Instance }) {
         </span>
       </div>
       <DailyTrafficChart daily={data?.daily ?? []} loading={initialLoading} />
-      <details className="traffic-daily">
+      <details className="traffic-daily" open>
         <summary>每日明细</summary>
         <div className="table-wrap">
           <table className="traffic-daily-table">
