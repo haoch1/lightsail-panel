@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { TrafficData } from "../../../shared/types";
 import { bytes } from "../../components/ui";
 import { dailyTrafficChart } from "../../lib/daily-traffic";
@@ -19,6 +19,11 @@ export default function DailyTrafficChart({
   const chartRef = useRef<HTMLElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ left: 8, top: 8 });
+  useEffect(() => {
+    const hide = () => setSelected(null);
+    window.addEventListener("resize", hide);
+    return () => window.removeEventListener("resize", hide);
+  }, []);
   function select(date: string, x: number, y: number) {
     const chart = chartRef.current;
     if (!chart) return;
@@ -158,7 +163,10 @@ export default function DailyTrafficChart({
       <div
         ref={tooltipRef}
         className="daily-chart-tooltip"
-        style={{ ...position, visibility: active ? "visible" : "hidden" }}
+        style={{
+          ...(active ? position : { left: 8, top: 8 }),
+          visibility: active ? "visible" : "hidden",
+        }}
         aria-hidden="true"
       >
         <strong>{active?.date ?? "\u00a0"}</strong>
