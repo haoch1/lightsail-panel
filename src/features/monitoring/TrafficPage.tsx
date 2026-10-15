@@ -25,11 +25,10 @@ export default function TrafficPage() {
             <ArrowDownUp size={23} />
             流量统计
           </h1>
-          <p>查看每台实例的入站、出站流量及按日汇总</p>
         </div>
       </div>
-      <section className="form-panel">
-        <Field label="统计实例">
+      <section className="resource-picker">
+        <Field label="实例">
           <Select
             disabled={initialLoading}
             value={instance ? key(instance) : ""}

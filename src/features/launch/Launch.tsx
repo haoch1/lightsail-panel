@@ -131,7 +131,6 @@ export default function Launch() {
             <Rocket size={23} />
             创建 Lightsail 实例
           </h1>
-          <p>选择 Debian、Ubuntu 或 CentOS，配置网络、套餐与启动脚本</p>
         </div>
         <RefreshButton
           loading={catalog.loading}
@@ -207,10 +206,7 @@ export default function Launch() {
                   )}
                 </Select>
               </Field>
-              <Field
-                label="可用区"
-                help="可选项来自当前账户在此区域的实际可用区。"
-              >
+              <Field label="可用区">
                 <Select
                   aria-label="可用区"
                   required
@@ -260,10 +256,7 @@ export default function Launch() {
                   <span className="network-title">
                     双堆栈 <span className="recommended">推荐</span>
                   </span>
-                  <span className="network-description">
-                    适用于需要完整网络兼容性的工作负载。包括一个公有 IPv4
-                    地址和一个公有 IPv6 地址。
-                  </span>
+                  <span className="network-description">公网 IPv4 + IPv6</span>
                 </span>
               </label>
               <label className="network-option">
@@ -277,21 +270,11 @@ export default function Launch() {
                 />
                 <span>
                   <span className="network-title">仅限 IPv6</span>
-                  <span className="network-description">
-                    适用于不需要公有 IPv4 地址的工作负载。包括一个公有 IPv6
-                    地址。
-                  </span>
+                  <span className="network-description">无公网 IPv4</span>
                 </span>
               </label>
             </fieldset>
-            <Field
-              label="系统镜像"
-              help={
-                catalog.data
-                  ? `当前区域 ${catalog.data.images.length} 个可用 Debian / Ubuntu / CentOS 镜像；名称、版本与蓝图 ID 均来自 AWS。`
-                  : "镜像目录来自当前账户和区域。"
-              }
-            >
+            <Field label="系统镜像">
               <Select
                 aria-label="系统镜像"
                 required
@@ -314,14 +297,7 @@ export default function Launch() {
                 ))}
               </Select>
             </Field>
-            <div className="image-blueprint" aria-busy={catalog.loading}>
-              <span>AWS 蓝图 ID</span>
-              <code>{selectedImage?.id || "—"}</code>
-            </div>
-            <Field
-              label="实例套餐"
-              help={`通用型 · ${types.length} 个可选套餐 · ${network === "ipv6" ? "仅 IPv6" : "含公网 IPv4"}。按所选系统和 IP 类型筛选。`}
-            >
+            <Field label="实例套餐">
               <BundlePicker
                 bundles={types}
                 value={instanceType}
@@ -371,8 +347,7 @@ export default function Launch() {
             setAllocateStaticIp={setAllocateStaticIp}
           />
           <section className="form-panel">
-            <h2>SSH 密钥</h2>
-            <p>默认 SSH 密钥</p>
+            <h2>默认 SSH 密钥</h2>
             <DefaultKeyDownload
               key={accountId + region}
               accountId={accountId}

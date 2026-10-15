@@ -79,9 +79,6 @@ export default function Ports({ instance }: { instance?: Instance }) {
           </button>
         </div>
       </div>
-      <div className="notice">
-        规则控制 Lightsail 实例的公网访问；实例内部的系统防火墙需单独配置。
-      </div>
       {data.error && <ErrorBox message={data.error} retry={data.refresh} />}
       {instance && <LaunchNetworkStatus resource="ports" instance={instance} />}
       <div className="table-wrap firewall-table">
@@ -146,6 +143,7 @@ export default function Ports({ instance }: { instance?: Instance }) {
           data.data &&
           !data.data.items.length && <Empty title="暂无开放的公网端口" />}
       </div>
+      <p className="resource-note">系统防火墙需单独配置。</p>
       {add && instance && (
         <PortRuleEditor
           instance={instance}

@@ -139,7 +139,7 @@ export default function PortRuleEditor({
             <p className="field-help">
               {icmp
                 ? "-1 表示全部类型或代码。"
-                : "单个端口将起始、结束填为同一数值；范围例如 8000–8100。"}
+                : "单端口填相同值；范围如 8000–8100。"}
             </p>
           </>
         )}
@@ -149,10 +149,7 @@ export default function PortRuleEditor({
           </div>
         ) : (
           <>
-            <Field
-              label="来源 IP 地址或 CIDR"
-              help="多个地址用逗号分隔；双栈实例可同时勾选 IPv4 和 IPv6。"
-            >
+            <Field label="来源 IP 地址或 CIDR" help="多个地址用逗号分隔。">
               <input
                 disabled={busy}
                 data-pending={busy || undefined}

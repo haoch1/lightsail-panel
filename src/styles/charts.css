@@ -168,3 +168,159 @@
   line-height: 1.6;
   text-align: right;
 }
+.daily-chart {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 20px;
+}
+.daily-chart-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.daily-chart-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.daily-chart-heading > span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.daily-chart-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.daily-bars {
+  display: grid;
+  grid-template-columns: repeat(var(--days), minmax(26px, 1fr));
+  gap: 6px;
+  height: 194px;
+  padding: 2px;
+}
+.daily-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  min-width: 0;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  border-radius: 3px;
+  touch-action: pan-x pan-y;
+}
+.daily-bar-track {
+  display: flex;
+  position: relative;
+  align-items: flex-end;
+  width: 100%;
+  flex: 1;
+  background: var(--subtle);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.daily-bar-fill {
+  display: block;
+  width: 100%;
+  background: var(--chart-secondary);
+}
+.daily-bar[data-active] .daily-bar-track {
+  box-shadow: inset 0 0 0 1px var(--chart-secondary);
+}
+.daily-bar[data-active] .daily-bar-fill {
+  filter: brightness(1.12);
+}
+.daily-bar[data-missing] .daily-bar-track {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--subtle) 0 4px,
+    var(--border) 4px 5px
+  );
+}
+.daily-bar-missing {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+.daily-bar-date {
+  display: block;
+  font-size: 10px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.daily-chart-empty {
+  height: 194px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+.daily-chart-tooltip {
+  position: absolute;
+  top: 52px;
+  right: 20px;
+  max-width: calc(100% - 40px);
+  width: 190px;
+  z-index: 2;
+  pointer-events: none;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.daily-chart-tooltip strong {
+  font-weight: 500;
+}
+.daily-chart-tooltip dl {
+  margin: 8px 0 0;
+}
+.daily-chart-tooltip dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+.daily-chart-tooltip dt {
+  color: var(--muted);
+}
+.daily-chart-tooltip dd {
+  margin: 0;
+}
+.traffic-modal .daily-chart {
+  flex: 1 0 250px;
+  display: flex;
+  flex-direction: column;
+}
+.traffic-modal .daily-chart-scroll {
+  flex: 1;
+}
+.traffic-modal .daily-bars {
+  height: 100%;
+  min-height: 180px;
+}
+@media (max-width: 760px) {
+  .daily-chart {
+    padding: 16px 12px;
+  }
+  .daily-bars {
+    grid-template-columns: repeat(var(--days), minmax(34px, 1fr));
+    height: 180px;
+  }
+  .daily-bar-date {
+    font-size: 11px;
+  }
+  .daily-chart-tooltip {
+    right: 12px;
+  }
+}

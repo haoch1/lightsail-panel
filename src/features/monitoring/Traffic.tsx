@@ -11,6 +11,7 @@ import {
   when,
 } from "../../components/ui";
 import { query } from "../../lib/api";
+import DailyTrafficChart from "./DailyTrafficChart";
 
 const size = (n: number | null) => (n === null ? "—" : bytes(n));
 function TrafficTotal({
@@ -104,10 +105,9 @@ export default function Traffic({ instance }: { instance?: Instance }) {
           {previousData ? "正在更新查询结果…" : ""}
         </span>
       </div>
-      <section className="panel traffic-daily">
-        <div className="section-heading">
-          <h2>按日流量</h2>
-        </div>
+      <DailyTrafficChart daily={data?.daily ?? []} loading={initialLoading} />
+      <details className="traffic-daily">
+        <summary>每日明细</summary>
         <div className="table-wrap">
           <table className="traffic-daily-table">
             <thead>
@@ -153,10 +153,9 @@ export default function Traffic({ instance }: { instance?: Instance }) {
               />
             )}
         </div>
-      </section>
+      </details>
       <p className="traffic-note">
-        统计全部网卡的入站、出站字节数。流量使用量不等同于 AWS
-        计费流量或套餐剩余额度；近期指标可能延迟。
+        入站与出站合计，非 AWS 计费流量；指标可能延迟。
       </p>
     </div>
   );

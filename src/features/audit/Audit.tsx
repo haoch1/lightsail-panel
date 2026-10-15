@@ -47,7 +47,6 @@ export default function Audit() {
             <ScrollText size={22} />
             操作日志
           </h1>
-          <p>近期操作记录，最多显示 200 条</p>
         </div>
         <div className="row-actions">
           <RefreshButton loading={loading || clearing} onClick={refresh} />

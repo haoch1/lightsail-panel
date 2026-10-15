@@ -25,11 +25,10 @@ export default function Firewall() {
             <Shield size={23} />
             防火墙
           </h1>
-          <p>按实例管理 Lightsail 的 IPv4 / IPv6 公网端口与来源网段</p>
         </div>
       </div>
-      <section className="form-panel">
-        <Field label="防火墙目标实例">
+      <section className="resource-picker">
+        <Field label="实例">
           <Select
             disabled={initialLoading}
             value={instance ? key(instance) : ""}

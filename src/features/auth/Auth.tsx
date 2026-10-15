@@ -22,14 +22,9 @@ export default function Auth({
       <div className="auth-card">
         <div className="auth-brand">
           <Cloud size={27} />
-          <strong>Lightsail Panel</strong>
+          <strong>LightSail Panel</strong>
         </div>
-        <h1>{initialized ? "登录面板" : "初始化你的面板"}</h1>
-        <p>
-          {initialized
-            ? "使用管理员密码访问 Lightsail 控制台。"
-            : "设置管理员密码，随后添加自己的 AWS 账户。"}
-        </p>
+        <h1>{initialized ? "登录" : "初始化"}</h1>
         <form
           onSubmit={async (e) => {
             e.preventDefault();

@@ -153,9 +153,6 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
             />
           )}
         </div>
-        <p className="account-manager-note">
-          凭证加密保存在服务器，AWS API 使用服务器直连。
-        </p>
       </>
     );
   return (
@@ -168,7 +165,7 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
             : "验证 AWS 身份后保存加密凭证。"
           : remove
             ? remove.name
-            : "添加、验证和管理面板保存的 AWS 账户。"
+            : undefined
       }
       className="account-manager-modal"
       backdropClassName={

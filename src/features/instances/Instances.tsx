@@ -221,40 +221,61 @@ export default function Instances() {
   }
   return (
     <>
-      <div className="page-heading">
+      <div className="page-heading instances-heading">
         <div>
           <h1>
             <Cloud size={23} /> Lightsail 实例
           </h1>
-          <p>管理 Lightsail 实例、运行状态与公网 IP</p>
+        </div>
+        <div className="row-actions">
+          <RefreshButton onClick={refresh} loading={loading} />
+          <button
+            className="button primary"
+            onClick={() => navigate("/lightsail/launch")}
+          >
+            <Rocket size={16} />
+            创建实例
+          </button>
+        </div>
+      </div>
+      <div className="instances-overview">
+        <div className="instance-counts" aria-label="实例概况">
+          <span>
+            实例 <strong>{data ? data.items.length : "—"}</strong>
+          </span>
+          <span>
+            运行中{" "}
+            <strong>
+              {data
+                ? data.items.filter((i) => i.state === "running").length
+                : "—"}
+            </strong>
+          </span>
+          <span>
+            已停止{" "}
+            <strong>
+              {data
+                ? data.items.filter((i) => i.state === "stopped").length
+                : "—"}
+            </strong>
+          </span>
+        </div>
+        <div className="instance-times">
+          {data?.at && (
+            <span
+              title={`实例更新：${when(data.itemsAt || data.at)}${usage.at ? `\n流量更新：${when(usage.at)}` : ""}`}
+            >
+              上次刷新{" "}
+              {when(
+                [data.itemsAt || data.at, usage.at].filter(Boolean).sort()[0],
+              )}
+            </span>
+          )}
         </div>
       </div>
       <>
-        <div className="toolbar">
+        <div className="toolbar instances-toolbar">
           <div className="toolbar-actions">
-            <RefreshButton onClick={refresh} loading={loading} />
-            <button
-              className="button primary"
-              onClick={() => navigate("/lightsail/launch")}
-            >
-              <Rocket size={16} />
-              启动新实例
-            </button>
-            {chosen.length > 0 && (
-              <>
-                <button className="button" onClick={() => setBulk("start")}>
-                  <Play size={14} />
-                  批量启动
-                </button>
-                <button className="button" onClick={() => setBulk("stop")}>
-                  <Square size={14} />
-                  批量停止
-                </button>
-                <span className="muted">已选 {chosen.length} 台</span>
-              </>
-            )}
-          </div>
-          <div className="toolbar-filters">
             <SearchInput value={search} onChange={setSearch} />
             <Select
               aria-label="实例状态"
@@ -269,16 +290,21 @@ export default function Instances() {
               <option value="terminated">已终止</option>
             </Select>
           </div>
-        </div>
-        <div className="table-caption">
-          <span>点击实例右侧“操作”可管理网络与流量。</span>
-          <span>
-            {loading && !data?.items.length
-              ? "读取实例中…"
-              : data
-                ? "共 " + data.items.length + " 个实例"
-                : "\u00a0"}
-          </span>
+          <div className="toolbar-actions">
+            {chosen.length > 0 && (
+              <>
+                <button className="button" onClick={() => setBulk("start")}>
+                  <Play size={14} />
+                  批量启动
+                </button>
+                <button className="button" onClick={() => setBulk("stop")}>
+                  <Square size={14} />
+                  批量停止
+                </button>
+                <span className="muted">已选 {chosen.length} 台</span>
+              </>
+            )}
+          </div>
         </div>
         <ScanNotices scan={data} />
         <LaunchNetworkStatus />
@@ -462,18 +488,6 @@ export default function Instances() {
             />
           )}
         </div>
-        {data?.at && (
-          <div className="table-footer">
-            <span
-              title={`实例更新：${when(data.itemsAt || data.at)}${usage.at ? `\n流量更新：${when(usage.at)}` : ""}`}
-            >
-              上次刷新{" "}
-              {when(
-                [data.itemsAt || data.at, usage.at].filter(Boolean).sort()[0],
-              )}
-            </span>
-          </div>
-        )}
       </>
       {menu && (
         <div

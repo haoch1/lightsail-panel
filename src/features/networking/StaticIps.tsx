@@ -94,11 +94,8 @@ export default function StaticIps() {
             <Timer size={23} />
             静态 IP
           </h1>
-          <p>管理 Lightsail 静态公网地址与实例绑定</p>
         </div>
-      </div>
-      <div className="toolbar">
-        <div className="toolbar-actions">
+        <div className="row-actions">
           <RefreshButton
             text="刷新"
             onClick={data.refresh}

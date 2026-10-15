@@ -7,7 +7,6 @@ export default function InstanceAddresses({
   instance: Instance;
   toast: ToastFn;
 }) {
-  const stopped = instance.state === "stopped" || instance.state === "stopping";
   return (
     <div className="instance-addresses">
       <div>
@@ -22,9 +21,6 @@ export default function InstanceAddresses({
         <span>私网</span>
         {instance.privateIp || "—"}
       </div>
-      {stopped && !instance.publicIp && !instance.ipv6?.length && (
-        <small>实例已停止</small>
-      )}
     </div>
   );
 }

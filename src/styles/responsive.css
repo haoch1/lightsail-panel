@@ -205,6 +205,32 @@
   .toolbar-filters .search {
     width: 160px;
   }
+  .instances-toolbar > .toolbar-actions:first-child {
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+  .instances-toolbar .search {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
+  .instances-toolbar .custom-select {
+    flex: 0 0 112px;
+  }
+  .instance-counts {
+    gap: 16px;
+  }
+  .instances-overview {
+    gap: 8px;
+  }
+  .resource-picker .field {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .resource-picker .custom-select {
+    width: 100%;
+  }
   .search {
     max-width: unset;
     width: 100%;
@@ -457,9 +483,6 @@
     line-height: 1.7;
     overflow-wrap: anywhere;
   }
-  .traffic-daily {
-    padding: 14px;
-  }
   .traffic-daily .table-wrap,
   .traffic-modal .traffic-daily .table-wrap {
     height: 280px;
@@ -468,7 +491,7 @@
   }
   .traffic-modal .traffic-daily {
     min-height: 0;
-    flex: auto;
+    flex: 0 0 auto;
   }
   .traffic-overview > div {
     padding: 14px 10px;
@@ -656,6 +679,7 @@
     flex-wrap: wrap;
   }
   .form-panel .select-value,
+  .resource-picker .select-value,
   .resource-scope .select-value {
     white-space: normal;
     overflow-wrap: anywhere;

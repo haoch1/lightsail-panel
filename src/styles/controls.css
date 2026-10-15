@@ -350,7 +350,7 @@ input[data-pending="true"]:disabled:is([type="checkbox"], [type="radio"]) {
 }
 .select-option.disabled {
   opacity: 0.45;
-  cursor: not-allowed;
+  cursor: default;
 }
 .select-group {
   font-size: 11px;

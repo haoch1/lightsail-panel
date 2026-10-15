@@ -147,9 +147,6 @@ export default function App() {
               <current.icon size={23} />
               {current.label}
             </h1>
-            {path === "/lightsail" && (
-              <p>管理 Lightsail 实例、运行状态与公网 IP</p>
-            )}
           </div>
         </div>
         {authError && (
@@ -203,7 +200,7 @@ export default function App() {
             }}
           >
             <Cloud size={21} />
-            <strong>Lightsail Panel</strong>
+            <strong>LightSail Panel</strong>
           </a>
           <button
             className="icon-button sidebar-close"
@@ -246,7 +243,6 @@ export default function App() {
               <Menu size={20} />
             </button>
             <div className="top-control">
-              <span className="top-label">区域范围</span>
               <Select
                 disabled={entering}
                 className="region-select"
@@ -268,7 +264,6 @@ export default function App() {
             </div>
             <div className="top-right">
               <div className="top-control account-control">
-                <span className="top-label">账户</span>
                 <Select
                   disabled={entering}
                   className="account-select"
