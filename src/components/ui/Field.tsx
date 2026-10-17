@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cloneElement, isValidElement, useId } from "react";
 import Select from "./Select";
+import { ignoreAutofill } from "../../lib/input-autofill";
 export function Field({
   label,
   help,
@@ -21,8 +22,18 @@ export function Field({
         children as React.ReactElement<{
           id?: string;
           "aria-describedby"?: string;
+          type?: string;
         }>,
-        { id, "aria-describedby": help ? id + "-help" : undefined },
+        {
+          ...(typeof children.type === "string" &&
+          ["input", "textarea"].includes(children.type) &&
+          (children.props as { type?: string }).type?.toLowerCase() !==
+            "password"
+            ? ignoreAutofill
+            : {}),
+          id,
+          "aria-describedby": help ? id + "-help" : undefined,
+        },
       )
     : children;
   return (

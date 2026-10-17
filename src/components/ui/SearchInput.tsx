@@ -1,4 +1,5 @@
 import { Search, X } from "lucide-react";
+import { ignoreAutofill } from "../../lib/input-autofill";
 export function SearchInput({
   value,
   onChange,
@@ -12,6 +13,7 @@ export function SearchInput({
     <div className="search">
       <Search size={15} />
       <input
+        {...ignoreAutofill}
         aria-label="搜索资源"
         placeholder={placeholder}
         value={value}

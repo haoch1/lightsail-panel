@@ -1,5 +1,6 @@
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { useId } from "react";
+import { ignoreAutofill } from "../../lib/input-autofill";
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   children?: ReactNode;
@@ -17,6 +18,7 @@ export function Checkbox({
   const input = (
     <input
       {...props}
+      {...ignoreAutofill}
       disabled={props.disabled || pending}
       data-pending={(pending && !props.disabled) || undefined}
       type="checkbox"

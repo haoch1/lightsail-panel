@@ -3,6 +3,7 @@ import { useState } from "react";
 import { usePanel } from "../../app/context";
 import { ErrorBox, Field, PendingButton } from "../../components/ui";
 import { api } from "../../lib/api";
+import { ignoreAutofill } from "../../lib/input-autofill";
 
 export default function AddAccount({
   onClose,
@@ -60,7 +61,6 @@ export default function AddAccount({
             <input
               disabled={busy}
               data-pending={busy || undefined}
-              autoComplete="off"
               required
               value={form.accessKeyId}
               onChange={(e) => change("accessKeyId", e.target.value)}
@@ -71,7 +71,7 @@ export default function AddAccount({
               disabled={busy}
               data-pending={busy || undefined}
               type="password"
-              autoComplete="new-password"
+              {...ignoreAutofill}
               name="aws-access-key-secret"
               required
               value={form.secretAccessKey}

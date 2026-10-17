@@ -20,6 +20,7 @@ import { creationRegionError } from "../../lib/region-access";
 import { DefaultKeyDownload } from "../ssh/SshKey";
 import { defaultStartupScript } from "./default-script";
 import LaunchNetworkOptions from "./LaunchNetworkOptions";
+import { ignoreAutofill } from "../../lib/input-autofill";
 export default function Launch() {
   const panel = usePanel();
   const [accountId, setAccount] = useState(
@@ -244,6 +245,7 @@ export default function Launch() {
               <legend>选择网络类型</legend>
               <label className="network-option">
                 <input
+                  {...ignoreAutofill}
                   type="radio"
                   className="square-choice"
                   name="network-type"
@@ -257,6 +259,7 @@ export default function Launch() {
               </label>
               <label className="network-option">
                 <input
+                  {...ignoreAutofill}
                   type="radio"
                   className="square-choice"
                   name="network-type"

@@ -17,6 +17,7 @@ import { usePanel } from "../../app/context";
 import { Modal } from "../../components/ui";
 import { api } from "../../lib/api";
 import { targetOf } from "../../lib/instance-target";
+import { ignoreAutofill } from "../../lib/input-autofill";
 
 type Status = "connecting" | "connected" | "closed" | "failed";
 const labels: Record<Status, string> = {
@@ -72,6 +73,9 @@ export default function SshTerminal({
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(element.current!);
+    if (term.textarea)
+      for (const [attribute, value] of Object.entries(ignoreAutofill))
+        term.textarea.setAttribute(attribute, value);
     terminalRef.current = term;
     setStatus("connecting");
     setIdentity("");
