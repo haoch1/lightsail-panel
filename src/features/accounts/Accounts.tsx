@@ -78,7 +78,6 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
     content = (
       <>
         <div className="account-manager-toolbar">
-          <span className="muted">共 {accounts.length} 个账户</span>
           <button
             className="button primary"
             onClick={() => setAdd(true)}
@@ -162,7 +161,7 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
         add
           ? demo
             ? "演示模式只添加示例账户，请勿输入真实密钥。"
-            : "验证 AWS 身份后保存加密凭证。"
+            : undefined
           : remove
             ? remove.name
             : undefined

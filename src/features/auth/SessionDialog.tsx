@@ -43,9 +43,6 @@ export default function SessionDialog({
         }}
       >
         <SessionDuration hours={hours} onChange={setHours} disabled={busy} />
-        <p className="muted">
-          保存后更新当前浏览器的登录期限，其他浏览器的会话不受影响。退出登录会立即结束当前会话。
-        </p>
         {error && <ErrorBox message={error} />}
         <div className="modal-actions">
           <button

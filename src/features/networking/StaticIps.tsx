@@ -183,11 +183,6 @@ export default function StaticIps() {
           !data.data?.items.length && (
             <Empty
               title={accounts.length ? "暂无静态 IP" : "先添加 AWS 账户"}
-              description={
-                accounts.length
-                  ? "可以为 Lightsail 实例分配一个固定公网地址。"
-                  : "通过顶部的“AWS 账户管理”添加并验证账户。"
-              }
             />
           )}
       </div>

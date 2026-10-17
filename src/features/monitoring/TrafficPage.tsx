@@ -52,10 +52,7 @@ export default function TrafficPage() {
           instance={instance}
         />
       ) : !scan.data?.errors.length ? (
-        <Empty
-          title="当前范围没有实例"
-          description="先连接账户或切换区域，再选择实例。"
-        />
+        <Empty title="当前范围没有实例" />
       ) : null}
     </>
   );

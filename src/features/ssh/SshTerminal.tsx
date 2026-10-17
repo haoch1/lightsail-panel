@@ -373,13 +373,14 @@ export default function SshTerminal({
           onKeyDown={(e) => e.stopPropagation()}
         />
       </div>
-      <div
-        className={"ssh-footer" + (error ? " danger-text" : " muted")}
-        role={error ? "alert" : undefined}
-      >
-        {error ||
-          (demo ? "演示模式，不连接真实实例。" : "关闭窗口将断开 SSH 连接。")}
-      </div>
+      {(error || demo) && (
+        <div
+          className={"ssh-footer" + (error ? " danger-text" : " muted")}
+          role={error ? "alert" : undefined}
+        >
+          {error || "演示模式，不连接真实实例。"}
+        </div>
+      )}
     </Modal>
   );
 }

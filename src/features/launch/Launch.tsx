@@ -141,7 +141,6 @@ export default function Launch() {
       {!panel.accounts.length ? (
         <Empty
           title="先添加 AWS 账户"
-          description="验证账户后，加载 Lightsail 镜像与套餐。"
           action={
             <button className="button primary" onClick={panel.openAccounts}>
               添加账户
@@ -253,10 +252,7 @@ export default function Launch() {
                   onChange={() => setNetwork("dualstack")}
                 />
                 <span>
-                  <span className="network-title">
-                    双堆栈 <span className="recommended">推荐</span>
-                  </span>
-                  <span className="network-description">公网 IPv4 + IPv6</span>
+                  <span className="network-title">双堆栈（IPv4 + IPv6）</span>
                 </span>
               </label>
               <label className="network-option">
@@ -270,7 +266,6 @@ export default function Launch() {
                 />
                 <span>
                   <span className="network-title">仅限 IPv6</span>
-                  <span className="network-description">无公网 IPv4</span>
                 </span>
               </label>
             </fieldset>
@@ -309,12 +304,10 @@ export default function Launch() {
           <section className="form-panel">
             <h2>基本配置</h2>
             <div className="form-grid">
-              <Field
-                label="实例名称"
-                help="2–63 位字母、数字、下划线或短横线。"
-              >
+              <Field label="实例名称">
                 <input
                   aria-label="实例名称"
+                  title="2–63 位字母、数字、下划线或短横线"
                   required
                   minLength={2}
                   maxLength={63}
@@ -325,7 +318,9 @@ export default function Launch() {
               </Field>
               <Field
                 label="实例数量"
-                help="多台实例自动添加 -1、-2 等名称后缀。"
+                help={
+                  Number(count) > 1 ? "名称自动添加 -1、-2 等后缀。" : undefined
+                }
               >
                 <input
                   aria-label="实例数量"
@@ -367,7 +362,7 @@ export default function Launch() {
             </div>
             <Field
               label="首次启动时执行（可选）"
-              help="先替换“你的密码”；不需要脚本时可清空。模板开启 root 密码登录。"
+              help="模板启用 root 密码登录，请替换“你的密码”。"
             >
               <textarea
                 aria-label="启动脚本"

@@ -47,7 +47,7 @@ export default function LaunchNetworkOptions({
         创建后设置防火墙
       </Checkbox>
       <p className="field-help">
-        未勾选时使用 AWS 默认规则；勾选后默认开放所有协议，可按需调整下列规则。
+        未启用时使用 AWS 默认规则；启用后默认开放所有协议。
       </p>
       {firewall !== undefined && (
         <>
@@ -116,11 +116,9 @@ export default function LaunchNetworkOptions({
         >
           自动分配并绑定静态 IPv4
         </Checkbox>
-        <p className="field-help">
-          {network === "ipv6"
-            ? "仅 IPv6 实例不支持静态 IPv4。"
-            : "每台实例分配一个静态 IP，并在创建就绪后绑定。"}
-        </p>
+        {network === "ipv6" && (
+          <p className="field-help">仅 IPv6 实例不支持静态 IPv4。</p>
+        )}
       </div>
       {editing && (
         <PortRuleEditor

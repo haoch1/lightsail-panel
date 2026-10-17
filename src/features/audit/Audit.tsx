@@ -8,7 +8,6 @@ import {
   ErrorBox,
   Modal,
   PendingButton,
-  RefreshButton,
 } from "../../components/ui";
 import { api } from "../../lib/api";
 
@@ -49,7 +48,6 @@ export default function Audit() {
           </h1>
         </div>
         <div className="row-actions">
-          <RefreshButton loading={loading || clearing} onClick={refresh} />
           <button
             className="button danger"
             disabled={loading || clearing || !data?.items.length}

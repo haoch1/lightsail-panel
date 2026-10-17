@@ -1,4 +1,4 @@
-import { ArrowUpRight, Cloud, FlaskConical, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Cloud, FlaskConical } from "lucide-react";
 import { useState } from "react";
 import { ThemeControl } from "../../app/theme";
 import { ErrorBox, Field, PendingButton } from "../../components/ui";
@@ -92,10 +92,6 @@ export default function Auth({
           先预览演示面板
           <ArrowUpRight size={14} />
         </a>
-        <div className="auth-foot">
-          <ShieldCheck size={14} />
-          凭证保存在你的服务器 · AES-256-GCM 加密
-        </div>
         <ThemeControl />
       </div>
     </div>

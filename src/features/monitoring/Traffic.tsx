@@ -154,9 +154,7 @@ export default function Traffic({ instance }: { instance?: Instance }) {
             )}
         </div>
       </details>
-      <p className="traffic-note">
-        入站与出站合计，非 AWS 计费流量；指标可能延迟。
-      </p>
+      <p className="traffic-note">统计值非 AWS 计费流量，指标可能延迟。</p>
     </div>
   );
 }

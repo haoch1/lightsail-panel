@@ -70,14 +70,9 @@ export default function TrafficLimit({
             <div className="check-label">
               <span className="table-placeholder" />
             </div>
-            <p className="check-description">
-              按本月入站＋出站合计计算，达到阈值后停止此实例。
-            </p>
+            <p className="check-description">达到本月流量阈值后停止实例。</p>
           </div>
-          <Field
-            label="套餐流量阈值（%）"
-            help="相对于此实例当前套餐的月流量额度，支持 0.1–100%。"
-          >
+          <Field label="套餐流量阈值（0.1–100%）">
             <div className="input-placeholder">
               <span className="table-placeholder" />
             </div>
@@ -155,14 +150,11 @@ function TrafficLimitForm({
         checked={enabled}
         pending={busy}
         onChange={(e) => setEnabled(e.target.checked)}
-        description="按本月入站＋出站合计计算，达到阈值后停止此实例。"
+        description="达到本月流量阈值后停止实例。"
       >
         启用自动关机
       </Checkbox>
-      <Field
-        label="套餐流量阈值（%）"
-        help="相对于此实例当前套餐的月流量额度，支持 0.1–100%。"
-      >
+      <Field label="套餐流量阈值（0.1–100%）">
         <input
           type="number"
           required
@@ -208,9 +200,9 @@ function TrafficLimitNotice() {
   return (
     <div className="notice">
       <span>
-        每 5 分钟后台检查。
-        {demo ? "演示设置不会调用 AWS。" : "关闭浏览器后继续执行。"}AWS
-        指标可能延迟；停止后套餐仍会计费，下月不会自动启动。
+        后台每 5 分钟检查，AWS 指标可能延迟。
+        {demo && "演示设置不调用 AWS。"}
+        停止后套餐仍计费，下月不自动启动。
       </span>
     </div>
   );

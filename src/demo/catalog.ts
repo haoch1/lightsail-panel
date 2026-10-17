@@ -119,7 +119,5 @@ export const demoCatalog: Omit<Catalog, "zones"> = {
       transfer: s.transfer,
     })),
   ),
-  warnings: [
-    "演示镜像依据 AWS 官方文档：Debian 13/12、Ubuntu 24.04/22.04、CentOS Stream 9。真实可用版本、规格与价格以当前账户和区域的 AWS 返回为准。",
-  ],
+  warnings: [],
 };

@@ -467,11 +467,6 @@ export default function Instances() {
                     ? "没有匹配的实例"
                     : "暂无实例"
               }
-              description={
-                !accounts.length
-                  ? "先添加并验证 AWS 凭证，即可加载真实资源。"
-                  : "试试其他账户或区域，或创建你的第一台实例。"
-              }
               action={
                 <button
                   className="button"

@@ -1,4 +1,3 @@
-import { regionLabel } from "../../../shared/regions";
 import { Download } from "lucide-react";
 import { useRef, useState } from "react";
 import { usePanel } from "../../app/context";
@@ -57,9 +56,7 @@ export function DefaultKeyDownload({
         下载默认私钥 (.pem)
       </PendingButton>
       <p className="muted">
-        {demo
-          ? "演示模式不提供真实私钥；连接 AWS 后可下载。"
-          : `${regionLabel(region)}；若尚无默认密钥，AWS 会创建一个。`}
+        {demo ? "演示模式不可下载私钥。" : "无默认密钥时，AWS 将自动创建。"}
       </p>
     </div>
   );

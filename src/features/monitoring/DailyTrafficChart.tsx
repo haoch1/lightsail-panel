@@ -59,8 +59,7 @@ export default function DailyTrafficChart({
       }}
     >
       <div className="daily-chart-heading">
-        <h2>每日流量</h2>
-        <span>入站 + 出站</span>
+        <h2 title="入站与出站合计">每日流量</h2>
       </div>
       {bars.length ? (
         <div

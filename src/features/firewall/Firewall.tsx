@@ -49,10 +49,7 @@ export default function Firewall() {
       {instance || initialLoading ? (
         <Ports key={instance ? key(instance) : "pending"} instance={instance} />
       ) : !data.data?.errors.length ? (
-        <Empty
-          title="当前范围没有实例"
-          description="先添加账户或切换区域，再选择需要配置的实例。"
-        />
+        <Empty title="当前范围没有实例" />
       ) : null}
     </>
   );
