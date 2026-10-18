@@ -485,9 +485,10 @@
   }
   .traffic-daily .table-wrap,
   .traffic-modal .traffic-daily .table-wrap {
-    height: 280px;
+    height: auto;
     flex: auto;
-    min-height: 150px;
+    min-height: 0;
+    max-height: 320px;
   }
   .traffic-modal .traffic-daily {
     min-height: 0;

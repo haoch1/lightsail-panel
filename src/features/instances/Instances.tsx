@@ -511,6 +511,10 @@ export default function Instances() {
                   : (index + (e.key === "ArrowDown" ? 1 : -1) + items.length) %
                     items.length;
             items[next]?.focus({ preventScroll: true });
+            items[next]?.scrollIntoView({
+              block: "nearest",
+              inline: "nearest",
+            });
           }}
         >
           <div className="menu-title">{menu.instance.name}</div>

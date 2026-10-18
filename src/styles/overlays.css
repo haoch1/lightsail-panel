@@ -1,4 +1,5 @@
 .context-menu {
+  overscroll-behavior: contain;
   position: fixed;
   width: 233px;
   border: 1px solid var(--border);
@@ -44,7 +45,7 @@
   gap: 5px;
   padding: 6px 4px;
   min-height: 32px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 18px;
   border: 1px solid var(--border);
 }
@@ -115,10 +116,10 @@
   height: min(780px, calc(100dvh - var(--modal-inset)));
 }
 .firewall-modal {
-  height: min(660px, calc(100dvh - var(--modal-inset)));
+  height: auto;
 }
 .traffic-limit-modal {
-  height: min(660px, calc(100dvh - var(--modal-inset)));
+  height: auto;
 }
 .traffic-modal .modal-body,
 .firewall-modal .modal-body,
@@ -138,7 +139,7 @@
   flex: 1;
 }
 .traffic-limit-modal .modal-actions {
-  margin-top: auto;
+  margin-top: 24px;
 }
 .account-manager-backdrop {
   animation: account-backdrop-in 160ms ease-out;
@@ -149,7 +150,7 @@
 }
 .modal.account-manager-modal {
   width: 820px;
-  height: min(540px, calc(100dvh - var(--modal-inset)));
+  height: auto;
   display: flex;
   overflow: hidden;
 }
@@ -159,7 +160,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: account-view-in 140ms ease-out;
 }
 .account-manager-modal .account-add-form {
   flex: 1;
@@ -167,21 +167,11 @@
   flex-direction: column;
 }
 .account-manager-modal .modal-actions {
-  margin-top: auto;
+  margin-top: 24px;
 }
 .account-manager-modal .account-manager-note {
   margin-top: auto;
   padding-top: 16px;
-}
-@keyframes account-view-in {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 @keyframes account-backdrop-in {
   from {

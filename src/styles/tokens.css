@@ -18,23 +18,28 @@
   --subtle: #f5f5f5;
   --surface-hover: #f0f0f0;
   --text: #202020;
-  --muted: #737373;
+  --muted: #686868;
   --border: #e5e5e5;
+  --control-border: #d4d4d4;
+  --control-hover: #a3a3a3;
+  --scroll-thumb: #c1c1c1;
+  --danger-button: #b93849;
+  --danger-button-hover: #a42d3d;
   --accent: #202020;
   --accent-hover: #404040;
   --accent-soft: #ededed;
   --focus: #858585;
   --chart-color: #525252;
-  --success: #16815d;
+  --success: #137754;
   --success-soft: #e8f6ef;
   --warning: #9a6818;
   --warning-soft: #fff9eb;
   --warning-border: #f3e7c8;
-  --danger: #c83f50;
+  --danger: #c03a4b;
   --danger-soft: #fff1f2;
   --danger-border: #f7d4d9;
   --red: var(--danger);
-  --shadow: 0 8px 28px #00000012;
+  --shadow: 0 4px 6px #00000004, 0 12px 32px #00000014;
   --mono: "Cascadia Code", Consolas, monospace;
   --chart-fill: #5252520c;
   --chart-secondary: #567b82;
@@ -48,6 +53,11 @@
   --text: #ededed;
   --muted: #a1a1a1;
   --border: #383838;
+  --control-border: #505050;
+  --control-hover: #858585;
+  --scroll-thumb: #606060;
+  --danger-button: #ba394c;
+  --danger-button-hover: #ce465a;
   --accent: #e5e5e5;
   --accent-hover: #fff;
   --accent-soft: #2e2e2e;
@@ -67,10 +77,30 @@
 }
 * {
   box-sizing: border-box;
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 body {
   margin: 0;
   background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
 }
 button {
   font: inherit;
@@ -91,7 +121,7 @@ select {
   -webkit-tap-highlight-color: transparent;
   outline: 0;
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   background: var(--surface);
   padding: 9px 12px;
   width: 100%;
@@ -107,7 +137,7 @@ textarea {
   -webkit-tap-highlight-color: transparent;
   outline: 0;
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   background: var(--surface);
   padding: 9px 12px;
   width: 100%;
@@ -172,7 +202,7 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 input:not([type="checkbox"]):not([type="radio"]) {
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   background: var(--surface);
   padding: 9px 12px;
   width: 100%;
@@ -180,7 +210,7 @@ input:not([type="checkbox"]):not([type="radio"]) {
   min-height: 40px;
   border-radius: 6px;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 20px;
 }
 input::placeholder {
   color: var(--muted);
@@ -191,17 +221,17 @@ textarea::placeholder {
 input:not([type="checkbox"]):not([type="radio"]):focus {
   border-color: var(--focus);
   outline: 0;
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px var(--focus);
 }
 select:focus {
   border-color: var(--focus);
   outline: 0;
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px var(--focus);
 }
 textarea:focus {
   border-color: var(--focus);
   outline: 0;
-  box-shadow: none;
+  box-shadow: inset 0 0 0 1px var(--focus);
 }
 input[type="checkbox"],
 .square-choice {
@@ -272,4 +302,11 @@ textarea:disabled {
 input:read-only:not([type="checkbox"]):not([type="radio"]) {
   background: var(--subtle);
   color: var(--muted);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) transparent;
+  }
 }

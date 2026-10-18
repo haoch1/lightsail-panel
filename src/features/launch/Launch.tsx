@@ -365,7 +365,11 @@ export default function Launch() {
             </div>
             <Field
               label="首次启动时执行（可选）"
-              help="模板启用 root 密码登录，请替换“你的密码”。"
+              help={
+                userData.includes("你的密码")
+                  ? "模板启用 root 密码登录，请替换“你的密码”。"
+                  : undefined
+              }
             >
               <textarea
                 aria-label="启动脚本"

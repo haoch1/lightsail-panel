@@ -251,7 +251,7 @@
   margin-top: 16px;
 }
 .network-option input[type="radio"] {
-  margin: 5px 0 0;
+  margin: 4px 0 0;
 }
 .network-title {
   display: flex;
@@ -272,7 +272,7 @@
   color: var(--success);
   border-radius: 4px;
   padding: 0 6px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .firewall-sources {
   white-space: normal;
@@ -280,7 +280,7 @@
   max-width: 450px;
   overflow-wrap: anywhere;
   font-family: var(--mono);
-  font-size: 12px !important;
+  font-size: 14px !important;
 }
 .resource-scope {
   margin-bottom: 16px;
@@ -308,7 +308,7 @@
   line-height: 1.65;
 }
 .key-fingerprint {
-  font-size: 11px;
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
 .traffic-content {
@@ -396,11 +396,12 @@
   height: 100%;
 }
 .firewall-modal .firewall-table {
-  flex: 1;
-  min-height: 140px;
+  flex: 0 1 auto;
+  min-height: 0;
 }
 .traffic-modal .traffic-daily .table-wrap {
-  height: 240px;
+  height: auto;
+  max-height: 240px;
 }
 .ports-content {
   display: flex;
@@ -414,7 +415,7 @@
 }
 .firewall-modal .firewall-table {
   height: auto;
-  max-height: none;
+  max-height: 400px;
 }
 .firewall-table table {
   table-layout: fixed;
@@ -592,7 +593,7 @@
   margin-top: 7px;
 }
 .traffic-progress.compact .traffic-progress-caption {
-  font-size: 11px;
+  font-size: 12px;
   margin-top: 5px;
 }
 .traffic-link:hover .traffic-progress-heading > span:first-child {

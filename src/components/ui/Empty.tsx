@@ -2,7 +2,7 @@ import { Cloud } from "lucide-react";
 import type { ReactNode } from "react";
 export function Empty({
   title = "暂无资源",
-  description = "当前账户和区域下没有相关资源。",
+  description,
   action,
 }: {
   title?: string;
@@ -15,7 +15,7 @@ export function Empty({
         <Cloud size={26} />
       </div>
       <strong>{title}</strong>
-      <p>{description}</p>
+      {description && <p>{description}</p>}
       {action}
     </div>
   );

@@ -166,7 +166,7 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
             ? remove.name
             : undefined
       }
-      className="account-manager-modal"
+      className={"account-manager-modal account-view-" + view}
       backdropClassName={
         "account-manager-backdrop" + (closing ? " closing" : "")
       }

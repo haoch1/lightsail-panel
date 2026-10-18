@@ -58,6 +58,9 @@
 }
 .button:focus-visible,
 .icon-button:focus-visible,
+.text-link:focus-visible,
+.back-link:focus-visible,
+.copy-text:focus-visible,
 .nav-item:focus-visible,
 .sidebar nav button:focus-visible,
 .context-menu button:focus-visible,
@@ -65,13 +68,138 @@ summary:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
+.search:focus-within {
+  border-color: var(--focus);
+  box-shadow: inset 0 0 0 1px var(--focus);
+}
+.search input:not([type="checkbox"]):focus {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
+.button:not(.primary):not(.danger):hover:enabled {
+  border-color: var(--control-hover);
+}
+.button > svg,
+.nav-item > svg,
+.context-menu button > svg {
+  transform: translateY(0.5px);
+}
+.button.small > svg,
+.pending-button-label > svg {
+  width: 14px;
+  height: 14px;
+}
+.select-trigger:disabled,
+.month-trigger:disabled {
+  cursor: default;
+}
+.topbar .select-trigger {
+  height: 36px;
+  line-height: 20px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+.details .copy-text {
+  align-items: flex-start;
+  text-align: left;
+}
+.details .copy-text span {
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+.details .copy-text svg {
+  margin-top: 3px;
+}
+.details dt,
+.details dd,
+.modal-head p,
+.notice,
+.error-box,
+.toast {
+  line-height: 1.65;
+}
+.modal-head > .icon-button {
+  margin-top: -2px;
+  margin-right: -4px;
+}
+.modal-body > .notice:first-child,
+.modal-body > .error-box:first-child {
+  margin-top: 0;
+}
+.modal-body > .notice:last-child,
+.modal-body > .error-box:last-child,
+.modal-body > .traffic-content > .traffic-note:last-child {
+  margin-bottom: 0;
+}
+.modal-body form > :is(.field, .notice, .error-box):has(+ .modal-actions) {
+  margin-bottom: 0;
+}
+.modal.account-manager-modal.account-view-add,
+.modal.account-manager-modal.account-view-remove {
+  width: 560px;
+}
+.context-menu button:focus-visible {
+  outline-offset: -2px;
+}
+.modal.account-view-list .account-table {
+  max-height: 400px;
+}
+.account-view-list .account-table th {
+  position: sticky;
+  top: 0;
+}
+.traffic-limit-placeholder {
+  min-height: 420px;
+}
+.error-box > span,
+.toast > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.toast > svg {
+  align-self: flex-start;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+.toast > .icon-button {
+  align-self: flex-start;
+  margin-top: -5px;
+}
+.network-option input[type="radio"] {
+  border-radius: 50%;
+}
+.network-option input[type="radio"]:checked::after {
+  width: 6px;
+  height: 6px;
+  top: 3px;
+  left: 3px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  transform: none;
+}
 .table-wrap th {
   height: 43px;
   padding-top: 12px;
   padding-bottom: 12px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 18px;
+}
+.table-wrap td strong,
+.table-wrap td .copy-text,
+.table-wrap td .state {
+  font-size: inherit;
+}
+.table-wrap td .state {
+  font-weight: 400;
+}
+.instance-price,
+.traffic-progress.compact .traffic-progress-heading {
+  font-size: 14px;
 }
 @media (min-width: 1261px) {
   .instances-table thead .selection-box {
@@ -158,6 +286,15 @@ summary:focus-visible {
   top: 0;
   z-index: 1;
 }
+@media (max-width: 950px) {
+  .firewall-sources {
+    font-size: 13px !important;
+  }
+  .table-wrap .responsive-table td[data-label]::before,
+  .traffic-daily-table td::before {
+    font-size: 12px;
+  }
+}
 @media (max-width: 760px) {
   .instance-table tbody tr,
   .instances-table tbody tr {
@@ -169,6 +306,54 @@ summary:focus-visible {
   .page-heading {
     align-items: flex-start;
     text-align: left;
+  }
+  .page-heading h1 {
+    font-size: 22px;
+    line-height: 32px;
+  }
+  .launch-page .page-heading {
+    align-items: flex-end;
+  }
+  .launch-page .page-heading > div {
+    flex: 1 0 100%;
+  }
+  .launch-page .page-heading > .button {
+    margin-left: auto;
+  }
+  .instances-toolbar .select-trigger {
+    padding-left: 10px;
+    padding-right: 10px;
+    gap: 6px;
+  }
+  .firewall-table,
+  .firewall-modal .firewall-table {
+    max-height: none;
+  }
+  .form-panel,
+  .panel {
+    padding: 18px 16px;
+  }
+  .field .select-trigger,
+  .search input:not([type="checkbox"]) {
+    font-size: 16px;
+  }
+  .check-label,
+  .network-option {
+    min-height: 28px;
+  }
+  .source-options {
+    gap: 8px 20px;
+  }
+  .modal-actions .button,
+  .ssh-tools .button {
+    min-height: 36px;
+  }
+  .demo-bar {
+    font-size: 12px;
+    line-height: 18px;
+  }
+  .demo-bar a {
+    font-size: 12px;
   }
   .resource-picker .field {
     flex-direction: row;

@@ -85,9 +85,7 @@ export default function Audit() {
                   {new Date(x.at).toLocaleString("zh-CN")}
                 </td>
                 <td data-label="操作">{auditActionLabel(x.action)}</td>
-                <td data-label="目标资源" className="mono">
-                  {x.target || "—"}
-                </td>
+                <td data-label="目标资源">{x.target || "—"}</td>
                 <td data-label="结果">
                   <span
                     className={
