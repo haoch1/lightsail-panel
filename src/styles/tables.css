@@ -166,7 +166,7 @@
 .instance-addresses .copy-text span {
   white-space: nowrap;
   overflow-wrap: normal;
-  max-width: 230px;
+  max-width: none;
 }
 .instance-actions-button {
   min-width: 72px;
@@ -200,8 +200,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 160px;
-  max-width: 280px;
+  min-width: max-content;
 }
 .instance-addresses > div {
   display: flex;
@@ -218,18 +217,7 @@
 .instance-addresses .copy-text {
   flex-shrink: 0;
 }
-.instance-ipv6 .copy-text {
-  flex-shrink: 1;
-  min-width: 0;
-}
-.instance-ipv6 .copy-text span {
-  white-space: normal;
-  overflow-wrap: normal;
-}
 @media (min-width: 951px) and (max-width: 1400px) {
-  .instance-addresses {
-    min-width: 192px;
-  }
   .instance-table td[data-label="账户 / 区域"] .subline {
     white-space: normal;
   }

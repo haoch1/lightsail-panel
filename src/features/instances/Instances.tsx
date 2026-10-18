@@ -346,7 +346,7 @@ export default function Instances() {
                     "账户 / 区域",
                     "操作",
                   ]}
-                  lines={[1, 1, 2, 3, 3, 3, 2, 1]}
+                  lines={[1, 1, 1, 3, 3, 3, 2, 1]}
                 />
               )}
               {items.map((i) => (
@@ -390,7 +390,6 @@ export default function Instances() {
                   </td>
                   <td data-label="状态">
                     <State value={i.state} />
-                    <div className="subline">{i.platform}</div>
                   </td>
                   <td data-label="规格 / 价格">
                     <div>{i.instanceType}</div>
