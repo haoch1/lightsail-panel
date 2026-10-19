@@ -17,6 +17,7 @@ export default function BundlePicker({
 }: Props) {
   return (
     <Select
+      searchable
       aria-label="实例套餐"
       required
       className="bundle-select"

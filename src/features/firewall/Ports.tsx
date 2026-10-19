@@ -101,9 +101,7 @@ export default function Ports({ instance }: { instance?: Instance }) {
             {data.data?.items.map(normalizePortRule).map((r, index) => (
               <tr className="resource-row" key={index}>
                 <td data-label="应用程序">
-                  <strong>
-                    {applicationLabel(r.protocol, r.fromPort, r.toPort)}
-                  </strong>
+                  {applicationLabel(r.protocol, r.fromPort, r.toPort)}
                 </td>
                 <td data-label="协议">{protocolLabel(r.protocol)}</td>
                 <td data-label="端口">

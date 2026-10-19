@@ -30,6 +30,7 @@ export default function TrafficPage() {
       <section className="resource-picker">
         <Field label="实例">
           <Select
+            searchable
             disabled={initialLoading}
             value={instance ? key(instance) : ""}
             onChange={(e) => setSelected(e.target.value)}

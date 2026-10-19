@@ -4,9 +4,9 @@ import {
   ArrowDownUp,
   ArrowUpRight,
   CheckCircle,
+  ChevronRight,
   Cloud,
   Clock,
-  FlaskConical,
   Globe,
   LogOut,
   Menu,
@@ -232,20 +232,28 @@ export default function App() {
         </aside>
         <div className="workspace" inert={mobile}>
           <header className="topbar">
-            <button
-              ref={navigation.opener}
-              className="icon-button mobile-menu"
-              aria-label="打开导航"
-              aria-expanded={mobile}
-              aria-controls="panel-navigation"
-              onClick={() => setMobile(true)}
-            >
-              <Menu size={20} />
-            </button>
+            <div className="topbar-left">
+              <button
+                ref={navigation.opener}
+                className="icon-button mobile-menu"
+                aria-label="打开导航"
+                aria-expanded={mobile}
+                aria-controls="panel-navigation"
+                onClick={() => setMobile(true)}
+              >
+                <Menu size={20} />
+              </button>
+              <nav className="breadcrumb" aria-label="当前位置">
+                <span>控制台</span>
+                <ChevronRight size={12} />
+                <strong>{nav.find((n) => n.path === path)?.label}</strong>
+              </nav>
+            </div>
             <div className="top-control">
               <Select
                 disabled={entering}
                 className="region-select"
+                searchable
                 icon={<Globe size={15} />}
                 aria-label="区域范围"
                 value={region}
@@ -267,6 +275,7 @@ export default function App() {
                 <Select
                   disabled={entering}
                   className="account-select"
+                  searchable
                   icon={<Cloud size={15} />}
                   aria-label="AWS 账户"
                   value={accountId}
@@ -301,9 +310,17 @@ export default function App() {
                   <Clock size={16} />
                 </button>
               )}
+              {demo && (
+                <span
+                  className="demo-indicator"
+                  title="所有数据和操作均为本地示例"
+                >
+                  演示模式
+                </span>
+              )}
               {demo ? (
-                <a className="text-link" href="/">
-                  连接 AWS <ArrowUpRight size={13} />
+                <a className="demo-exit" href="/">
+                  退出演示 <ArrowUpRight size={13} />
                 </a>
               ) : (
                 <button
@@ -321,15 +338,6 @@ export default function App() {
               )}
             </div>
           </header>
-          {demo && (
-            <div className="demo-bar">
-              <FlaskConical size={14} />
-              <span>演示模式 · 所有数据和操作均为本地示例</span>
-              <a href="/">
-                退出演示，连接真实账户 <ArrowUpRight size={12} />
-              </a>
-            </div>
-          )}
           <main>
             {accountData.error && (
               <ErrorBox

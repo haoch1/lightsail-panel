@@ -1,14 +1,14 @@
 .context-menu {
-  overscroll-behavior: contain;
   position: fixed;
   width: 233px;
+  max-width: calc(100vw - 16px);
   border: 1px solid var(--border);
   background: var(--surface);
   z-index: 60;
   max-height: calc(100dvh - 80px);
   overflow: auto;
   animation: menu-in 0.12s ease-out;
-  border-radius: 7px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 5px;
 }
@@ -45,7 +45,7 @@
   gap: 5px;
   padding: 6px 4px;
   min-height: 32px;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 18px;
   border: 1px solid var(--border);
 }
@@ -79,11 +79,12 @@
   justify-content: center;
   padding: 24px;
   z-index: 80;
-  animation: modal-in 0.12s ease-out;
-  background: #0008;
+  animation: modal-in 160ms ease-out;
+  background: #0006;
   backdrop-filter: blur(2px);
 }
 .modal {
+  animation: dialog-in 180ms ease-out;
   max-width: 100%;
   max-height: calc(100dvh - var(--modal-inset));
   display: flex;
@@ -93,8 +94,8 @@
   padding: 24px;
   width: 560px;
   border-color: var(--border);
-  border-radius: 10px;
-  box-shadow: 0 24px 80px #0005;
+  border-radius: 12px;
+  box-shadow: var(--modal-shadow);
   overscroll-behavior: contain;
 }
 .modal.wide {
@@ -109,7 +110,10 @@
 }
 .modal-body {
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 3px;
+  margin: -3px;
   overscroll-behavior: contain;
 }
 .traffic-modal {
@@ -139,7 +143,7 @@
   flex: 1;
 }
 .traffic-limit-modal .modal-actions {
-  margin-top: 24px;
+  margin-top: auto;
 }
 .account-manager-backdrop {
   animation: account-backdrop-in 160ms ease-out;
@@ -160,6 +164,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  animation: account-view-in 140ms ease-out;
 }
 .account-manager-modal .account-add-form {
   flex: 1;
@@ -167,11 +172,21 @@
   flex-direction: column;
 }
 .account-manager-modal .modal-actions {
-  margin-top: 24px;
+  margin-top: auto;
 }
 .account-manager-modal .account-manager-note {
   margin-top: auto;
   padding-top: 16px;
+}
+@keyframes account-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes account-backdrop-in {
   from {
@@ -195,11 +210,25 @@
   justify-content: space-between;
   gap: 15px;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+}
+.modal-head > div {
+  min-width: 0;
 }
 .modal-head h2 {
   line-height: 1.5;
   font-size: 18px;
+  overflow-wrap: anywhere;
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .modal-head p {
   color: var(--muted);
@@ -226,6 +255,22 @@
 .account-manager-modal[aria-busy="true"] .row-actions > .icon-button:disabled {
   opacity: 0.6;
   cursor: default;
+}
+@keyframes account-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes account-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 .toasts {
   position: fixed;
@@ -258,4 +303,29 @@
 }
 .toast span {
   word-break: break-word;
+}
+
+.modal.account-manager-modal.account-view-add,
+.modal.account-manager-modal.account-view-remove {
+  width: 560px;
+}
+.modal.account-view-list .account-table {
+  max-height: 400px;
+}
+.account-view-list .account-table th {
+  position: sticky;
+  top: 0;
+}
+.details .copy-text {
+  align-items: flex-start;
+  text-align: left;
+}
+.details .copy-text span {
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+.details .copy-text svg {
+  margin-top: 3px;
 }

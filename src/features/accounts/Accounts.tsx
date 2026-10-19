@@ -132,12 +132,12 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
                         }}
                       />
                       <button
-                        className="icon-button danger-text"
+                        className="button small danger-text"
                         disabled={!!busy}
-                        aria-label={"移除账户 " + account.name}
+                        aria-label={"删除账户 " + account.name}
                         onClick={() => setRemove(account)}
                       >
-                        <Trash2 size={15} />
+                        <Trash2 size={15} /> 删除
                       </button>
                     </div>
                   </td>

@@ -52,7 +52,7 @@ export default function LaunchNetworkOptions({
       {firewall !== undefined && (
         <>
           <div className="table-wrap">
-            <table className="responsive-table">
+            <table className="responsive-table launch-rules-table">
               <thead>
                 <tr>
                   <th>协议</th>

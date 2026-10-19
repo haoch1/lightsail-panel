@@ -1,6 +1,3 @@
-.mobile-menu {
-  display: none;
-}
 .details {
   margin: 0;
 }
@@ -24,14 +21,7 @@
   word-break: break-word;
   min-width: 0;
 }
-.form-panel {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 8px;
-  padding: 24px;
-  margin: 16px 0;
-  box-shadow: none;
-}
+
 .resource-picker {
   padding-bottom: 18px;
   margin-bottom: 18px;
@@ -59,8 +49,12 @@
 }
 .form-panel h2 {
   font-weight: 600;
-  font-size: 17px;
+  font-size: 15px;
   margin-bottom: 20px;
+}
+.launch-page form {
+  display: grid;
+  gap: 20px;
 }
 .form-panel > h2 + p {
   font-size: 13px;
@@ -87,7 +81,7 @@
   color: var(--muted);
 }
 .section-title {
-  font-size: 17px;
+  font-size: 15px;
   margin: 25px 0 16px;
 }
 .info-columns {
@@ -107,7 +101,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.5;
 }
 .panel p {
@@ -190,16 +184,7 @@
   gap: 5px;
   align-items: center;
 }
-.section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-.section-heading h2 {
-  margin: 0;
-}
+
 .startup-script {
   font-family: var(--mono);
   font-size: 13px !important;
@@ -280,7 +265,7 @@
   max-width: 450px;
   overflow-wrap: anywhere;
   font-family: var(--mono);
-  font-size: 14px !important;
+  font-size: 14px;
 }
 .resource-scope {
   margin-bottom: 16px;
@@ -318,78 +303,6 @@
 }
 .traffic-content > :not(.traffic-daily) {
   flex-shrink: 0;
-}
-.traffic-overview {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-.traffic-overview > div {
-  padding: 20px 24px;
-}
-.traffic-overview > div + div {
-  border-left: 1px solid var(--border);
-}
-.traffic-overview span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  font-size: 12px;
-}
-.traffic-overview strong {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  margin-top: 8px;
-  font-weight: 600;
-  font-size: var(--stat-size);
-  letter-spacing: -0.5px;
-  font-variant-numeric: tabular-nums;
-}
-.traffic-overview strong span {
-  display: inline;
-  color: inherit;
-  font: inherit;
-}
-.traffic-range {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  font-size: 12px;
-  color: var(--muted);
-  margin: 14px 0 20px;
-  min-height: 18px;
-}
-.traffic-daily {
-  display: block;
-  flex-shrink: 0;
-  min-height: 0;
-  margin-bottom: 0;
-  margin-top: 12px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
-.traffic-daily summary {
-  width: fit-content;
-  cursor: pointer;
-  padding: 6px 0;
-  font-size: 13px;
-  color: var(--muted);
-}
-.traffic-daily summary:hover {
-  color: var(--text);
-}
-.traffic-daily[open] > .table-wrap {
-  margin-top: 10px;
-}
-.traffic-daily table {
-  table-layout: fixed;
-  min-width: 480px;
-  font-variant-numeric: tabular-nums;
 }
 .traffic-modal .traffic-content,
 .firewall-modal .ports-content {
@@ -434,7 +347,7 @@
   width: 42%;
 }
 .firewall-table th:nth-child(5) {
-  width: 16%;
+  width: 112px;
 }
 .firewall-table th {
   position: sticky;
@@ -577,7 +490,7 @@
   line-height: 1.5;
 }
 .traffic-progress.compact {
-  width: 154px;
+  width: 180px;
 }
 .traffic-progress.compact .traffic-progress-heading {
   font-size: 13px;

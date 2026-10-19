@@ -273,8 +273,10 @@ export default function Instances() {
           )}
         </div>
       </div>
-      <>
-        <div className="toolbar instances-toolbar">
+      <ScanNotices scan={data} />
+      <LaunchNetworkStatus />
+      <div className="table-panel">
+        <div className="toolbar table-toolbar instances-toolbar">
           <div className="toolbar-actions">
             <SearchInput value={search} onChange={setSearch} />
             <Select
@@ -306,8 +308,6 @@ export default function Instances() {
             )}
           </div>
         </div>
-        <ScanNotices scan={data} />
-        <LaunchNetworkStatus />
         <div className="table-wrap">
           <table className="instance-table responsive-table">
             <thead>
@@ -315,6 +315,10 @@ export default function Instances() {
                 <th className="check-cell">
                   <Checkbox
                     aria-label="全选实例"
+                    indeterminate={
+                      items.some((i) => selected.includes(keyOf(i))) &&
+                      !items.every((i) => selected.includes(keyOf(i)))
+                    }
                     checked={
                       !!items.length &&
                       items.every((i) => selected.includes(keyOf(i)))
@@ -482,7 +486,7 @@ export default function Instances() {
             />
           )}
         </div>
-      </>
+      </div>
       {menu && (
         <div
           ref={menuElement}

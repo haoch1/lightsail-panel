@@ -114,7 +114,7 @@ export default function StaticIps() {
       <ScanNotices scan={data.data} />
       <LaunchNetworkStatus resource="static-ips" />
       <div className="table-wrap">
-        <table className="responsive-table">
+        <table className="responsive-table static-ip-table">
           <thead>
             <tr>
               <th>名称</th>

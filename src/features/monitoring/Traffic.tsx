@@ -1,3 +1,5 @@
+import { ChevronDown } from "lucide-react";
+import { SegmentedControl } from "../../components/ui/SegmentedControl";
 import { useState } from "react";
 import type { Instance, TrafficData } from "../../../shared/types";
 import { useApi } from "../../app/context";
@@ -69,23 +71,17 @@ export default function Traffic({ instance }: { instance?: Instance }) {
   return (
     <div className="traffic-content" aria-busy={initialLoading || loading}>
       <div className="toolbar">
-        <div className="periods">
-          {Object.entries({
-            month: "本月",
-            "7d": "近 7 天",
-            "30d": "近 30 天",
-          }).map(([key, text]) => (
-            <button
-              key={key}
-              className={"button " + (key === range ? "primary" : "")}
-              aria-pressed={key === range}
-              disabled={!instance}
-              onClick={() => setRange(key)}
-            >
-              {text}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          label="统计周期"
+          value={range}
+          onChange={setRange}
+          disabled={!instance}
+          options={[
+            ["month", "本月"],
+            ["7d", "近 7 天"],
+            ["30d", "近 30 天"],
+          ]}
+        />
         <RefreshButton loading={initialLoading || loading} onClick={refresh} />
       </div>
       {error && <ErrorBox message={error} retry={refresh} />}
@@ -107,7 +103,10 @@ export default function Traffic({ instance }: { instance?: Instance }) {
       </div>
       <DailyTrafficChart daily={data?.daily ?? []} loading={initialLoading} />
       <details className="traffic-daily" open>
-        <summary>每日明细</summary>
+        <summary>
+          <ChevronDown aria-hidden="true" />
+          每日明细
+        </summary>
         <div className="table-wrap">
           <table className="traffic-daily-table">
             <thead>

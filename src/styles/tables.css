@@ -40,65 +40,6 @@
   font-size: 12px;
   line-height: 1.6;
 }
-.table-wrap {
-  border: 1px solid var(--border);
-  overflow: auto;
-  background: var(--surface);
-  border-radius: 8px;
-}
-.table-wrap.borderless {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.table-wrap table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  white-space: nowrap;
-  font-size: 13px;
-}
-.table-wrap th {
-  vertical-align: middle;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
-  background: var(--subtle);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 12px 16px;
-  height: 43px;
-}
-.table-wrap td {
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-  padding: 14px 16px;
-  font-size: 14px;
-  line-height: 1.6;
-}
-.table-wrap tr:last-child td {
-  border-bottom: 0;
-}
-.table-wrap tbody tr:hover {
-  background: var(--subtle);
-}
-.table-wrap td strong {
-  font-size: 13px;
-  font-weight: 500;
-}
-.instance-table {
-  min-width: 960px;
-}
-.table-wrap .check-cell {
-  width: 40px;
-  padding: 14px 0 14px 16px;
-}
-.table-wrap .check-cell input {
-  display: block;
-  margin: 0;
-}
-.table-wrap .actions-cell {
-  width: 50px;
-}
 .instance-name {
   padding: 0;
   text-align: left;
@@ -108,18 +49,7 @@
 .instance-name:hover {
   text-decoration: underline;
 }
-.subline {
-  color: var(--muted);
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 12px;
-  line-height: 1.5;
-  margin-top: 4px;
-}
-.subline.mono {
-  font-size: 12px;
-}
+
 .table-wrap tr.selected {
   background: var(--accent-soft);
 }
@@ -144,10 +74,10 @@
 .instance-actions-column {
   width: 106px;
   min-width: 106px;
-  text-align: center;
+  text-align: right;
 }
 .instance-row-actions {
-  justify-content: center;
+  justify-content: flex-end;
 }
 .table-wrap .instance-table tbody tr:hover {
   background: var(--surface);
@@ -170,7 +100,7 @@
 }
 .instance-actions-button {
   min-width: 72px;
-  justify-content: center;
+  justify-content: flex-end;
 }
 .instance-table th:last-child {
   position: sticky;
@@ -188,10 +118,6 @@
 }
 .instance-table tr.selected td:last-child {
   background: var(--accent-soft);
-}
-.traffic-daily .table-wrap {
-  height: auto;
-  max-height: 320px;
 }
 .amount-column.mono {
   font-family: inherit;
@@ -218,10 +144,7 @@
   flex-shrink: 0;
 }
 @media (min-width: 951px) and (max-width: 1400px) {
-  .instance-table td[data-label="账户 / 区域"] .subline {
-    white-space: normal;
-  }
-  .instance-actions-column {
+  .instance-table td[data-label="账户 / 区域"] .instance-actions-column {
     width: 96px;
     min-width: 96px;
   }
@@ -243,4 +166,101 @@
 .instance-region span {
   display: inline-block;
   white-space: nowrap;
+}
+
+.instance-table {
+  min-width: 1180px;
+}
+.instance-table th,
+.instance-table td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.instance-table td {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.instance-table th:first-child,
+.instance-table td:first-child {
+  width: 40px;
+  padding-left: 12px;
+  padding-right: 0;
+}
+.instance-table th:last-child,
+.instance-table td:last-child {
+  width: 92px;
+}
+.instance-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.table-wrap td strong {
+  font-weight: 600;
+}
+.audit-table {
+  --audit-detail-column: clamp(180px, 24vw, 360px);
+  table-layout: fixed;
+  min-width: 800px;
+}
+.audit-table th {
+  width: calc((100% - var(--audit-detail-column) - 100px) / 3);
+}
+.audit-table th:nth-child(4) {
+  width: 100px;
+}
+.audit-table th:last-child {
+  width: var(--audit-detail-column);
+}
+.audit-table th:last-child,
+.audit-table td:last-child {
+  text-align: right;
+}
+.audit-table .detail-cell {
+  min-width: 0;
+  max-width: none;
+}
+.account-table th:last-child,
+.account-table td:last-child,
+.static-ip-table th:last-child,
+.static-ip-table td:last-child,
+.launch-rules-table th:last-child,
+.launch-rules-table td:last-child,
+.firewall-table th:last-child,
+.firewall-table td:last-child {
+  text-align: right;
+}
+.static-ip-table {
+  table-layout: fixed;
+  min-width: 880px;
+}
+.static-ip-table th {
+  width: calc((100% - 252px) / 4);
+}
+.static-ip-table th:nth-child(5) {
+  width: 96px;
+}
+.static-ip-table th:last-child {
+  width: 156px;
+}
+.static-ip-table td {
+  overflow-wrap: anywhere;
+}
+.account-table th:last-child {
+  width: 200px;
+}
+.launch-rules-table th:last-child {
+  width: 64px;
+}
+.account-table .row-actions,
+.static-ip-table .row-actions {
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+.selection-box {
+  display: inline-flex;
+  width: 24px;
+  height: 32px;
+  align-items: center;
+  cursor: pointer;
 }

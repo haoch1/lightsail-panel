@@ -1,6 +1,6 @@
 import { compareImages } from "../../../shared/images";
 import { regionLabel } from "../../../shared/regions";
-import { ArrowLeft, Rocket } from "lucide-react";
+import { Rocket } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Catalog, PortInfo } from "../../../shared/types";
 import { useApi, usePanel } from "../../app/context";
@@ -121,13 +121,6 @@ export default function Launch() {
     <div className="launch-page">
       <div className="page-heading">
         <div>
-          <button
-            className="back-link"
-            onClick={() => panel.navigate("/lightsail")}
-          >
-            <ArrowLeft size={13} />
-            返回实例列表
-          </button>
           <h1>
             <Rocket size={23} />
             创建 Lightsail 实例
@@ -171,6 +164,7 @@ export default function Launch() {
             <div className="form-grid">
               <Field label="AWS 账户">
                 <Select
+                  searchable
                   aria-label="创建账户"
                   value={accountId}
                   required
@@ -188,6 +182,7 @@ export default function Launch() {
               </Field>
               <Field label="区域">
                 <Select
+                  searchable
                   aria-label="创建区域"
                   openFromStart
                   value={region}
@@ -208,6 +203,7 @@ export default function Launch() {
               </Field>
               <Field label="可用区">
                 <Select
+                  searchable
                   aria-label="可用区"
                   required
                   value={zone}
@@ -274,6 +270,7 @@ export default function Launch() {
             </fieldset>
             <Field label="系统镜像">
               <Select
+                searchable
                 aria-label="系统镜像"
                 required
                 value={imageId}
