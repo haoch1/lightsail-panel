@@ -56,6 +56,7 @@ jobs:
           curl --fail --silent http://127.0.0.1:8090/lightsail | grep -q 'id="root"'
           test "$(docker inspect --format '{{.Config.User}}' lightsail-panel-test)" = node
           test "$(docker exec lightsail-panel-test printenv PORT)" = 8090
+          test "$(docker exec lightsail-panel-test printenv NODE_OPTIONS)" = --max-semi-space-size=2
           test "$(docker inspect --format '{{json .Config.ExposedPorts}}' lightsail-panel-test)" = '{"8090/tcp":{}}'
           test "$(docker inspect --format '{{json .Config.Cmd}}' lightsail-panel-test)" = '["lightsail-panel"]'
           test "$(docker inspect --format '{{.Path}}' lightsail-panel-test)" = lightsail-panel
@@ -148,16 +149,19 @@ jobs:
           test "$(docker exec lightsail-panel hostname)" = lightsail-panel
           test "$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/app/data"}}{{.Name}}{{end}}{{end}}' lightsail-panel)" = lightsail-panel-data
           docker exec lightsail-panel lightsail-panel --healthcheck
-      - name: Verify custom host port
+          test "$(docker exec lightsail-panel printenv NODE_OPTIONS)" = --max-semi-space-size=2
+      - name: Verify custom host port and runtime options
         env:
           PANEL_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
           PANEL_PORT: 18090
+          NODE_OPTIONS: --max-semi-space-size=4
         run: |
           docker compose up -d
           curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
             --retry-connrefused http://127.0.0.1:18090/api/health > health.json
           python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
           test "$(docker exec lightsail-panel printenv PORT)" = 8090
+          test "$(docker exec lightsail-panel printenv NODE_OPTIONS)" = --max-semi-space-size=4
           docker exec lightsail-panel lightsail-panel --healthcheck
       - name: Deployment logs
         if: always()

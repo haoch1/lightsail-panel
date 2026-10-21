@@ -136,6 +136,8 @@ WebSocket 每 15 秒检查心跳、登录有效期和账户状态；退出登录
 
 npm 包、Compose 项目与服务、Docker 容器、hostname 和启动命令统一命名为 `lightsail-panel`。Dockerfile 清除继承的 entrypoint，`bin/lightsail-panel.mjs` 通过 shebang 运行 Node.js，应用作为容器 PID 1。`--healthcheck` 模式仅查询本地健康端点。
 
+运行阶段通过 `NODE_OPTIONS=--max-semi-space-size=2` 调整 V8 年轻代空间，减少常驻内存及短时分配峰值。构建阶段保留 Node.js 默认设置。Compose 允许覆盖该变量；不设置较小的老年代上限或容器内存硬限制，资源缓存、采集并发、刷新周期与 SSH 会话策略保持原有语义。
+
 `server/runtime-identity.mjs` 设置 `process.title` 与 Linux 线程的 `/proc/self/task/<tid>/comm`。启动时同步已有线程，1 秒后补充检查，之后每 30 秒修正新增或名称不同的线程。定时器使用 `unref`，服务停止时清理。该机制无需 root 或额外 capabilities；无法访问 `/proc` 时记录一次警告并继续运行。
 
 Compose 数据卷标识与实际卷名均为 `lightsail-panel-data`，挂载到 `/app/data`。

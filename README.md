@@ -83,7 +83,7 @@ curl -fsS http://127.0.0.1:8090/api/health
 健康检查返回示例：
 
 ```json
-{ "ok": true, "version": "1.8.7", "service": "lightsail" }
+{ "ok": true, "version": "1.8.8", "service": "lightsail" }
 ```
 
 远程连接可使用 SSH 端口转发：
@@ -311,10 +311,13 @@ sudo systemctl reload nginx
 | `PANEL_IMAGE`    | `ghcr.io/haoch1/lightsail-panel:latest` | 镜像引用，支持版本标签、提交标签或 `@sha256:...` 摘要                   |
 | `PANEL_BIND`     | `127.0.0.1`                             | Compose 在宿主机绑定的地址                                              |
 | `PANEL_PORT`     | `8090`                                  | Compose 在宿主机发布的端口                                              |
+| `NODE_OPTIONS`   | `--max-semi-space-size=2`               | Node.js 运行参数；默认缩小年轻代内存，支持覆盖                          |
 | `PUBLIC_ORIGIN`  | 空                                      | 浏览器访问来源；HTTPS 反向代理时设置                                    |
 | `ENCRYPTION_KEY` | 自动生成                                | 可选的 32 字节 Base64 加密密钥；未配置时写入数据卷中的 `encryption.key` |
 
 容器内部固定使用 `HOST=0.0.0.0`、`PORT=8090`、`DATA_DIR=/app/data`。宿主机端口通过 `PANEL_PORT` 自定义，例如 `PANEL_PORT=9000` 对应 `9000:8090`。
+
+运行镜像默认使用 `--max-semi-space-size=2` 减少 V8 年轻代及短时分配峰值，不限制应用总内存，也不改变缓存、后台采集或 SSH 行为。大量账户或高并发部署可在 `.env` 中覆盖 `NODE_OPTIONS`，例如 `--max-semi-space-size=4`，并结合实际负载评估内存与响应时间，参数定义见 [Node.js CLI 文档](https://nodejs.org/download/release/v24.20.0/docs/api/cli.html#--max-semi-space-sizesize-in-mib)。源码部署须在启动 Node.js 前通过进程环境设置该变量，应用加载 `.env` 时已无法改变 V8 启动参数。
 
 Compose 项目、服务、容器、启动命令和 Linux 进程、线程名称统一为 `lightsail-panel`；数据卷为 `lightsail-panel-data`。实现说明见 [架构文档](docs/ARCHITECTURE.md)。
 
