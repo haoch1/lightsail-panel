@@ -45,7 +45,7 @@ jobs:
           python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
           curl --fail --silent http://127.0.0.1:8090/api/auth > auth.json
           python3 -c 'import json; d=json.load(open("auth.json")); assert d["initialized"] is False and d["authenticated"] is False'
-          curl --fail --silent http://127.0.0.1:8090/lightsail | grep -q 'id="root"'
+          curl --fail --silent http://127.0.0.1:8090/instances | grep -q 'id="root"'
           test "$(docker inspect --format '{{.Config.User}}' lightsail-panel-test)" = node
           test "$(docker exec lightsail-panel-test printenv PORT)" = 8090
           test "$(docker exec lightsail-panel-test printenv NODE_OPTIONS)" = --max-semi-space-size=2

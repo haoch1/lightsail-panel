@@ -439,7 +439,7 @@ PANEL_IMAGE=lightsail-panel:local docker compose up -d --pull never
 
 GitHub Actions 在 AMD64 runner 上完成构建、测试、容器启动及 Compose 部署验证后发布镜像；Pull Request 仅验证。容器以非 root 用户运行，启用 `no-new-privileges` 并移除 Linux capabilities。
 
-演示入口：`/lightsail?demo=1`。数据与操作在浏览器内模拟，包括流量进度、自动关机设置、SSH 终端及设置页，不调用 AWS 或 Telegram API。演示模式请勿输入真实凭证。
+演示入口：`/instances?demo=1`。数据与操作在浏览器内模拟，包括流量进度、自动关机设置、SSH 终端及设置页，不调用 AWS 或 Telegram API。演示模式请勿输入真实凭证。
 
 ## 许可证
 
