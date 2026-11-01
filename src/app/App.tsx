@@ -1,4 +1,5 @@
 import { Sidebar } from "../components/ui/Sidebar";
+import { usePasswordManagerPolicy } from "../components/ui/usePasswordManagerPolicy";
 import { awsRegionOptions } from "../../shared/regions";
 import {
   AlertCircle,
@@ -62,6 +63,7 @@ export default function App() {
       : bootstrap,
   );
   const [path, setPath] = useState(initialPath);
+  usePasswordManagerPolicy(auth?.authenticated === false);
   const accountId = "all";
   const region = "all";
   const [mobile, setMobile] = useState(false);
