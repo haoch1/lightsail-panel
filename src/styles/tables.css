@@ -173,7 +173,7 @@
 }
 @media (min-width: 901px) {
   .instance-table .traffic-link {
-    width: clamp(220px, 18vw, 240px);
+    width: 180px;
   }
 }
 .instance-table th,
