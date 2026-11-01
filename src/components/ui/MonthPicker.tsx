@@ -1,7 +1,6 @@
+import * as Popover from "@radix-ui/react-popover";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-
+import { useRef, useState } from "react";
 export default function MonthPicker({
   value,
   max,
@@ -11,94 +10,55 @@ export default function MonthPicker({
   max: string;
   onChange: (month: string) => void;
 }) {
-  const id = useId();
-  const root = useRef<HTMLDivElement>(null),
-    trigger = useRef<HTMLButtonElement>(null),
-    menu = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false),
-    [year, setYear] = useState(Number(value.slice(0, 4)));
-  const [position, setPosition] = useState({ left: 0, top: 0 });
-  useLayoutEffect(() => {
-    if (!open) return;
-    const place = () => {
-      const box = trigger.current!.getBoundingClientRect();
-      setPosition({
-        left: Math.max(8, Math.min(box.left, innerWidth - 284)),
-        top: box.bottom + 5,
-      });
-    };
-    place();
-    window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
-  }, [open]);
-  useEffect(() => {
-    if (!open) return;
-    const outside = (e: PointerEvent) => {
-      if (
-        !root.current?.contains(e.target as Node) &&
-        !menu.current?.contains(e.target as Node)
-      )
-        setOpen(false);
-    };
-    const scroll = (e: Event) => {
-      if (!menu.current?.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", outside);
-    document.addEventListener("scroll", scroll, true);
-    menu.current
-      ?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')
-      ?.focus({ preventScroll: true });
-    return () => {
-      document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("scroll", scroll, true);
-    };
-  }, [open]);
+  const content = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [year, setYear] = useState(Number(value.slice(0, 4)));
   function close() {
     setOpen(false);
-    trigger.current?.focus({ preventScroll: true });
   }
   function choose(month: string) {
     onChange(month);
     close();
   }
   return (
-    <div className="month-picker" ref={root}>
-      <button
-        ref={trigger}
-        type="button"
-        className="month-trigger"
-        aria-label={`费用月份：${value.slice(0, 4)}年${Number(value.slice(5))}月`}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls={open ? id : undefined}
-        onClick={() => {
-          if (open) close();
-          else {
-            setYear(Number(value.slice(0, 4)));
-            setOpen(true);
-          }
-        }}
-      >
-        <span>
-          {value.slice(0, 4)}年{Number(value.slice(5))}月
-        </span>
-        <CalendarDays size={16} />
-      </button>
-      {open &&
-        createPortal(
-          <div
-            ref={menu}
-            id={id}
-            role="dialog"
-            aria-label="选择费用月份"
+    <Popover.Root
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setYear(Number(value.slice(0, 4)));
+      }}
+    >
+      <div className="month-picker">
+        <Popover.Trigger asChild>
+          <button
+            type="button"
+            className="month-trigger"
+            aria-label={
+              "费用月份：" +
+              value.slice(0, 4) +
+              "年" +
+              Number(value.slice(5)) +
+              "月"
+            }
+          >
+            <span>
+              {value.slice(0, 4)}年{Number(value.slice(5))}月
+            </span>
+            <CalendarDays size={16} />
+          </button>
+        </Popover.Trigger>
+        <Popover.Portal>
+          <Popover.Content
+            ref={content}
             className="month-menu"
-            style={position}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                e.preventDefault();
-                e.stopPropagation();
-                close();
-              }
+            aria-label="选择费用月份"
+            sideOffset={5}
+            collisionPadding={12}
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              content.current
+                ?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')
+                ?.focus({ preventScroll: true });
             }}
           >
             <div className="month-year">
@@ -151,9 +111,9 @@ export default function MonthPicker({
                 关闭
               </button>
             </div>
-          </div>,
-          document.body,
-        )}
-    </div>
+          </Popover.Content>
+        </Popover.Portal>
+      </div>
+    </Popover.Root>
   );
 }

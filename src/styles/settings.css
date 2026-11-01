@@ -55,7 +55,7 @@
 }
 .session-expiry {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .session-settings-row {
   display: flex;
@@ -85,9 +85,9 @@
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 16px;
-  font-size: 14px;
+  font-size: var(--font-md);
   padding: 0;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .notification-selection-actions {
   display: flex;
@@ -111,8 +111,8 @@
   margin-bottom: 16px;
 }
 .notification-preview .section-heading h3 {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-md);
+  font-weight: var(--weight-medium);
   margin: 0;
 }
 .notification-preview .custom-select {
@@ -123,13 +123,13 @@
   background: var(--subtle);
   border-radius: 8px;
   padding: 20px;
-  font-size: 14px;
+  font-size: var(--font-md);
   line-height: 1.8;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 .notification-example b {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .notification-example blockquote {
   margin: 12px 0;
@@ -165,7 +165,7 @@
   overflow-wrap: anywhere;
 }
 .notification-status {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--muted);
 }
 .notification-status.sent {

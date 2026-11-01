@@ -1,3 +1,4 @@
+import { Sidebar } from "../components/ui/Sidebar";
 import { awsRegionOptions } from "../../shared/regions";
 import {
   AlertCircle,
@@ -30,7 +31,6 @@ import { api, isDemo, setCsrf } from "../lib/api";
 import { PanelContext, useApi } from "./context";
 import { ThemeControl } from "./theme";
 import { useResourceUpdates } from "../hooks/useResourceUpdates";
-import { useMobileNavigation } from "../hooks/useMobileNavigation";
 import { bootstrap } from "../lib/bootstrap";
 const nav = [
   { path: "/lightsail", label: "Lightsail 实例", icon: Cloud },
@@ -65,7 +65,6 @@ export default function App() {
   const accountId = "all";
   const region = "all";
   const [mobile, setMobile] = useState(false);
-  const navigation = useMobileNavigation(mobile, () => setMobile(false));
   const [notices, setNotices] = useState<
     { id: number; message: string; type: string }[]
   >([]);
@@ -181,22 +180,7 @@ export default function App() {
       }}
     >
       <div className="shell">
-        {mobile && (
-          <button
-            className="sidebar-mask"
-            aria-label="关闭导航遮罩"
-            tabIndex={-1}
-            onClick={() => setMobile(false)}
-          />
-        )}
-        <aside
-          id="panel-navigation"
-          ref={navigation.sidebar}
-          className={"sidebar " + (mobile ? "open" : "")}
-          role={mobile ? "dialog" : undefined}
-          aria-modal={mobile || undefined}
-          aria-label={mobile ? "主导航" : undefined}
-        >
+        <Sidebar open={mobile} onOpenChange={setMobile} id="panel-navigation">
           <a
             className="brand"
             href={"/lightsail" + (demo ? "?demo=1" : "")}
@@ -235,12 +219,11 @@ export default function App() {
           <div className="side-appearance">
             <ThemeControl compact />
           </div>
-        </aside>
-        <div className="workspace" inert={mobile}>
+        </Sidebar>
+        <div className="workspace">
           <header className="topbar">
             <div className="topbar-left">
               <button
-                ref={navigation.opener}
                 className="icon-button mobile-menu"
                 aria-label="打开导航"
                 aria-expanded={mobile}

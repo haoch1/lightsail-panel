@@ -5,7 +5,7 @@
   display: grid;
   gap: 12px;
   border-bottom: 1px solid var(--border);
-  font-size: 13px;
+  font-size: var(--font-sm);
   grid-template-columns: 112px minmax(0, 1fr);
   padding: 11px 0;
   border-color: var(--border);
@@ -36,7 +36,7 @@
 .resource-picker .field > label {
   flex-shrink: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .resource-picker .custom-select {
   width: min(100%, 520px);
@@ -44,12 +44,12 @@
 .resource-note {
   margin: 12px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-xs);
   line-height: 1.6;
 }
 .form-panel h2 {
-  font-weight: 600;
-  font-size: 15px;
+  font-weight: var(--weight-semibold);
+  font-size: var(--font-label);
   margin-bottom: 20px;
 }
 .launch-page form {
@@ -57,13 +57,13 @@
   gap: 20px;
 }
 .form-panel > h2 + p {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--muted);
   margin-top: 0;
   margin-bottom: 23px;
 }
 .form-note {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--muted);
   display: flex;
   gap: 5px;
@@ -77,11 +77,11 @@
   gap: 16px;
 }
 .launch-footer p {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--muted);
 }
 .section-title {
-  font-size: 15px;
+  font-size: var(--font-label);
   margin: 25px 0 16px;
 }
 .info-columns {
@@ -101,13 +101,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 15px;
+  font-size: var(--font-label);
   line-height: 1.5;
 }
 .panel p {
   color: var(--muted);
   margin-top: 12px;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .panel.no-padding {
   padding: 0;
@@ -123,7 +123,7 @@
 .plain-list {
   padding-left: 18px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-xs);
   line-height: 2;
   margin: 13px 0 5px;
 }
@@ -157,7 +157,7 @@
   margin-bottom: 24px;
 }
 .auth-card > p {
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--muted);
   margin-top: 9px;
   margin-bottom: 25px;
@@ -167,7 +167,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   color: var(--muted);
   padding: 22px 0 19px;
 }
@@ -177,7 +177,7 @@
 .auth-foot {
   border-top: 1px solid var(--border);
   padding-top: 17px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--muted);
   display: flex;
   justify-content: center;
@@ -187,7 +187,7 @@
 
 .startup-script {
   font-family: var(--mono);
-  font-size: 13px !important;
+  font-size: var(--font-sm) !important;
   line-height: 1.85;
   min-height: 188px;
 }
@@ -202,7 +202,7 @@
   gap: 10px;
   margin: -8px 0 22px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .image-blueprint code {
   color: var(--text);
@@ -212,8 +212,8 @@
   font-variant-numeric: tabular-nums;
 }
 .bundle-menu .select-option {
-  font-size: 14px;
-  font-weight: 400;
+  font-size: var(--font-md);
+  font-weight: var(--weight-regular);
 }
 .network-options {
   border: 0;
@@ -222,8 +222,8 @@
   min-width: 0;
 }
 .network-options legend {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-md);
+  font-weight: var(--weight-medium);
   margin-bottom: 12px;
 }
 .network-option {
@@ -242,12 +242,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: var(--font-md);
   line-height: 22px;
 }
 .network-description {
   display: block;
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--muted);
   line-height: 1.7;
   margin-top: 3px;
@@ -257,7 +257,7 @@
   color: var(--success);
   border-radius: 4px;
   padding: 0 6px;
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .firewall-sources {
   white-space: normal;
@@ -265,7 +265,7 @@
   max-width: 450px;
   overflow-wrap: anywhere;
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: var(--font-md);
 }
 .resource-scope {
   margin-bottom: 16px;
@@ -278,7 +278,7 @@
   margin-top: 2px;
 }
 .ssh-download p {
-  font-size: 12px;
+  font-size: var(--font-xs);
   line-height: 1.6;
 }
 .ssh-key-actions {
@@ -289,11 +289,11 @@
 }
 .ssh-key-help {
   margin: 12px 0 0;
-  font-size: 12px;
+  font-size: var(--font-xs);
   line-height: 1.65;
 }
 .key-fingerprint {
-  font-size: 12px;
+  font-size: var(--font-xs);
   overflow-wrap: anywhere;
 }
 .traffic-content {
@@ -358,7 +358,7 @@
   top: 0;
 }
 .traffic-note {
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--muted);
   line-height: 1.75;
   margin: 16px 0;
@@ -369,11 +369,11 @@
   justify-content: flex-end;
   gap: 12px;
   margin-bottom: 18px;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .account-manager-note {
   margin-top: 16px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   color: var(--muted);
 }
 .account-table table {
@@ -442,12 +442,12 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--font-md);
+  font-weight: var(--weight-medium);
 }
 .traffic-progress-percent {
   color: var(--traffic-fill);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   white-space: nowrap;
 }
 .traffic-progress-amount {
@@ -458,14 +458,14 @@
   margin-top: 12px;
 }
 .traffic-progress-amount strong {
-  font-size: 22px;
-  font-weight: 600;
+  font-size: var(--font-title);
+  font-weight: var(--weight-semibold);
   line-height: 1.4;
   letter-spacing: -0.3px;
 }
 .traffic-progress-amount > span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .traffic-progress-track {
   display: block;
@@ -485,28 +485,28 @@
   display: block;
   margin-top: 8px;
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 400;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-regular);
   line-height: 1.5;
 }
 .traffic-progress.compact {
   width: 180px;
 }
 .traffic-progress.compact .traffic-progress-heading {
-  font-size: 13px;
-  font-weight: 400;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-regular);
   gap: 12px;
 }
 .traffic-progress.compact .traffic-progress-percent {
-  font-size: 12px;
-  font-weight: 400;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-regular);
 }
 .traffic-progress.compact .traffic-progress-track {
   height: 5px;
   margin-top: 7px;
 }
 .traffic-progress.compact .traffic-progress-caption {
-  font-size: 12px;
+  font-size: var(--font-xs);
   margin-top: 5px;
 }
 .traffic-link:hover .traffic-progress-heading > span:first-child {

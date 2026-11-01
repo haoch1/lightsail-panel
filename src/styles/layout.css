@@ -21,7 +21,7 @@
 }
 .brand strong {
   font-size: 17px;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   letter-spacing: -0.4px;
 }
 .sidebar nav {
@@ -43,8 +43,8 @@
   border-radius: 7px;
   color: var(--muted);
   transition:
-    background 120ms,
-    color 120ms;
+    background var(--motion-fast),
+    color var(--motion-fast);
 }
 .sidebar nav .nav-item:hover {
   background: var(--subtle);
@@ -53,7 +53,7 @@
 .sidebar nav .nav-item.active {
   color: var(--surface);
   background: var(--accent);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .side-appearance {
   padding: 16px 12px;
@@ -92,11 +92,11 @@
   align-items: center;
   gap: 10px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-sm);
   white-space: nowrap;
 }
 .breadcrumb strong {
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   color: var(--text);
 }
 .breadcrumb > svg {
@@ -113,12 +113,12 @@
   border: 1px solid var(--warning-border);
   color: var(--warning);
   background: var(--warning-soft);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-medium);
 }
 .demo-exit {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-sm);
   display: flex;
   align-items: center;
   gap: 3px;
@@ -149,8 +149,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: var(--font-title);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.65px;
   line-height: 34px;
 }
@@ -175,8 +175,8 @@
 }
 .section-heading h2,
 .card-header h2 {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-semibold);
   letter-spacing: 0;
   line-height: 22px;
 }
@@ -228,16 +228,16 @@ table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 14px;
+  font-size: var(--font-md);
   font-variant-numeric: tabular-nums;
 }
 th {
   height: 42px;
   padding: 10px 16px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 20px;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   background: var(--subtle);
   white-space: nowrap;
 }
@@ -248,10 +248,10 @@ td {
   vertical-align: middle;
 }
 td strong {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 tbody tr {
-  transition: background 120ms;
+  transition: background var(--motion-fast);
 }
 tbody tr:hover {
   background: color-mix(in srgb, var(--subtle) 60%, transparent);
@@ -302,13 +302,13 @@ tr[data-selected] {
   gap: 8px;
 }
 .field > label {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
   line-height: 20px;
 }
 .field small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-xs);
   line-height: 20px;
   overflow-wrap: anywhere;
 }
@@ -318,7 +318,7 @@ tr[data-selected] {
   gap: 9px;
   padding: 4px 0;
   min-height: 30px;
-  font-size: 14px;
+  font-size: var(--font-md);
   cursor: pointer;
 }
 .check-row > span {
@@ -335,7 +335,7 @@ tr[data-selected] {
 .form-note,
 .form-stack > small {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 21px;
 }
 .notice {
@@ -343,7 +343,7 @@ tr[data-selected] {
   background: var(--subtle);
   border: 1px solid var(--border);
   border-radius: 7px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 22px;
 }
 .error-box {
@@ -356,7 +356,7 @@ tr[data-selected] {
   color: var(--danger);
   border-radius: 7px;
   margin-bottom: 16px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   overflow-wrap: anywhere;
 }
 .error-box > span {
@@ -374,12 +374,12 @@ tr[data-selected] {
   color: var(--muted);
 }
 .empty h2 {
-  font-size: 16px;
+  font-size: var(--font-section);
   color: var(--text);
 }
 .empty p {
   max-width: 420px;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .toasts {
   position: fixed;
@@ -399,7 +399,7 @@ tr[data-selected] {
   border: 1px solid var(--border);
   background: var(--surface);
   box-shadow: var(--shadow);
-  animation: dialog-in 160ms ease-out;
+  animation: dialog-in var(--motion-normal) ease-out;
 }
 .toast span {
   min-width: 0;
@@ -421,7 +421,7 @@ tr[data-selected] {
   padding: 10px 14px;
   border-radius: 7px;
   margin-bottom: 20px;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 @media (max-width: 1100px) {
   .workspace main {
@@ -437,8 +437,8 @@ tr[data-selected] {
     visibility: hidden;
     width: 240px;
     transition:
-      transform 180ms ease,
-      visibility 180ms;
+      transform var(--motion-slow) ease,
+      visibility var(--motion-slow);
   }
   .sidebar.open {
     transform: translateX(0);
@@ -485,7 +485,7 @@ tr[data-selected] {
     padding: 20px;
   }
   .page-heading h1 {
-    font-size: 22px;
+    font-size: var(--font-title);
     line-height: 32px;
   }
   .toasts {
@@ -508,7 +508,7 @@ tr[data-selected] {
     gap: 16px;
   }
   .page-heading h1 {
-    font-size: 21px;
+    font-size: var(--font-title);
     line-height: 32px;
   }
   .page-actions {
@@ -516,7 +516,7 @@ tr[data-selected] {
   }
   .page-actions .button {
     padding: 8px 10px;
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
   .breadcrumb > span,
   .breadcrumb > svg {
@@ -526,7 +526,7 @@ tr[data-selected] {
     gap: 8px;
   }
   .demo-exit {
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
   .form-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -562,7 +562,7 @@ tr[data-selected] {
   }
   input:not([type="checkbox"]):not([type="radio"]),
   textarea {
-    font-size: 16px;
+    font-size: var(--font-section);
   }
   .modal-backdrop {
     --modal-inset: 24px;
@@ -617,7 +617,7 @@ tr[data-selected] {
   gap: 24px;
   font-family:
     "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
-  font-size: 14px;
+  font-size: var(--font-md);
   line-height: 24px;
 }
 .instance-counts > span {
@@ -632,12 +632,12 @@ tr[data-selected] {
   min-height: 24px;
   font: inherit;
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums lining-nums;
 }
 .instance-times {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-variant-numeric: tabular-nums;
 }
 .toolbar-actions,
@@ -678,10 +678,10 @@ tr[data-selected] {
   width: 144px;
 }
 .topbar .select-trigger {
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .topbar .account-manager-button {
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .topbar .demo-exit {
   white-space: nowrap;
@@ -698,7 +698,7 @@ tr[data-selected] {
 }
 .page-heading p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-sm);
   margin-top: 6px;
 }
 @media (min-width: 901px) {
@@ -726,7 +726,7 @@ tr[data-selected] {
     padding-right: 40px;
   }
   .sidebar .brand strong {
-    font-size: 16px;
+    font-size: var(--font-section);
   }
 }
 @media (max-width: 600px) {
@@ -735,13 +735,77 @@ tr[data-selected] {
   }
   .instance-counts {
     gap: 18px;
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
   .instances-overview {
     margin-bottom: 20px;
   }
   .row-actions .button {
-    font-size: 13px;
+    font-size: var(--font-sm);
     padding: 8px 10px;
+  }
+}
+
+.navigation-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  background: #0006;
+  backdrop-filter: blur(2px);
+  animation: modal-in var(--motion-normal) var(--ease-out);
+}
+.sidebar {
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+.sidebar .brand {
+  flex-shrink: 0;
+}
+@media (max-width: 900px) {
+  .sidebar[data-state="open"] {
+    animation: navigation-in var(--motion-slow) var(--ease-out);
+  }
+  .sidebar[data-state="closed"] {
+    animation: navigation-out var(--motion-normal) ease-in;
+  }
+  .topbar {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+@media (max-width: 600px) {
+  .workspace main {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-bottom: max(32px, env(safe-area-inset-bottom));
+  }
+  .page-actions,
+  .row-actions {
+    flex-wrap: wrap;
+  }
+  .modal-actions {
+    flex-wrap: wrap;
+  }
+  .modal-backdrop {
+    padding: max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
+}
+@keyframes navigation-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes navigation-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
   }
 }

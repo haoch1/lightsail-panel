@@ -37,14 +37,14 @@
   gap: 15px;
   color: var(--muted);
   margin-bottom: 15px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   line-height: 1.6;
 }
 .instance-name {
   padding: 0;
   text-align: left;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
 }
 .instance-name:hover {
   text-decoration: underline;
@@ -57,7 +57,7 @@
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-xs);
   margin-top: 13px;
 }
 .row-actions {
@@ -86,7 +86,7 @@
   background: var(--accent-soft);
 }
 .instance-price {
-  font-size: 13px;
+  font-size: var(--font-sm);
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
 }
@@ -138,7 +138,7 @@
   min-width: 30px;
   flex-shrink: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .instance-addresses .copy-text {
   flex-shrink: 0;
@@ -156,11 +156,11 @@
 }
 .instance-addresses .private-address {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-xs);
 }
 .instance-addresses small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-xs);
   padding-left: 40px;
 }
 .instance-region span {
@@ -191,11 +191,11 @@
   width: 92px;
 }
 .instance-name {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-md);
+  font-weight: var(--weight-semibold);
 }
 .table-wrap td strong {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .audit-table {
   --audit-detail-column: clamp(180px, 24vw, 360px);

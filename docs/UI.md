@@ -44,12 +44,20 @@
 
 ## 响应式布局
 
-- 900 px 及以下：侧栏转为导航抽屉，较宽表格在自身容器内滚动。
+- 900 px 及以下：侧栏转为导航抽屉；实例列表使用 shadcn/ui Card（radix-vega）的 `size="sm"`，顶部名称和状态，其下流量占满卡片宽度，以 14 px 数值、额度、进度与明细入口优先展示。网络独占一行，规格与账户分为双列，操作集中于底部。全选位于筛选栏。其余较宽表格在自身容器内滚动。
 - 600 px 及以下：资源表格转为信息卡片，表单采用单列；长名称、IPv6、CIDR 和日志详情完整换行。创建页标题与操作允许分行。
 - 320 px 窄屏：保持核心操作可达，允许工具栏换行；图表在自身区域横向滚动，页面不产生整体横向滚动。
 - 移动端防火墙列表随页面滚动，弹窗继续由正文容器控制滚动，避免多层滚动竞争。
 
 ## 维护与验证
+
+公共交互使用 Radix Dialog（弹窗和移动导航）、Select、Dropdown Menu、Popover（时间与月份）、Toggle Group、Tooltip；可搜索选择器由 Radix Popover + cmdk 提供。视口避让、嵌套焦点、键盘导航、Esc 和滚动锁定由成熟组件处理。
+
+与 Aliyun Panel 保持 `tokens.css`、`foundation.css`、`controls.css` 以及 `Modal`、`Sidebar`、`Select`、`ActionMenu`、`TimePicker`、`SegmentedControl`、`Tooltip` 的内容一致。两个仓库独立构建，公共组件修改须同步，不依赖彼此的本地路径。字号、字重和 120 / 150 / 180 ms 过渡统一由变量控制；触屏主要操作至少 44 px，移动端搜索输入为 16 px，页面、导航和弹窗保留设备安全间距。
+
+`inventory.css` 和 `InventoryTrafficHeading` 也在两个项目中保持一致，统一实例列表的信息顺序和流量展示，避免不同页面重新覆盖卡片布局。
+
+`ShadcnCard` 直接复用已安装的标准 Card 源码，来源见 [shadcn/ui Card](https://ui.shadcn.com/docs/components/radix/card)。`InventoryTable` 根据宽度切换标准 `CardHeader / CardTitle / CardAction / CardContent / CardFooter` 组合；桌面表格和手机卡片复用数据、选择状态及操作处理。`shadcn.css` 仅加载 Tailwind 主题与工具类，不引入 Preflight；颜色和字号映射到面板已有变量。
 
 主题变量位于 `src/styles/tokens.css`；`foundation.css` 管理基础元素，`layout.css` 管理导航及布局，控件、表单、表格、反馈和弹窗按文件拆分；`traffic.css` 管理流量视图，`responsive.css` 管理业务组件的窄屏布局。新增组件应复用 `Field`、`Input`、`Select`、`SegmentedControl`、`Modal`、`PendingButton` 等基础控件，避免叠加独立覆盖层。
 

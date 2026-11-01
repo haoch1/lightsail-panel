@@ -100,17 +100,8 @@
   .topbar-left .demo-indicator {
     padding: 4px 6px;
   }
-  .instances-toolbar > .toolbar-actions {
-    width: 100%;
-  }
-  .instances-toolbar .search {
-    width: 100%;
-  }
-  .instances-toolbar .custom-select {
-    width: 160px;
-  }
   .field .select-trigger {
-    font-size: 16px;
+    font-size: var(--font-section);
   }
   .form-grid {
     grid-template-columns: 1fr;
@@ -171,7 +162,7 @@
   .responsive-table td::before {
     content: attr(data-label);
     display: block;
-    font-size: 12px;
+    font-size: var(--font-xs);
     color: var(--muted);
     margin-bottom: 6px;
   }
@@ -193,26 +184,6 @@
   }
   .responsive-table td:last-child::before {
     content: none;
-  }
-  .instance-table td.check-cell {
-    position: absolute;
-    right: 16px;
-    top: 20px;
-    width: auto;
-  }
-  .instance-table td[data-label="实例"] {
-    padding-right: 32px;
-  }
-  .instance-table td.check-cell::before,
-  .instance-table td[data-label="实例"]::before {
-    content: none;
-  }
-  .instance-table .table-loading-row {
-    height: auto;
-    min-height: 400px;
-  }
-  .instance-table .row-actions {
-    justify-content: flex-start;
   }
   .account-table .row-actions,
   .static-ip-table .row-actions {
@@ -245,7 +216,7 @@
   }
   .firewall-sources {
     min-width: 0;
-    font-size: 13px !important;
+    font-size: var(--font-sm) !important;
   }
   .details > div {
     grid-template-columns: 80px minmax(0, 1fr);

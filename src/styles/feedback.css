@@ -1,15 +1,15 @@
 .mono {
   font-family: "Cascadia Code", Consolas, monospace;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-variant-numeric: tabular-nums;
 }
 .code-input {
   font-family: "Cascadia Code", Consolas, monospace;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .muted {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .danger-text {
   color: var(--red) !important;
@@ -32,9 +32,9 @@
   align-items: center;
   border-radius: 99px;
   line-height: 20px;
-  font-weight: 400;
+  font-weight: var(--weight-regular);
   white-space: nowrap;
-  font-size: 13px;
+  font-size: var(--font-sm);
   padding: 3px 8px;
   gap: 6px;
 }
@@ -73,12 +73,12 @@
   min-height: 200px;
 }
 .empty strong {
-  font-size: 14px;
+  font-size: var(--font-md);
   color: var(--text);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .empty p {
-  font-size: 13px;
+  font-size: var(--font-sm);
   max-width: 500px;
 }
 .empty-icon {
@@ -102,7 +102,7 @@
   margin: 12px 0;
   word-break: break-word;
   border-radius: 7px;
-  font-size: 13px;
+  font-size: var(--font-sm);
 }
 .error-box button {
   display: flex;
@@ -118,7 +118,7 @@
   background: var(--subtle);
   color: var(--muted);
   padding: 12px 14px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   line-height: 1.75;
   border-radius: 7px;
   margin: 14px 0 18px;

@@ -35,7 +35,7 @@ export default function SshTerminal({
   onClose: () => void;
 }) {
   const { demo, toast } = usePanel();
-  const element = useRef<HTMLDivElement>(null);
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const disconnectRef = useRef<() => void>(() => {});
@@ -48,6 +48,7 @@ export default function SshTerminal({
   const { accountId, region, service, id } = targetOf(instance);
 
   useEffect(() => {
+    if (!element) return;
     let cancelled = false;
     let stopped = false;
     let ticket = "";
@@ -72,7 +73,7 @@ export default function SshTerminal({
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
-    term.open(element.current!);
+    term.open(element);
     if (term.textarea)
       for (const [attribute, value] of Object.entries(ignoreAutofill))
         term.textarea.setAttribute(attribute, value);
@@ -98,7 +99,7 @@ export default function SshTerminal({
           });
       });
     });
-    observer.observe(element.current!);
+    observer.observe(element);
     const selection = term.onSelectionChange(() =>
       setSelected(term.hasSelection()),
     );
@@ -265,7 +266,7 @@ export default function SshTerminal({
       data.dispose();
       term.dispose();
     };
-  }, [accountId, region, service, id, demo, attempt, instance.sshUser]);
+  }, [accountId, region, service, id, demo, attempt, instance.sshUser, element]);
 
   async function copy() {
     const value = terminalRef.current?.getSelection();
@@ -358,7 +359,7 @@ export default function SshTerminal({
       </div>
       <div className="ssh-terminal-frame">
         <div
-          ref={element}
+          ref={setElement}
           className="ssh-terminal"
           aria-label="SSH 终端"
           onKeyDownCapture={(e) => {

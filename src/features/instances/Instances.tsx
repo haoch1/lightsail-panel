@@ -1,9 +1,9 @@
+import { InventoryTable } from "../../components/ui/InventoryTable";
 import ScanNotices from "../../components/ScanNotices";
 import { regionLabel, regionNames } from "../../../shared/regions";
 import {
   ArrowDownUp,
   ArrowLeftRight,
-  ChevronDown,
   ChevronRight,
   Cloud,
   Gauge,
@@ -19,7 +19,6 @@ import {
 import {
   useDeferredValue,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   lazy,
@@ -30,7 +29,6 @@ import { usePanel } from "../../app/context";
 import { useInstances } from "../../hooks/useInstances";
 import { useInstanceUsage } from "../../hooks/useInstanceUsage";
 import { instanceKey } from "../../lib/instance-usage";
-import { menuPosition } from "../../lib/menu-position";
 import { InstanceRate, MonthlyTraffic } from "./UsageCells";
 import {
   TableLoading,
@@ -46,6 +44,8 @@ import {
   when,
 } from "../../components/ui";
 import Select from "../../components/ui/Select";
+import { ActionMenu } from "../../components/ui/ActionMenu";
+import { InventoryTrafficHeading } from "../../components/ui/InventoryTrafficHeading";
 import LaunchNetworkStatus from "../launch/LaunchNetworkStatus";
 import { useOperationJobs } from "../../hooks/useResourceUpdates";
 import { api } from "../../lib/api";
@@ -96,16 +96,8 @@ export default function Instances() {
   const filter = useDeferredValue(search);
   const [status, setStatus] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
-  const [menu, setMenu] = useState<{
-    instance: Instance;
-    x: number;
-    y: number;
-    anchor?: { right: number; top: number; bottom: number };
-    maxHeight?: number;
-  } | null>(null);
+  const [menu, setMenu] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const menuElement = useRef<HTMLDivElement>(null);
-  const menuTrigger = useRef<HTMLButtonElement | null>(null);
   const [bulk, setBulk] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
@@ -127,67 +119,6 @@ export default function Instances() {
     setSelected([]);
     setMenu(null);
   }, [accountId, region, service]);
-  useEffect(() => {
-    if (!menu) return;
-    const close = () => setMenu(null);
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-    const scrolled = (e: Event) => {
-      if (menuElement.current?.contains(e.target as Node)) return;
-      if (menu.anchor && menuTrigger.current) {
-        const rect = menuTrigger.current.getBoundingClientRect();
-        if (
-          rect.right === menu.anchor.right &&
-          rect.top === menu.anchor.top &&
-          rect.bottom === menu.anchor.bottom
-        )
-          return;
-      } else if (window.scrollX === scrollX && window.scrollY === scrollY)
-        return;
-      close();
-    };
-    document.addEventListener("click", close);
-    document.addEventListener("scroll", scrolled, true);
-    window.addEventListener("resize", close);
-    const esc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        close();
-        menuTrigger.current?.focus({ preventScroll: true });
-      }
-    };
-    document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("click", close);
-      document.removeEventListener("scroll", scrolled, true);
-      window.removeEventListener("resize", close);
-      document.removeEventListener("keydown", esc);
-    };
-  }, [menu]);
-  useLayoutEffect(() => {
-    const element = menuElement.current;
-    if (!menu || !element) return;
-    const rect = element.getBoundingClientRect();
-    const position = menu.anchor
-      ? menuPosition(menu.anchor, rect.width, element.scrollHeight + 2, {
-          width: innerWidth,
-          height: innerHeight,
-        })
-      : {
-          x: Math.max(8, Math.min(menu.x, innerWidth - rect.width - 8)),
-          y: Math.max(8, Math.min(menu.y, innerHeight - rect.height - 8)),
-          maxHeight: undefined,
-        };
-    if (
-      position.x !== menu.x ||
-      position.y !== menu.y ||
-      position.maxHeight !== menu.maxHeight
-    )
-      setMenu({ ...menu, ...position });
-    if (!element.contains(document.activeElement))
-      element
-        .querySelector<HTMLButtonElement>("button:not(:disabled)")
-        ?.focus({ preventScroll: true });
-  }, [menu]);
   async function run(
     i: Instance,
     action: string,
@@ -215,12 +146,11 @@ export default function Instances() {
   }
   function command(i: Instance, action: string) {
     if (submitting.current) return;
-    setMenu(null);
     if (action === "start") void run(i, action);
     else setDialog({ kind: "action", instance: i, action });
   }
   return (
-    <>
+    <div className="instance-inventory">
       <div className="page-heading instances-heading">
         <div>
           <h1>
@@ -291,6 +221,23 @@ export default function Instances() {
               <option value="pending">启动中</option>
               <option value="terminated">已终止</option>
             </Select>
+            <label className="inventory-select-all">
+              <Checkbox
+                aria-label="选择所有筛选结果"
+                indeterminate={
+                  items.some((i) => selected.includes(keyOf(i))) &&
+                  !items.every((i) => selected.includes(keyOf(i)))
+                }
+                checked={
+                  !!items.length &&
+                  items.every((i) => selected.includes(keyOf(i)))
+                }
+                onChange={(e) =>
+                  setSelected(e.target.checked ? items.map(keyOf) : [])
+                }
+              />
+              <span>全选</span>
+            </label>
           </div>
           <div className="toolbar-actions">
             {chosen.length > 0 && (
@@ -309,7 +256,10 @@ export default function Instances() {
           </div>
         </div>
         <div className="table-wrap">
-          <table className="instance-table responsive-table">
+          <InventoryTable
+            className="instance-table responsive-table inventory-table"
+            aria-label="Lightsail 实例"
+          >
             <thead>
               <tr>
                 <th className="check-cell">
@@ -362,25 +312,23 @@ export default function Instances() {
                   }
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    setMenu({
-                      instance: i,
-                      x: e.clientX,
-                      y: e.clientY,
-                    });
+                    setMenu(keyOf(i));
                   }}
                 >
                   <td className="check-cell">
-                    <Checkbox
-                      aria-label={"选择 " + i.name}
-                      checked={selected.includes(keyOf(i))}
-                      onChange={(e) =>
-                        setSelected((s) =>
-                          e.target.checked
-                            ? [...s, keyOf(i)]
-                            : s.filter((x) => x !== keyOf(i)),
-                        )
-                      }
-                    />
+                    <label className="selection-box">
+                      <Checkbox
+                        aria-label={"选择 " + i.name}
+                        checked={selected.includes(keyOf(i))}
+                        onChange={(e) =>
+                          setSelected((s) =>
+                            e.target.checked
+                              ? [...s, keyOf(i)]
+                              : s.filter((x) => x !== keyOf(i)),
+                          )
+                        }
+                      />
+                    </label>
                   </td>
                   <td data-label="实例">
                     <button
@@ -412,6 +360,7 @@ export default function Instances() {
                         setDialog({ kind: "traffic", instance: i })
                       }
                     >
+                      <InventoryTrafficHeading />
                       <MonthlyTraffic usage={usage.values[instanceKey(i)]} />
                     </button>
                   </td>
@@ -432,35 +381,136 @@ export default function Instances() {
                   </td>
                   <td data-label="操作">
                     <div className="row-actions instance-row-actions">
-                      <button
-                        className="button small instance-actions-button"
-                        aria-label={i.name + " 操作"}
-                        aria-haspopup="menu"
-                        aria-expanded={menu?.instance === i}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          menuTrigger.current = e.currentTarget;
-                          const r = e.currentTarget.getBoundingClientRect();
-                          setMenu({
-                            instance: i,
-                            x: r.right,
-                            y: r.bottom + 6,
-                            anchor: {
-                              right: r.right,
-                              top: r.top,
-                              bottom: r.bottom,
-                            },
-                          });
-                        }}
+                      <ActionMenu
+                        label={i.name}
+                        open={menu === keyOf(i)}
+                        onOpenChange={(open) => setMenu(open ? keyOf(i) : null)}
                       >
-                        操作 <ChevronDown size={14} />
-                      </button>
+                        <div className="menu-power-actions">
+                          <button
+                            role="menuitem"
+                            disabled={pending(i) || i.state !== "stopped"}
+                            onClick={() => command(i, "start")}
+                          >
+                            <Play />
+                            <span>启动</span>
+                          </button>
+                          <button
+                            role="menuitem"
+                            disabled={pending(i) || i.state !== "running"}
+                            onClick={() => command(i, "stop")}
+                          >
+                            <Square />
+                            <span>停止</span>
+                          </button>
+                          <button
+                            role="menuitem"
+                            disabled={pending(i) || i.state !== "running"}
+                            onClick={() => command(i, "reboot")}
+                          >
+                            <RotateCw />
+                            <span>重启</span>
+                          </button>
+                        </div>
+                        <hr />
+                        <button
+                          role="menuitem"
+                          disabled={i.state !== "running"}
+                          onClick={() => {
+                            setDialog({ kind: "ssh", instance: i });
+                          }}
+                        >
+                          <TerminalSquare />
+                          <span>SSH 终端</span>
+                        </button>
+                        <button
+                          role="menuitem"
+                          disabled={
+                            i.state !== "running" ||
+                            pending(i) ||
+                            i.ipAddressType === "ipv6"
+                          }
+                          onClick={() => command(i, "rotate-ip")}
+                        >
+                          <ArrowLeftRight />
+                          <span>更换公网 IP</span>
+                        </button>
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            setDialog({ kind: "details", instance: i });
+                          }}
+                        >
+                          <Network />
+                          <span>实例详情</span>
+                        </button>
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            setDialog({ kind: "traffic", instance: i });
+                          }}
+                        >
+                          <ArrowDownUp />
+                          <span>流量统计</span>
+                        </button>
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            setDialog({ kind: "traffic-limit", instance: i });
+                          }}
+                        >
+                          <Gauge />
+                          <span>自动关机</span>
+                        </button>
+                        <button
+                          role="menuitem"
+                          onClick={() => {
+                            setDialog({ kind: "ports", instance: i });
+                          }}
+                        >
+                          <ShieldCheck />
+                          <span>防火墙设置</span>
+                        </button>
+                        <button
+                          role="menuitem"
+                          disabled={pending(i)}
+                          onClick={() =>
+                            command(
+                              i,
+                              i.ipv6?.length ||
+                                i.ipAddressType === "ipv6" ||
+                                i.ipAddressType === "dualstack"
+                                ? "disable-ipv6"
+                                : "enable-ipv6",
+                            )
+                          }
+                        >
+                          <Network />
+                          <span>
+                            {i.ipv6?.length ||
+                            i.ipAddressType === "ipv6" ||
+                            i.ipAddressType === "dualstack"
+                              ? "关闭 IPv6"
+                              : "启用 IPv6"}
+                          </span>
+                        </button>
+                        <hr />
+                        <button
+                          role="menuitem"
+                          className="danger-text"
+                          disabled={pending(i)}
+                          onClick={() => command(i, "terminate")}
+                        >
+                          <Trash2 />
+                          <span>删除实例</span>
+                        </button>
+                      </ActionMenu>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </InventoryTable>
           {!loading && !data?.errors.length && items.length === 0 && (
             <Empty
               title={
@@ -487,171 +537,6 @@ export default function Instances() {
           )}
         </div>
       </div>
-      {menu && (
-        <div
-          ref={menuElement}
-          className="context-menu"
-          role="menu"
-          style={{ left: menu.x, top: menu.y, maxHeight: menu.maxHeight }}
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => {
-            if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key))
-              return;
-            e.preventDefault();
-            const items = [
-              ...(menuElement.current?.querySelectorAll<HTMLButtonElement>(
-                "button:not(:disabled)",
-              ) || []),
-            ];
-            const index = items.indexOf(
-              document.activeElement as HTMLButtonElement,
-            );
-            const next =
-              e.key === "Home"
-                ? 0
-                : e.key === "End"
-                  ? items.length - 1
-                  : (index + (e.key === "ArrowDown" ? 1 : -1) + items.length) %
-                    items.length;
-            items[next]?.focus({ preventScroll: true });
-            items[next]?.scrollIntoView({
-              block: "nearest",
-              inline: "nearest",
-            });
-          }}
-        >
-          <div className="menu-title">{menu.instance.name}</div>
-          <div className="menu-power-actions">
-            <button
-              role="menuitem"
-              disabled={
-                pending(menu.instance) || menu.instance.state !== "stopped"
-              }
-              onClick={() => command(menu.instance, "start")}
-            >
-              <Play />
-              <span>启动</span>
-            </button>
-            <button
-              role="menuitem"
-              disabled={
-                pending(menu.instance) || menu.instance.state !== "running"
-              }
-              onClick={() => command(menu.instance, "stop")}
-            >
-              <Square />
-              <span>停止</span>
-            </button>
-            <button
-              role="menuitem"
-              disabled={
-                pending(menu.instance) || menu.instance.state !== "running"
-              }
-              onClick={() => command(menu.instance, "reboot")}
-            >
-              <RotateCw />
-              <span>重启</span>
-            </button>
-          </div>
-          <hr />
-          <button
-            role="menuitem"
-            disabled={menu.instance.state !== "running"}
-            onClick={() => {
-              setDialog({ kind: "ssh", instance: menu.instance });
-              setMenu(null);
-            }}
-          >
-            <TerminalSquare />
-            <span>SSH 终端</span>
-          </button>
-          <button
-            role="menuitem"
-            disabled={
-              menu.instance.state !== "running" ||
-              pending(menu.instance) ||
-              menu.instance.ipAddressType === "ipv6"
-            }
-            onClick={() => command(menu.instance, "rotate-ip")}
-          >
-            <ArrowLeftRight />
-            <span>更换公网 IP</span>
-          </button>
-          <button
-            role="menuitem"
-            onClick={() => {
-              setDialog({ kind: "details", instance: menu.instance });
-              setMenu(null);
-            }}
-          >
-            <Network />
-            <span>实例详情</span>
-          </button>
-          <button
-            role="menuitem"
-            onClick={() => {
-              setDialog({ kind: "traffic", instance: menu.instance });
-              setMenu(null);
-            }}
-          >
-            <ArrowDownUp />
-            <span>流量统计</span>
-          </button>
-          <button
-            role="menuitem"
-            onClick={() => {
-              setDialog({ kind: "traffic-limit", instance: menu.instance });
-              setMenu(null);
-            }}
-          >
-            <Gauge />
-            <span>自动关机</span>
-          </button>
-          <button
-            role="menuitem"
-            onClick={() => {
-              setDialog({ kind: "ports", instance: menu.instance });
-              setMenu(null);
-            }}
-          >
-            <ShieldCheck />
-            <span>防火墙设置</span>
-          </button>
-          <button
-            role="menuitem"
-            disabled={pending(menu.instance)}
-            onClick={() =>
-              command(
-                menu.instance,
-                menu.instance.ipv6?.length ||
-                  menu.instance.ipAddressType === "ipv6" ||
-                  menu.instance.ipAddressType === "dualstack"
-                  ? "disable-ipv6"
-                  : "enable-ipv6",
-              )
-            }
-          >
-            <Network />
-            <span>
-              {menu.instance.ipv6?.length ||
-              menu.instance.ipAddressType === "ipv6" ||
-              menu.instance.ipAddressType === "dualstack"
-                ? "关闭 IPv6"
-                : "启用 IPv6"}
-            </span>
-          </button>
-          <hr />
-          <button
-            role="menuitem"
-            className="danger-text"
-            disabled={pending(menu.instance)}
-            onClick={() => command(menu.instance, "terminate")}
-          >
-            <Trash2 />
-            <span>删除实例</span>
-          </button>
-        </div>
-      )}
       {dialog?.kind === "action" && (
         <ActionDialog
           instance={dialog.instance}
@@ -758,6 +643,6 @@ export default function Instances() {
           </div>
         </Modal>
       )}
-    </>
+    </div>
   );
 }
