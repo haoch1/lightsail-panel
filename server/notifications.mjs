@@ -365,7 +365,7 @@ export class Notifications {
       "audit:" + row.id,
       (autoStop ? "流量保护关机" : auditActionLabel(row.action)) +
         (row.status === "failed" ? "失败" : "成功"),
-      `目标：${row.target || "—"}\n账户：${account}\n${region ? `区域：${region}\n` : ""}${row.detail || ""}`,
+      `目标：${row.target || "—"}\n账户：${account}\n${region ? `区域：${region}\n` : ""}${autoStop && row.status === "success" && rule ? `阈值 ${rule.thresholdPercent}%` : row.detail || ""}`,
       { usage: rule && { used: rule.usedBytes, total: rule.allowanceBytes } },
     );
   }
@@ -403,7 +403,7 @@ export class Notifications {
         "monitor-recovery",
         `${stateKey}:recovery:${this.now()}`,
         label + "恢复",
-        context + "查询已恢复，后台数据已更新",
+        context,
       );
     const items = Object.create(null);
     if (path === "/instances")
@@ -441,7 +441,17 @@ export class Notifications {
             `${stateKey}:${item.id}:ip:${this.now()}`,
             "公网 IP 变化",
             context +
-              `实例：${item.name}\nIPv4：${previous.ip || "—"} → ${current.ip || "—"}\nIPv6：${previous.ipv6 || "—"} → ${current.ipv6 || "—"}`,
+              `实例：${item.name}\n` +
+              [
+                previous.ip !== current.ip
+                  ? `IPv4：${previous.ip || "—"} → ${current.ip || "—"}`
+                  : "",
+                previous.ipv6 !== current.ipv6
+                  ? `IPv6：${previous.ipv6 || "—"} → ${current.ipv6 || "—"}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join("\n"),
           );
       }
     this.state(stateKey, { error: false, items });
@@ -460,7 +470,7 @@ export class Notifications {
       "test",
       "test:" + randomUUID(),
       "Telegram 测试通知",
-      "LightSail Panel 通知连接测试。后续按所选通知类型发送。",
+      "Telegram 通知连接正常。",
       { test: true },
     );
     if (!queued)
@@ -522,7 +532,6 @@ export class Notifications {
     const lines = [
       `实例：${items.length} · 运行中：${items.filter((i) => i.state === "running").length} · 已停止：${items.filter((i) => i.state === "stopped").length}`,
     ];
-    const collected = [];
     for (const i of items.slice(0, 5)) {
       const row = traffic.get(JSON.stringify([i.accountId, i.region, i.id]));
       // Do not carry the previous month's traffic across a calendar boundary.
@@ -541,8 +550,6 @@ export class Notifications {
             offset,
           ).start.toISOString();
       const bytes = currentMonth ? row?.value.totals?.combined : undefined;
-      collected.push(i.at);
-      if (Number.isFinite(bytes) && bytes >= 0) collected.push(row.at);
       lines.push(
         [
           `${notificationRegionFlag(i.region)} ${clip(i.name, 32)} · ${states[i.state] || i.state}`.trim(),
@@ -556,17 +563,11 @@ export class Notifications {
     if (!items.length) lines.push("暂无实例采集数据");
     if (items.length > 5)
       lines.push(`另有 ${items.length - 5} 台实例，请查看面板`);
-    lines.push(
-      "流量为最近成功采集的入站＋出站，非 AWS 计费流量。",
-      collected.length
-        ? `数据最早采集：${new Intl.DateTimeFormat("zh-CN", { timeZone: n.timezone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(Math.min(...collected))}（${n.timezone}）`
-        : "等待后台采集",
-    );
     if (
       this.enqueue(
         "daily",
         `daily:${date}:${n.timezone}`,
-        `LightSail 实例日报 ${date}`,
+        "LightSail 实例日报",
         lines.join("\n\n"),
       )
     )

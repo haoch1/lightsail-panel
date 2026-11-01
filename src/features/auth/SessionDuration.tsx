@@ -5,15 +5,17 @@ export default function SessionDuration({
   hours,
   onChange,
   disabled = false,
+  label = "登录有效期",
 }: {
   hours: number;
   onChange: (hours: number) => void;
   disabled?: boolean;
+  label?: string;
 }) {
   return (
-    <Field label="登录有效期">
+    <Field label={label}>
       <Select
-        aria-label="登录有效期"
+        aria-label={label}
         pending={disabled}
         value={String(hours)}
         onChange={(e) => onChange(Number(e.target.value))}

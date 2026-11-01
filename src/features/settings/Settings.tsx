@@ -26,9 +26,16 @@ import { Input } from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
 import { api } from "../../lib/api";
 import Accounts from "../accounts/Accounts";
+import SessionSettings from "../auth/SessionSettings";
 
 const timezones = ["UTC", ...Intl.supportedValuesOf("timeZone")];
-export default function Settings() {
+export default function Settings({
+  expires,
+  onSessionSaved,
+}: {
+  expires?: number;
+  onSessionSaved: (expires: number) => void;
+}) {
   const { toast, demo } = usePanel();
   const settings = useApi<{ notifications: NotificationSettings }>("/settings");
   const history = useApi<{ items: NotificationRecord[] }>("/notifications");
@@ -81,6 +88,7 @@ export default function Settings() {
       >
         <Accounts embedded />
       </section>
+      <SessionSettings expires={expires} onSaved={onSessionSaved} />
       <section
         className="form-panel notification-settings"
         aria-labelledby="telegram-heading"

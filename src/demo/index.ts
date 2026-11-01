@@ -151,6 +151,7 @@ export async function demoApi(
   await new Promise((r) => setTimeout(r, 120));
   const [p, search] = path.split("?"),
     q = new URLSearchParams(search);
+  if (p === "/session") return { expires: Date.now() + body.hours * 3600000 };
   if (p === "/settings") {
     if (method === "PUT") {
       const { clearToken, ...input } = body.notifications;

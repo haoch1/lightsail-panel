@@ -149,8 +149,13 @@ export function formatNotification(
             .join(" "),
         ),
       );
-    if (account && account !== "—") body.push(bold(clipMessage(account, 48)));
-    if (region) body.push(encode("区域 " + clipMessage(region, 80)));
+    const context = [
+      account && account !== "—" ? bold(clipMessage(account, 48)) : "",
+      encode(clipMessage(region, 80)),
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    if (context) body.push(context);
     message = lines
       .filter((line) => !/^(?:目标|实例|账户|区域)：/.test(line))
       .join(" ")
@@ -214,8 +219,7 @@ export const notificationExamples: Record<
 > = {
   "operation-success": {
     title: "开放防火墙端口成功",
-    message:
-      "实例：web-server\n账户：主账户\nTCP 443 · 0.0.0.0/0\n防火墙规则已确认更新",
+    message: "实例：web-server\n账户：主账户\nTCP 443 · 0.0.0.0/0",
   },
   "operation-failed": {
     title: "停止实例失败",
@@ -223,8 +227,7 @@ export const notificationExamples: Record<
   },
   "traffic-stop": {
     title: "流量保护关机成功",
-    message:
-      "实例：web-server\n账户：主账户\n区域：ap-southeast-1\n本月入站＋出站达到 95.12%，阈值 95%\n已确认实例停止",
+    message: "实例：web-server\n账户：主账户\n区域：ap-southeast-1\n阈值 95%",
     usage: { used: 1902.4 * 1024 ** 3, total: 2000 * 1024 ** 3 },
   },
   status: {
@@ -242,11 +245,11 @@ export const notificationExamples: Record<
   },
   "monitor-recovery": {
     title: "实例监控恢复",
-    message: "账户：主账户\n区域：ap-southeast-1\n查询已恢复，后台数据已更新",
+    message: "账户：主账户\n区域：ap-southeast-1",
   },
   daily: {
     title: "LightSail 实例日报",
     message:
-      "实例：2 · 运行中：1 · 已停止：1\n\n🇸🇬 web-server · 运行中\n本月流量 350.56 GB\n主账户 · ap-southeast-1\n\n🇯🇵 backup-server · 已停止\n本月流量 12.30 GB\n主账户 · ap-northeast-1\n\n流量以最近成功采集的数据为准，非 AWS 计费流量",
+      "实例：2 · 运行中：1 · 已停止：1\n\n🇸🇬 web-server · 运行中\n本月流量 350.56 GB\n主账户 · ap-southeast-1\n\n🇯🇵 backup-server · 已停止\n本月流量 12.30 GB\n主账户 · ap-northeast-1",
   },
 };

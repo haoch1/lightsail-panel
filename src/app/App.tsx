@@ -6,7 +6,6 @@ import {
   CheckCircle,
   ChevronRight,
   Cloud,
-  Clock,
   LogOut,
   Menu,
   Rocket,
@@ -22,7 +21,6 @@ import { ErrorBox } from "../components/ui";
 import Settings from "../features/settings/Settings";
 import Audit from "../features/audit/Audit";
 import Auth from "../features/auth/Auth";
-import SessionDialog from "../features/auth/SessionDialog";
 import Firewall from "../features/firewall/Firewall";
 import Instances from "../features/instances/Instances";
 import Launch from "../features/launch/Launch";
@@ -54,13 +52,20 @@ export default function App() {
     initialized: boolean;
     authenticated: boolean;
     expires?: number;
-  } | null>(demo ? { initialized: true, authenticated: true } : bootstrap);
+  } | null>(
+    demo
+      ? {
+          initialized: true,
+          authenticated: true,
+          expires: Date.now() + 720 * 3600000,
+        }
+      : bootstrap,
+  );
   const [path, setPath] = useState(initialPath);
   const accountId = "all";
   const region = "all";
   const [mobile, setMobile] = useState(false);
   const navigation = useMobileNavigation(mobile, () => setMobile(false));
-  const [sessionDialog, setSessionDialog] = useState(false);
   const [notices, setNotices] = useState<
     { id: number; message: string; type: string }[]
   >([]);
@@ -151,7 +156,15 @@ export default function App() {
   else if (path === "/lightsail/firewall") page = <Firewall />;
   else if (path === "/lightsail/traffic") page = <TrafficPage />;
   else if (path === "/audit") page = <Audit />;
-  else if (path === "/settings") page = <Settings />;
+  else if (path === "/settings")
+    page = (
+      <Settings
+        expires={auth?.expires}
+        onSessionSaved={(expires) =>
+          setAuth((a) => (a ? { ...a, expires } : a))
+        }
+      />
+    );
   else page = <Instances />;
   return (
     <PanelContext.Provider
@@ -243,17 +256,6 @@ export default function App() {
               </nav>
             </div>
             <div className="top-right">
-              {!demo && (
-                <button
-                  disabled={entering}
-                  className="icon-button"
-                  aria-label="登录有效期"
-                  title="登录有效期"
-                  onClick={() => setSessionDialog(true)}
-                >
-                  <Clock size={16} />
-                </button>
-              )}
               {demo && (
                 <span
                   className="demo-indicator"
@@ -298,17 +300,6 @@ export default function App() {
             {page}
           </main>
         </div>
-        {sessionDialog && (
-          <SessionDialog
-            expires={auth?.expires}
-            onClose={() => setSessionDialog(false)}
-            onSaved={(expires) => {
-              setAuth((a) => (a ? { ...a, expires } : a));
-              setSessionDialog(false);
-              toast("登录有效期已更新");
-            }}
-          />
-        )}
         <div className="toasts" aria-live="polite">
           {notices.map((n) => (
             <div key={n.id} className={"toast " + n.type}>

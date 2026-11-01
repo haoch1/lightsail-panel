@@ -36,6 +36,24 @@
 .notification-settings > .section-heading {
   margin-bottom: 24px;
 }
+.session-settings > .section-heading {
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.session-expiry {
+  color: var(--muted);
+  font-size: 13px;
+}
+.session-settings-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+.session-settings-row > .field {
+  flex: 1;
+  max-width: 360px;
+  margin-bottom: 0;
+}
 .notification-settings form > .check-label {
   margin: -2px 0 20px;
 }

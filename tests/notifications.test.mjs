@@ -305,6 +305,7 @@ test("status and IP observations establish a silent durable baseline and ignore 
   assert.equal(f.service.records().length, 1);
   observe({ ...item, createdAt: "replacement", publicIp: "198.51.100.2" });
   assert.equal(f.service.records()[0].type, "ip");
+  assert.doesNotMatch(f.service.records()[0].message, /IPv6/);
   observe(item, { errors: [{ message: "incomplete" }] });
   assert.equal(f.service.records().length, 2);
   f.service.snapshot(key.replace(account.id, "all"), {
@@ -462,6 +463,8 @@ test("daily summaries use saved snapshots and timezone, deduplicate across resta
   assert.match(sent[0], /运行中：1/);
   assert.doesNotMatch(sent[0], /999\.00 GB/);
   assert.match(sent[0], /🇺🇸 web/);
+  assert.doesNotMatch(sent[0], /采集|非 AWS|Asia\/Shanghai/);
+  assert.equal((sent[0].match(/🕒/g) || []).length, 1);
   f.reopen();
   now += 60000;
   await f.service.tick();
