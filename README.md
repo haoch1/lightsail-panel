@@ -40,7 +40,7 @@ LightSail Panel 是 Amazon Lightsail 的自托管中文管理面板，支持多�
 
 ## Docker 部署
 
-预构建镜像：[`ghcr.io/haoch1/lightsail-panel:latest`](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel)，支持 `linux/amd64` 和 `linux/arm64`，由 Docker 自动选择目标架构。
+预构建镜像：[`ghcr.io/haoch1/lightsail-panel:latest`](https://github.com/haoch1/lightsail-panel/pkgs/container/lightsail-panel)，用于 `linux/amd64` 服务器。
 
 ### 1. 准备环境
 
@@ -437,7 +437,7 @@ docker build -t lightsail-panel:local .
 PANEL_IMAGE=lightsail-panel:local docker compose up -d --pull never
 ```
 
-GitHub Actions 在 amd64 和 arm64 原生 runner 上完成构建、测试、容器启动及 Compose 部署验证后发布镜像；Pull Request 仅验证。容器以非 root 用户运行，启用 `no-new-privileges` 并移除 Linux capabilities。
+GitHub Actions 在 AMD64 runner 上完成构建、测试、容器启动及 Compose 部署验证后发布镜像；Pull Request 仅验证。容器以非 root 用户运行，启用 `no-new-privileges` 并移除 Linux capabilities。
 
 演示入口：`/lightsail?demo=1`。数据与操作在浏览器内模拟，包括流量进度、自动关机设置、SSH 终端及设置页，不调用 AWS 或 Telegram API。演示模式请勿输入真实凭证。
 

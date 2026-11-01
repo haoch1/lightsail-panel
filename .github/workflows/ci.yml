@@ -19,20 +19,12 @@ env:
 
 jobs:
   docker:
-    name: Build and test (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
+    name: Build and test (AMD64)
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
       packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: amd64
-            runner: ubuntu-24.04
-          - arch: arm64
-            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
       - name: Validate Compose configuration
@@ -41,13 +33,13 @@ jobs:
         run: |
           docker build \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
-            --tag "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}" .
+            --tag "${IMAGE_NAME}:sha-${GITHUB_SHA}-amd64" .
       - name: Verify container startup and HTTP endpoints
         run: |
           docker run --detach --name lightsail-panel-test --hostname lightsail-panel \
             --publish 127.0.0.1:8090:8090 \
             --security-opt no-new-privileges:true --cap-drop ALL \
-            "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}"
+            "${IMAGE_NAME}:sha-${GITHUB_SHA}-amd64"
           curl --fail --silent --show-error --retry 20 --retry-delay 2 --retry-all-errors \
             --retry-connrefused http://127.0.0.1:8090/api/health > health.json
           python3 -c 'import json; assert json.load(open("health.json"))["ok"] is True'
@@ -85,7 +77,7 @@ jobs:
             printf "%s\n" "$names"
             exit 1
           '
-          test "$(docker inspect --format '{{.Architecture}}' "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}")" = "${{ matrix.arch }}"
+          test "$(docker inspect --format '{{.Architecture}}' "${IMAGE_NAME}:sha-${GITHUB_SHA}-amd64")" = amd64
           docker stop --time 10 lightsail-panel-test
           test "$(docker inspect --format '{{.State.ExitCode}}' lightsail-panel-test)" = 0
       - name: Publish tested platform image
@@ -94,7 +86,7 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-          docker push "${IMAGE_NAME}:sha-${GITHUB_SHA}-${{ matrix.arch }}"
+          docker push "${IMAGE_NAME}:sha-${GITHUB_SHA}-amd64"
       - name: Container logs
         if: always()
         run: docker logs lightsail-panel-test || true
@@ -103,7 +95,7 @@ jobs:
         run: docker rm --force lightsail-panel-test || true
 
   publish:
-    name: Publish multi-platform image
+    name: Publish AMD64 image
     needs: docker
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-24.04
@@ -124,14 +116,13 @@ jobs:
           elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             tags+=("$GITHUB_REF_NAME" "${GITHUB_REF_NAME#v}")
           fi
+          source_image="${IMAGE_NAME}:sha-${GITHUB_SHA}-amd64"
+          docker pull "$source_image"
+          test "$(docker inspect --format '{{.Architecture}}' "$source_image")" = amd64
           for tag in "${tags[@]}"; do
-            docker manifest create "${IMAGE_NAME}:${tag}" \
-              "${IMAGE_NAME}:sha-${GITHUB_SHA}-amd64" \
-              "${IMAGE_NAME}:sha-${GITHUB_SHA}-arm64"
-            docker manifest push "${IMAGE_NAME}:${tag}"
+            docker tag "$source_image" "${IMAGE_NAME}:${tag}"
+            docker push "${IMAGE_NAME}:${tag}"
           done
-          docker manifest inspect "${IMAGE_NAME}:sha-${GITHUB_SHA}" > manifest.json
-          python3 -c 'import json; platforms={m["platform"]["architecture"] for m in json.load(open("manifest.json"))["manifests"]}; assert platforms == {"amd64", "arm64"}'
       - name: Verify deployment from the registry
         env:
           PANEL_IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}

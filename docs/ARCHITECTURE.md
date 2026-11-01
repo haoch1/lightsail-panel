@@ -146,7 +146,7 @@ Compose 数据卷标识与实际卷名均为 `lightsail-panel-data`，挂载到 
 
 功能扩展须同步定义共享类型、参数校验、AWS 方法、HTTP 路由和前端模块。新增 AWS 命令须核对 IAM 策略并补充业务测试。
 
-本地验证命令为 `pnpm check`、`pnpm test` 和 `pnpm build`。运行标识测试在独立子进程中验证进程标题、线程名称和健康检查退出码。Docker CI 在 amd64、arm64 上验证构建、启动命令、PID 1、线程名称、健康接口、初始化状态、前端资源、非 root 运行和 SIGTERM 退出；发布阶段验证 Compose 容器名称与数据卷挂载。
+本地验证命令为 `pnpm check`、`pnpm test` 和 `pnpm build`。运行标识测试在独立子进程中验证进程标题、线程名称和健康检查退出码。Docker CI 使用 AMD64 runner，验证构建、启动命令、PID 1、线程名称、健康接口、初始化状态、前端资源、非 root 运行和 SIGTERM 退出；发布阶段验证 Compose 容器名称与数据卷挂载。
 
 ## Telegram 通知
 
