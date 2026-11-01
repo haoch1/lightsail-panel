@@ -184,8 +184,8 @@ test("notification formatting escapes resource text, shares preview styles, and 
   };
   const html = formatNotification(source, true, "Asia/Shanghai");
   assert.match(html, /^<b>🔴 流量保护关机失败<\/b>/);
-  assert.match(html, /<b>🇸🇬 &lt;web&gt;&amp;&lt;\/blockquote&gt;<\/b>/);
-  assert.match(html, /<b>&lt;QA&gt;<\/b>/);
+  assert.match(html, /<b>&lt;web&gt;&amp;&lt;\/blockquote&gt;<\/b>/);
+  assert.doesNotMatch(html, /QA|ap-southeast-1|账户|区域/);
   assert.match(html, /本月流量 <b>95\.1%<\/b>/);
   assert.match(html, /已用 1902\.4 \/ 2000\.0 GB · 剩余 97\.6 GB/);
   assert.match(html, /阈值 95%； AWS 拒绝停止请求/);
@@ -462,7 +462,8 @@ test("daily summaries use saved snapshots and timezone, deduplicate across resta
   assert.match(sent[0], /流量数据尚未就绪/);
   assert.match(sent[0], /运行中：1/);
   assert.doesNotMatch(sent[0], /999\.00 GB/);
-  assert.match(sent[0], /🇺🇸 web/);
+  assert.match(sent[0], /web/);
+  assert.doesNotMatch(sent[0], /QA|us-east-1|账户|区域/);
   assert.doesNotMatch(sent[0], /采集|非 AWS|Asia\/Shanghai/);
   assert.equal((sent[0].match(/🕒/g) || []).length, 1);
   f.reopen();

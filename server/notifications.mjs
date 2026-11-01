@@ -7,7 +7,6 @@ import {
   defaultNotifications,
   formatNotification,
   notificationChoices,
-  notificationRegionFlag,
 } from "../shared/notifications.ts";
 
 const types = notificationChoices.map((item) => item.value);
@@ -332,10 +331,6 @@ export class Notifications {
     const autoStop = row.action === "traffic-auto-stop";
     const monitor = row.action === "traffic-auto-stop-check";
     if (!autoStop && !monitor && !resourceActions.has(row.action)) return;
-    const account =
-      this.store.accounts().find((a) => a.id === row.account)?.name ||
-      row.account ||
-      "—";
     const tracked = this.store.db
       .prepare(
         "SELECT body FROM launch_network WHERE json_extract(body,'$.auditId')=? LIMIT 1",
@@ -365,7 +360,7 @@ export class Notifications {
       "audit:" + row.id,
       (autoStop ? "流量保护关机" : auditActionLabel(row.action)) +
         (row.status === "failed" ? "失败" : "成功"),
-      `目标：${row.target || "—"}\n账户：${account}\n${region ? `区域：${region}\n` : ""}${autoStop && row.status === "success" && rule ? `阈值 ${rule.thresholdPercent}%` : row.detail || ""}`,
+      `目标：${row.target || "—"}\n${autoStop && row.status === "success" && rule ? `阈值 ${rule.thresholdPercent}%` : row.detail || ""}`,
       { usage: rule && { used: rule.usedBytes, total: rule.allowanceBytes } },
     );
   }
@@ -384,7 +379,16 @@ export class Notifications {
       .accounts()
       .find((a) => a.id === q.get("accountId"))?.name;
     if (!account) return;
-    const context = `账户：${account}\n区域：${q.get("region")}\n${q.get("id") ? `实例：${q.get("id")}\n` : ""}`;
+    const names =
+      q.get("id") ||
+      Object.keys(old?.items || {})
+        .slice(0, 3)
+        .join(", ") ||
+      (value?.items || [])
+        .slice(0, 3)
+        .map((item) => item.name)
+        .join(", ");
+    const context = names ? `实例：${names}\n` : "";
     const label = path === "/instances" ? "实例监控" : "流量监控";
     if (error) {
       if (!old?.error)
@@ -428,8 +432,7 @@ export class Notifications {
             "status",
             `${stateKey}:${item.id}:state:${this.now()}`,
             "实例状态变化",
-            context +
-              `实例：${item.name}\n${states[previous.state] || previous.state} → ${states[current.state] || current.state}`,
+            `实例：${item.name}\n${states[previous.state] || previous.state} → ${states[current.state] || current.state}`,
           );
         if (
           previous.state === "running" &&
@@ -440,8 +443,7 @@ export class Notifications {
             "ip",
             `${stateKey}:${item.id}:ip:${this.now()}`,
             "公网 IP 变化",
-            context +
-              `实例：${item.name}\n` +
+            `实例：${item.name}\n` +
               [
                 previous.ip !== current.ip
                   ? `IPv4：${previous.ip || "—"} → ${current.ip || "—"}`
@@ -552,11 +554,10 @@ export class Notifications {
       const bytes = currentMonth ? row?.value.totals?.combined : undefined;
       lines.push(
         [
-          `${notificationRegionFlag(i.region)} ${clip(i.name, 32)} · ${states[i.state] || i.state}`.trim(),
+          `${clip(i.name, 32)} · ${states[i.state] || i.state}`,
           Number.isFinite(bytes) && bytes >= 0
             ? `本月流量 ${(bytes / 1024 ** 3).toFixed(2)} GB`
             : "流量数据尚未就绪",
-          `${clip(accounts.get(i.accountId), 32)} · ${i.region}`,
         ].join("\n"),
       );
     }

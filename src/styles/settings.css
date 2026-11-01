@@ -89,10 +89,6 @@
 .notification-report-settings {
   margin-top: 20px;
 }
-.notification-report-settings input[type="time"] {
-  height: 40px;
-  min-height: 40px;
-}
 .notification-preview {
   margin-top: 24px;
   padding-top: 24px;

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cloneElement, isValidElement, useId } from "react";
 import Select from "./Select";
 import { Input } from "./Input";
+import TimePicker from "./TimePicker";
 import { ignoreAutofill } from "../../lib/input-autofill";
 export function Field({
   label,
@@ -18,7 +19,8 @@ export function Field({
     ((typeof children.type === "string" &&
       ["input", "select", "textarea"].includes(children.type)) ||
       children.type === Select ||
-      children.type === Input);
+      children.type === Input ||
+      children.type === TimePicker);
   const control = native
     ? cloneElement(
         children as React.ReactElement<{

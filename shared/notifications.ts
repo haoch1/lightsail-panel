@@ -91,27 +91,6 @@ const clipMessage = (value: string, limit: number) =>
   Array.from(value).slice(0, limit).join("");
 const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const regionFlags: Record<string, string> = {
-  "ap-east-1": "🇭🇰",
-  "ap-northeast-1": "🇯🇵",
-  "ap-northeast-2": "🇰🇷",
-  "ap-northeast-3": "🇯🇵",
-  "ap-southeast-1": "🇸🇬",
-  "ap-southeast-2": "🇦🇺",
-  "ap-southeast-3": "🇮🇩",
-  "ap-southeast-4": "🇦🇺",
-  "ap-south-1": "🇮🇳",
-  "ap-south-2": "🇮🇳",
-  "eu-central-1": "🇩🇪",
-  "eu-west-1": "🇮🇪",
-  "eu-west-2": "🇬🇧",
-  "eu-west-3": "🇫🇷",
-  "eu-north-1": "🇸🇪",
-  "ca-central-1": "🇨🇦",
-  "sa-east-1": "🇧🇷",
-};
-export const notificationRegionFlag = (region: string) =>
-  regionFlags[region] || (region.startsWith("us-") ? "🇺🇸" : "");
 export function notificationIcon(item: NotificationMessage) {
   if (
     item.type === "operation-failed" ||
@@ -138,24 +117,8 @@ export function formatNotification(
         .find((line) => pattern.test(line))
         ?.replace(pattern, "")
         .trim() || "";
-    const name = field(/^(?:目标|实例)：/),
-      region = field(/^区域：/),
-      account = field(/^账户：/);
-    if (name && name !== "—")
-      body.push(
-        bold(
-          [notificationRegionFlag(region), clipMessage(name, 48)]
-            .filter(Boolean)
-            .join(" "),
-        ),
-      );
-    const context = [
-      account && account !== "—" ? bold(clipMessage(account, 48)) : "",
-      encode(clipMessage(region, 80)),
-    ]
-      .filter(Boolean)
-      .join(" · ");
-    if (context) body.push(context);
+    const name = field(/^(?:目标|实例)：/);
+    if (name && name !== "—") body.push(bold(clipMessage(name, 48)));
     message = lines
       .filter((line) => !/^(?:目标|实例|账户|区域)：/.test(line))
       .join(" ")
@@ -219,20 +182,20 @@ export const notificationExamples: Record<
 > = {
   "operation-success": {
     title: "开放防火墙端口成功",
-    message: "实例：web-server\n账户：主账户\nTCP 443 · 0.0.0.0/0",
+    message: "实例：web-server\nTCP 443 · 0.0.0.0/0",
   },
   "operation-failed": {
     title: "停止实例失败",
-    message: "实例：web-server\n账户：主账户\nAWS 拒绝请求，请检查 IAM 权限",
+    message: "实例：web-server\nAWS 拒绝请求，请检查 IAM 权限",
   },
   "traffic-stop": {
     title: "流量保护关机成功",
-    message: "实例：web-server\n账户：主账户\n区域：ap-southeast-1\n阈值 95%",
+    message: "实例：web-server\n阈值 95%",
     usage: { used: 1902.4 * 1024 ** 3, total: 2000 * 1024 ** 3 },
   },
   status: {
     title: "实例状态变化",
-    message: "实例：web-server\n区域：ap-southeast-1\n运行中 → 已停止",
+    message: "实例：web-server\n运行中 → 已停止",
   },
   ip: {
     title: "公网 IP 变化",
@@ -240,16 +203,15 @@ export const notificationExamples: Record<
   },
   "monitor-error": {
     title: "实例监控异常",
-    message:
-      "账户：主账户\n区域：ap-southeast-1\nAWS 查询超时，保留最近成功数据",
+    message: "实例：web-server\nAWS 查询超时",
   },
   "monitor-recovery": {
     title: "实例监控恢复",
-    message: "账户：主账户\n区域：ap-southeast-1",
+    message: "实例：web-server",
   },
   daily: {
     title: "LightSail 实例日报",
     message:
-      "实例：2 · 运行中：1 · 已停止：1\n\n🇸🇬 web-server · 运行中\n本月流量 350.56 GB\n主账户 · ap-southeast-1\n\n🇯🇵 backup-server · 已停止\n本月流量 12.30 GB\n主账户 · ap-northeast-1",
+      "实例：2 · 运行中：1 · 已停止：1\n\nweb-server · 运行中\n本月流量 350.56 GB\n\nbackup-server · 已停止\n本月流量 12.30 GB",
   },
 };

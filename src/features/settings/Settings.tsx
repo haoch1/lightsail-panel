@@ -24,6 +24,7 @@ import {
 } from "../../components/ui";
 import { Input } from "../../components/ui/Input";
 import Select from "../../components/ui/Select";
+import TimePicker from "../../components/ui/TimePicker";
 import { api } from "../../lib/api";
 import Accounts from "../accounts/Accounts";
 import SessionSettings from "../auth/SessionSettings";
@@ -215,12 +216,10 @@ export default function Settings({
             {n.events.includes("daily") && (
               <div className="form-grid notification-report-settings">
                 <Field label="日报时间">
-                  <Input
-                    type="time"
-                    required
+                  <TimePicker
                     value={n.reportTime}
                     disabled={!!busy}
-                    onChange={(e) => change({ reportTime: e.target.value })}
+                    onChange={(reportTime) => change({ reportTime })}
                   />
                 </Field>
                 <Field label="日报时区">
