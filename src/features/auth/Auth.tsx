@@ -3,6 +3,8 @@ import { useState } from "react";
 import { ThemeControl } from "../../app/theme";
 import { ErrorBox, Field, PendingButton } from "../../components/ui";
 import { api, setCsrf } from "../../lib/api";
+import { Form } from "../../components/ui/Form";
+import { Input } from "../../components/ui/Input";
 import SessionDuration from "./SessionDuration";
 
 export default function Auth({
@@ -25,7 +27,8 @@ export default function Auth({
           <strong>LightSail Panel</strong>
         </div>
         <h1>{initialized ? "登录" : "初始化"}</h1>
-        <form
+        <Form
+          allowPasswordManager
           onSubmit={async (e) => {
             e.preventDefault();
             if (busy) return;
@@ -48,14 +51,14 @@ export default function Auth({
             }
           }}
         >
-          <Field
-            label="管理员密码"
-            help={initialized ? undefined : "至少 12 位，无默认密码。"}
-          >
-            <input
+          <Field label="管理员密码">
+            <Input
+              allowPasswordManager
               disabled={busy}
               data-pending={busy || undefined}
               type="password"
+              name="password"
+              placeholder={initialized ? undefined : "至少 12 位"}
               required
               autoComplete={initialized ? "current-password" : "new-password"}
               minLength={initialized ? 1 : 12}
@@ -65,10 +68,12 @@ export default function Auth({
           </Field>
           {!initialized && (
             <Field label="确认密码">
-              <input
+              <Input
+                allowPasswordManager
                 disabled={busy}
                 data-pending={busy || undefined}
                 type="password"
+                name="password-confirmation"
                 required
                 minLength={12}
                 autoComplete="new-password"
@@ -80,13 +85,14 @@ export default function Auth({
           <SessionDuration hours={hours} onChange={setHours} disabled={busy} />
           {error && <ErrorBox message={error} />}
           <PendingButton
+            type="submit"
             className="button primary full"
             busy={busy}
-            pendingLabel="正在验证…"
+            pendingLabel={initialized ? "正在登录" : "正在初始化"}
           >
-            {initialized ? "登录" : "创建管理员并进入"}
+            {initialized ? "登录" : "初始化面板"}
           </PendingButton>
-        </form>
+        </Form>
         <a className="demo-entry" href="/instances?demo=1">
           <FlaskConical size={15} />
           先预览演示面板

@@ -223,11 +223,4 @@
   .pagination {
     flex-wrap: wrap;
   }
-  .auth-wrap {
-    padding: 20px;
-  }
-  .auth-card {
-    padding: 24px;
-    max-width: 410px;
-  }
 }

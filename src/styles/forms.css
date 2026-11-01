@@ -98,9 +98,6 @@
   padding-top: 18px;
   border-top: 1px solid var(--border);
 }
-.auth-card .field {
-  margin-bottom: 18px;
-}
 .form-grid > .field {
   margin-bottom: 0;
 }

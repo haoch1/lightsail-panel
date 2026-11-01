@@ -1,3 +1,4 @@
+import { Form } from "../../components/ui/Form";
 import { compareImages } from "../../../shared/images";
 import { regionLabel } from "../../../shared/regions";
 import { Rocket } from "lucide-react";
@@ -142,7 +143,7 @@ export default function Launch() {
           }
         />
       ) : (
-        <form
+        <Form
           onSubmit={(e) => {
             e.preventDefault();
             if (firewall && !firewall.length) {
@@ -419,7 +420,7 @@ export default function Launch() {
               检查并创建
             </button>
           </div>
-        </form>
+        </Form>
       )}
       {confirm && (
         <Modal

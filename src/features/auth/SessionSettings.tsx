@@ -1,3 +1,4 @@
+import { Form } from "../../components/ui/Form";
 import { useState } from "react";
 import { usePanel } from "../../app/context";
 import { ErrorBox, PendingButton, when } from "../../components/ui";
@@ -28,7 +29,7 @@ export default function SessionSettings({
           </span>
         )}
       </div>
-      <form
+      <Form
         onSubmit={async (e) => {
           e.preventDefault();
           if (busy) return;
@@ -64,7 +65,7 @@ export default function SessionSettings({
           </PendingButton>
         </div>
         {error && <ErrorBox message={error} />}
-      </form>
+      </Form>
     </section>
   );
 }

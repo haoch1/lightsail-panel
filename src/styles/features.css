@@ -129,64 +129,6 @@
   line-height: 2;
   margin: 13px 0 5px;
 }
-.auth-wrap {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  background: var(--canvas);
-}
-.auth-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  width: 440px;
-}
-.auth-brand {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 29px;
-}
-.auth-brand strong {
-  font-size: 20px;
-}
-.auth-card h1 {
-  font-size: 23px;
-  margin-bottom: 24px;
-}
-.auth-card > p {
-  font-size: var(--font-sm);
-  color: var(--muted);
-  margin-top: 9px;
-  margin-bottom: 25px;
-}
-.demo-entry {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  font-size: var(--font-sm);
-  color: var(--muted);
-  padding: 22px 0 19px;
-}
-.demo-entry:hover {
-  color: var(--text);
-}
-.auth-foot {
-  border-top: 1px solid var(--border);
-  padding-top: 17px;
-  font-size: var(--font-xs);
-  color: var(--muted);
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-  align-items: center;
-}
-
 .startup-script {
   font-family: var(--mono);
   font-size: var(--font-sm) !important;

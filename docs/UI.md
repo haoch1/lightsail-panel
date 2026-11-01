@@ -30,6 +30,10 @@
 
 页面使用一级路径 `/instances`、`/launch`、`/ips`、`/firewall`、`/traffic`、`/audit`、`/settings`，支持直接访问、刷新、前进和后退。不保留原 `/lightsail` 路径映射；根路径默认进入 `/instances`。
 
+登录与初始化页复用两仓库相同的 `auth.css`，外观选择器与登录按钮等宽。表单使用 `Form`，输入使用 `Input`；仅登录页显式启用 `allowPasswordManager`，其余字段（含 Token 和云密钥）及表单均关闭自动填充，并提供常见密码管理器的忽略标记。原生输入由 `Field` 补齐标记，SSH 终端输入沿用相同规则。
+
+桌面 `scrollbar-gutter: stable` 已预留滚动条空间，Radix 锁定滚动时不再重复补偿，避免卡片宽度变化；移动端与不支持该属性的浏览器保留原有补偿。
+
 ## 控件与状态
 
 - 普通按钮、输入框和下拉选择器的单行基准高度为 40 px；紧凑按钮及图标按钮为 34 px。多行选项允许增高。

@@ -1,3 +1,4 @@
+import { Form } from "../../components/ui/Form";
 import { regionLabel } from "../../../shared/regions";
 import { useState } from "react";
 import type { Region } from "../../../shared/types";
@@ -48,7 +49,7 @@ export default function AllocateStaticIp({
 
   return (
     <Modal title="分配静态 IP" busy={busy} onClose={onClose}>
-      <form
+      <Form
         onSubmit={(e) => {
           e.preventDefault();
           void allocate();
@@ -137,7 +138,7 @@ export default function AllocateStaticIp({
             确认分配
           </PendingButton>
         </div>
-      </form>
+      </Form>
     </Modal>
   );
 }

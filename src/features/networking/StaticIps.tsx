@@ -1,3 +1,4 @@
+import { Form } from "../../components/ui/Form";
 import { regionLabel } from "../../../shared/regions";
 import { Plus, Timer } from "lucide-react";
 import { useState } from "react";
@@ -208,7 +209,7 @@ export default function StaticIps() {
           busy={busy}
           onClose={() => setDialog(null)}
         >
-          <form
+          <Form
             onSubmit={(e) => {
               e.preventDefault();
               void run();
@@ -287,7 +288,7 @@ export default function StaticIps() {
                 确认
               </PendingButton>
             </div>
-          </form>
+          </Form>
         </Modal>
       )}
     </>

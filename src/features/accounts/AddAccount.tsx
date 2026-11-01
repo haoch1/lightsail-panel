@@ -1,3 +1,4 @@
+import { Form } from "../../components/ui/Form";
 import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { usePanel } from "../../app/context";
@@ -27,7 +28,7 @@ export default function AddAccount({
     setForm((f) => ({ ...f, [key]: value }));
   }
   return (
-    <form
+    <Form
       className="account-add-form"
       onSubmit={async (e) => {
         e.preventDefault();
@@ -95,6 +96,6 @@ export default function AddAccount({
           {demo ? "添加示例账户" : "验证并保存"}
         </PendingButton>
       </div>
-    </form>
+    </Form>
   );
 }

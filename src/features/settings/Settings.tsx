@@ -1,3 +1,4 @@
+import { Form } from "../../components/ui/Form";
 import { Bell, Settings as SettingsIcon } from "lucide-react";
 import { useState } from "react";
 import type {
@@ -117,7 +118,7 @@ export default function Settings({
             正在读取通知设置…
           </div>
         ) : (
-          <form onSubmit={save}>
+          <Form onSubmit={save}>
             <div className="form-grid">
               <Field label="Bot Token">
                 <Input
@@ -317,7 +318,7 @@ export default function Settings({
                 保存
               </PendingButton>
             </div>
-          </form>
+          </Form>
         )}
       </section>
       <section

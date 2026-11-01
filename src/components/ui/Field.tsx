@@ -30,9 +30,7 @@ export function Field({
         }>,
         {
           ...(typeof children.type === "string" &&
-          ["input", "textarea"].includes(children.type) &&
-          (children.props as { type?: string }).type?.toLowerCase() !==
-            "password"
+          ["input", "textarea"].includes(children.type)
             ? ignoreAutofill
             : {}),
           id,

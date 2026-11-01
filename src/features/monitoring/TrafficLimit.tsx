@@ -1,3 +1,4 @@
+import { Form } from "../../components/ui/Form";
 import { useState } from "react";
 import type { Instance, TrafficLimitRule } from "../../../shared/types";
 import { regionLabel } from "../../../shared/regions";
@@ -124,7 +125,7 @@ function TrafficLimitForm({
   const [percent, setPercent] = useState(rule?.thresholdPercent || 90);
   const [error, setError] = useState("");
   return (
-    <form
+    <Form
       onSubmit={async (e) => {
         e.preventDefault();
         if (busy) return;
@@ -191,7 +192,7 @@ function TrafficLimitForm({
           保存
         </PendingButton>
       </div>
-    </form>
+    </Form>
   );
 }
 

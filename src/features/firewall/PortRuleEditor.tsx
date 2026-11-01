@@ -1,3 +1,4 @@
+import { Form } from "../../components/ui/Form";
 import { regionLabel } from "../../../shared/regions";
 import { useState } from "react";
 import type { Instance, PortInfo } from "../../../shared/types";
@@ -48,7 +49,7 @@ export default function PortRuleEditor({
       busy={busy}
       onClose={onClose}
     >
-      <form
+      <Form
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -199,7 +200,7 @@ export default function PortRuleEditor({
             确认开放
           </PendingButton>
         </div>
-      </form>
+      </Form>
     </Modal>
   );
 }
