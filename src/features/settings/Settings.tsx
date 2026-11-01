@@ -347,12 +347,12 @@ export default function Settings({
                 <tr key={item.id}>
                   <td data-label="时间">{when(item.at)}</td>
                   <td data-label="通知">
-                    <details>
-                      <summary>
-                        {notificationIcon(item)} {item.title}
-                      </summary>
+                    <div className="notification-title">
+                      {notificationIcon(item)} {item.title}
+                    </div>
+                    {item.message && (
                       <p className="notification-message">{item.message}</p>
-                    </details>
+                    )}
                     {item.error && (
                       <div className="subline danger-text">{item.error}</div>
                     )}
@@ -361,9 +361,10 @@ export default function Settings({
                     <span className={`notification-status ${item.status}`}>
                       {notificationStatus[item.status]}
                     </span>
-                    {item.attempts > 0 && (
-                      <div className="subline">已尝试 {item.attempts} 次</div>
-                    )}
+                    {(item.status === "queued" || item.status === "failed") &&
+                      item.attempts > 0 && (
+                        <div className="subline">已尝试 {item.attempts} 次</div>
+                      )}
                   </td>
                 </tr>
               ))}

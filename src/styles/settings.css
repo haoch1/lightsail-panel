@@ -32,6 +32,19 @@
 }
 .settings-accounts .account-table table {
   min-width: 640px;
+  table-layout: fixed;
+}
+.settings-accounts .account-table th:first-child {
+  width: 28%;
+}
+.settings-accounts .account-table th:nth-child(2) {
+  width: 32%;
+}
+.settings-accounts .account-table th:last-child {
+  width: 188px;
+}
+.settings-accounts .account-table td {
+  overflow-wrap: anywhere;
 }
 .notification-settings > .section-heading {
   margin-bottom: 24px;
@@ -136,21 +149,30 @@
   gap: 10px;
   margin-top: 24px;
 }
+.notification-table {
+  table-layout: fixed;
+}
 .notification-table th:first-child {
-  width: 180px;
+  width: 196px;
 }
 .notification-table th:last-child {
-  width: 140px;
+  width: 116px;
 }
-.notification-table details > summary {
-  cursor: pointer;
+.notification-table th:last-child,
+.notification-table td:last-child {
+  text-align: right;
+}
+.notification-table td {
+  vertical-align: top;
+}
+.notification-title {
   overflow-wrap: anywhere;
 }
 .notification-message {
   font-size: 13px;
   line-height: 1.8;
   color: var(--muted);
-  margin-bottom: 0;
+  margin: 6px 0 0;
 }
 .notification-status {
   font-size: 13px;
@@ -204,6 +226,9 @@
   }
   .notification-history .responsive-table td {
     grid-column: 1 / -1;
+  }
+  .notification-table td:last-child {
+    text-align: left;
   }
 }
 @media (max-width: 360px) {

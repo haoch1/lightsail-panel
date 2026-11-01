@@ -568,7 +568,7 @@ export class Notifications {
       this.enqueue(
         "daily",
         `daily:${date}:${n.timezone}`,
-        "LightSail 实例日报",
+        `LightSail 实例日报 ${date}`,
         lines.join("\n\n"),
       )
     )

@@ -108,6 +108,27 @@ export function formatNotification(
 ) {
   const encode = (value: string) => (html ? escapeHtml(value) : value);
   const bold = (value: string) => (html ? `<b>${encode(value)}</b>` : value);
+  const parts =
+    item.at !== undefined && Number.isFinite(new Date(item.at).valueOf())
+      ? Object.fromEntries(
+          new Intl.DateTimeFormat("en-GB", {
+            timeZone: timezone,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hourCycle: "h23",
+          })
+            .formatToParts(new Date(item.at))
+            .map((p) => [p.type, p.value]),
+        )
+      : undefined;
+  const title =
+    item.type === "daily" && item.title === "LightSail 实例日报" && parts
+      ? `${item.title} ${parts.year}-${parts.month}-${parts.day}`
+      : item.title;
   const body: string[] = [];
   let message = item.message || "";
   if (item.type !== "daily") {
@@ -149,27 +170,13 @@ export function formatNotification(
   if (message)
     body.push(encode(clipMessage(message, item.type === "daily" ? 2800 : 800)));
   const sections = [
-    bold(notificationIcon(item) + " " + clipMessage(item.title, 80)),
+    bold(notificationIcon(item) + " " + clipMessage(title, 80)),
   ];
   if (body.length)
     sections.push(
       html ? `<blockquote>${body.join("\n")}</blockquote>` : body.join("\n"),
     );
-  if (item.at !== undefined && Number.isFinite(new Date(item.at).valueOf())) {
-    const parts = Object.fromEntries(
-      new Intl.DateTimeFormat("en-GB", {
-        timeZone: timezone,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hourCycle: "h23",
-      })
-        .formatToParts(new Date(item.at))
-        .map((p) => [p.type, p.value]),
-    );
+  if (parts) {
     sections.push(
       `🕒 ${parts.year}.${parts.month}.${parts.day} - ${parts.hour}:${parts.minute}:${parts.second}`,
     );

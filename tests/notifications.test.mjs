@@ -214,6 +214,30 @@ test("notification formatting escapes resource text, shares preview styles, and 
   );
 });
 
+test("daily preview dates follow the report timezone and preserve the queued report date", () => {
+  const source = {
+    ...notificationExamples.daily,
+    type: "daily",
+    at: "2026-11-01T16:30:00Z",
+  };
+  assert.match(
+    formatNotification(source, true, "Asia/Shanghai"),
+    /^<b>🟢 LightSail 实例日报 2026-11-02<\/b>/,
+  );
+  assert.match(
+    formatNotification(source, true, "UTC"),
+    /^<b>🟢 LightSail 实例日报 2026-11-01<\/b>/,
+  );
+  assert.match(
+    formatNotification(
+      { ...source, title: "LightSail 实例日报 2026-10-31" },
+      true,
+      "Asia/Shanghai",
+    ),
+    /^<b>🟢 LightSail 实例日报 2026-10-31<\/b>/,
+  );
+});
+
 test("traffic protection request failures notify with the default event selection without changing stop behavior", async (t) => {
   const f = fixture(t);
   const account = f.store.saveAccount(
@@ -460,6 +484,8 @@ test("daily summaries use saved snapshots and timezone, deduplicate across resta
   await f.service.tick();
   assert.equal(sent.length, 1);
   assert.match(sent[0], /流量数据尚未就绪/);
+  assert.equal(f.service.records()[0].title, "LightSail 实例日报 2026-11-01");
+  assert.match(sent[0], /^<b>🟢 LightSail 实例日报 2026-11-01<\/b>/);
   assert.match(sent[0], /运行中：1/);
   assert.doesNotMatch(sent[0], /999\.00 GB/);
   assert.match(sent[0], /web/);
@@ -473,6 +499,7 @@ test("daily summaries use saved snapshots and timezone, deduplicate across resta
   now += 86400000;
   await f.service.tick();
   assert.equal(sent.length, 2);
+  assert.equal(f.service.records()[0].title, "LightSail 实例日报 2026-11-02");
 });
 
 test("settings endpoints require session and CSRF, reject Aliyun-only fields, hide tokens, and queue tests", async (t) => {
