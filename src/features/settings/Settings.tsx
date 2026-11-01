@@ -350,12 +350,6 @@ export default function Settings({
                     <div className="notification-title">
                       {notificationIcon(item)} {item.title}
                     </div>
-                    {item.message && (
-                      <p className="notification-message">{item.message}</p>
-                    )}
-                    {item.error && (
-                      <div className="subline danger-text">{item.error}</div>
-                    )}
                   </td>
                   <td data-label="投递状态">
                     <span className={`notification-status ${item.status}`}>
@@ -365,6 +359,9 @@ export default function Settings({
                       item.attempts > 0 && (
                         <div className="subline">已尝试 {item.attempts} 次</div>
                       )}
+                    {item.error && (
+                      <div className="subline danger-text">{item.error}</div>
+                    )}
                   </td>
                 </tr>
               ))}

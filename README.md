@@ -84,7 +84,7 @@ curl -fsS http://127.0.0.1:8090/api/health
 健康检查返回示例：
 
 ```json
-{ "ok": true, "version": "1.9.3", "service": "lightsail" }
+{ "ok": true, "version": "1.9.5", "service": "lightsail" }
 ```
 
 远程连接可使用 SSH 端口转发：
