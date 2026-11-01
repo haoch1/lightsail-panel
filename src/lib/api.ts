@@ -7,8 +7,18 @@ export function invalidateAudit() {
   resourceCache.invalidate((key) => key === "/audit");
   window.dispatchEvent(new Event("panel:audit-updated"));
 }
+export function invalidateNotifications(settings = false) {
+  resourceCache.invalidate(
+    (key) => key === "/notifications" || (settings && key === "/settings"),
+  );
+  window.dispatchEvent(new Event("panel:notifications-updated"));
+}
 function changed(path: string, body: unknown) {
   invalidateAudit();
+  if (path === "/settings" || path === "/notifications/test") {
+    invalidateNotifications(path === "/settings");
+    return;
+  }
   if (path === "/audit") {
     resourceCache.invalidate((key) => key === path);
     return;

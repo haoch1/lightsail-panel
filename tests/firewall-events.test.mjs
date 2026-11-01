@@ -312,6 +312,7 @@ test("authenticated events immediately signal logs, cleanup and operation status
     403,
   );
   const abort = new AbortController();
+  const backgroundListeners = store.onEvent.size;
   const response = await fetch(base + "/api/events", {
     headers,
     signal: abort.signal,
@@ -330,7 +331,7 @@ test("authenticated events immediately signal logs, cleanup and operation status
   store.deleteSession(session.token);
   store.audit({ action: "start" });
   assert.equal((await reader.read()).done, true);
-  assert.equal(store.onEvent.size, 0);
+  assert.equal(store.onEvent.size, backgroundListeners);
   abort.abort();
 });
 test("traffic display uses familiar uppercase units and refresh timestamps omit seconds", () => {

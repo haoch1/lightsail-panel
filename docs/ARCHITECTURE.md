@@ -84,7 +84,7 @@ WebSocket 每 15 秒检查心跳、登录有效期和账户状态；退出登录
 
 ## 界面布局
 
-公共布局统一侧栏、顶部选择器及主内容区间距。主要操作置于页面标题右侧；实例概况集中显示数量与单一刷新时间，筛选控件紧邻列表。防火墙和流量页面使用紧凑实例选择器，不重复页面功能说明；费用、删除及网络中断提示保留在相关操作中。应用品牌与浏览器标题统一为 `LightSail Panel`。
+公共布局统一侧栏、面包屑导航及主内容区间距。资源列表汇总全部账户与区域；创建及分配操作保留各自的目标选择器。账户管理移入 `/settings` 设置页，复用原有的添加、验证、移除和凭证加密流程。主要操作置于页面标题右侧；实例概况集中显示数量与单一刷新时间，筛选控件紧邻列表。防火墙和流量页面使用紧凑实例选择器，不重复页面功能说明；费用、删除及网络中断提示保留在相关操作中。应用品牌与浏览器标题统一为 `LightSail Panel`。
 
 `Field` 为非密码输入和文本域统一设置 `autocomplete="off"` 及密码管理器忽略标记；搜索、复选框、网络选项和 xterm 输入区使用相同策略。管理员密码保留 `current-password` / `new-password` 语义，不在页面或整个表单上禁用密码管理器。AWS Access Key 属于接口凭证，包含遮蔽显示的 Secret Access Key，均按手动输入字段处理。忽略标记参照 [1Password 开发文档](https://www.1password.dev/web/compatible-website-design)及 [Dashlane 表单文档](https://support.dashlane.com/hc/en-us/articles/4420122792594-Optimize-your-web-forms-for-Dashlane-autofill)，扩展是否遵循标记取决于其实现和设置。
 
@@ -147,3 +147,11 @@ Compose 数据卷标识与实际卷名均为 `lightsail-panel-data`，挂载到 
 功能扩展须同步定义共享类型、参数校验、AWS 方法、HTTP 路由和前端模块。新增 AWS 命令须核对 IAM 策略并补充业务测试。
 
 本地验证命令为 `pnpm check`、`pnpm test` 和 `pnpm build`。运行标识测试在独立子进程中验证进程标题、线程名称和健康检查退出码。Docker CI 在 amd64、arm64 上验证构建、启动命令、PID 1、线程名称、健康接口、初始化状态、前端资源、非 root 运行和 SIGTERM 退出；发布阶段验证 Compose 容器名称与数据卷挂载。
+
+## Telegram 通知
+
+`server/notifications.mjs` 订阅服务端审计结果与资源快照事件。仅对成功或失败的资源操作生成通知；处理中状态不投递。实例状态及 IP 变化按账户、区域的成功采集建立持久化基线，聚合查询和首次基线不重复发送。监控异常与恢复分别记录，持续异常不重复推送。通知监听失败不会改变 AWS 操作结果。
+
+`server/http/settings.mjs` 提供经会话认证和 CSRF 校验的设置、通知记录及测试接口。Token 使用 Store 的 AES-256-GCM 加密能力，公开设置仅返回已配置标记。`notification_outbox` 保存投递状态，`notification_state` 保存变化基线与日报去重记录；队列不保存 Bot Token。发送具备超时、有限重试、429 退避和服务停止取消机制，后台运行独立于页面会话。
+
+日报按配置的 IANA 时区读取既有快照，不新增 AWS 读取。通知设置修改仅更新本地设置及通知记录缓存，不使资源快照失效。SSE 仍仅传递事件类型或查询标识，新增 `notifications` 事件用于同步投递状态。配置、触发范围和边界见 [Telegram 通知](TELEGRAM.md)。

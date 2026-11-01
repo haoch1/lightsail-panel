@@ -42,12 +42,28 @@ export function useApi<T>(
       if (path && matchesUpdate(path, (event as CustomEvent).detail))
         revise((r) => ({ version: r.version + 1, manual: false }));
     };
+    const notificationsUpdated = () => {
+      if (path !== "/notifications" && path !== "/settings") return;
+      clearTimeout(timer);
+      timer = setTimeout(
+        () => revise((r) => ({ version: r.version + 1, manual: false })),
+        50,
+      );
+    };
     window.addEventListener("panel:resources-updated", updated);
     window.addEventListener("panel:audit-updated", auditUpdated);
+    window.addEventListener(
+      "panel:notifications-updated",
+      notificationsUpdated,
+    );
     return () => {
       clearTimeout(timer);
       window.removeEventListener("panel:resources-updated", updated);
       window.removeEventListener("panel:audit-updated", auditUpdated);
+      window.removeEventListener(
+        "panel:notifications-updated",
+        notificationsUpdated,
+      );
     };
   }, [path]);
   const refresh = useCallback(

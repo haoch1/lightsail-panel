@@ -1,4 +1,4 @@
-import { awsRegionOptions, regionLabel } from "../../shared/regions";
+import { awsRegionOptions } from "../../shared/regions";
 import {
   AlertCircle,
   ArrowDownUp,
@@ -7,21 +7,19 @@ import {
   ChevronRight,
   Cloud,
   Clock,
-  Globe,
   LogOut,
   Menu,
   Rocket,
   ScrollText,
   Shield,
   Timer,
-  UsersRound,
+  Settings as SettingsIcon,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Account, Region, ToastFn } from "../../shared/types";
 import { ErrorBox } from "../components/ui";
-import Select from "../components/ui/Select";
-import Accounts from "../features/accounts/Accounts";
+import Settings from "../features/settings/Settings";
 import Audit from "../features/audit/Audit";
 import Auth from "../features/auth/Auth";
 import SessionDialog from "../features/auth/SessionDialog";
@@ -43,6 +41,7 @@ const nav = [
   { path: "/lightsail/firewall", label: "防火墙", icon: Shield },
   { path: "/lightsail/traffic", label: "流量统计", icon: ArrowDownUp },
   { path: "/audit", label: "操作日志", icon: ScrollText },
+  { path: "/settings", label: "设置", icon: SettingsIcon },
 ];
 const validPath = (path: string) =>
   nav.some((n) => n.path === path) ? path : "/lightsail";
@@ -57,12 +56,11 @@ export default function App() {
     expires?: number;
   } | null>(demo ? { initialized: true, authenticated: true } : bootstrap);
   const [path, setPath] = useState(initialPath);
-  const [accountId, setAccountId] = useState("all");
-  const [region, setRegion] = useState("all");
+  const accountId = "all";
+  const region = "all";
   const [mobile, setMobile] = useState(false);
   const navigation = useMobileNavigation(mobile, () => setMobile(false));
   const [sessionDialog, setSessionDialog] = useState(false);
-  const [manageAccounts, setManageAccounts] = useState(false);
   const [notices, setNotices] = useState<
     { id: number; message: string; type: string }[]
   >([]);
@@ -77,19 +75,13 @@ export default function App() {
     auth?.authenticated ? "/accounts" : null,
   );
   const accounts = accountData.data?.items || [];
-  const selected = accounts.find((a) => a.id === accountId) || accounts[0];
+  const selected = accounts[0];
   const regionData = useApi<{ items: Region[] }>(
-    selected ? `/regions?accountId=${selected.id}&service=lightsail` : null,
+    selected && path === "/lightsail/launch"
+      ? `/regions?accountId=${selected.id}&service=lightsail`
+      : null,
   );
   const regions = regionData.data?.items || awsRegionOptions;
-  useEffect(() => {
-    if (
-      accountData.data &&
-      accountId !== "all" &&
-      !accounts.some((a) => a.id === accountId)
-    )
-      setAccountId("all");
-  }, [accountData.data, accountId]);
   useEffect(() => {
     if (demo || bootstrap) return;
     let active = true;
@@ -159,6 +151,7 @@ export default function App() {
   else if (path === "/lightsail/firewall") page = <Firewall />;
   else if (path === "/lightsail/traffic") page = <TrafficPage />;
   else if (path === "/audit") page = <Audit />;
+  else if (path === "/settings") page = <Settings />;
   else page = <Instances />;
   return (
     <PanelContext.Provider
@@ -170,7 +163,7 @@ export default function App() {
         toast,
         navigate,
         refreshAccounts: accountData.refresh,
-        openAccounts: () => setManageAccounts(true),
+        openAccounts: () => navigate("/settings"),
         demo,
       }}
     >
@@ -249,56 +242,7 @@ export default function App() {
                 <strong>{nav.find((n) => n.path === path)?.label}</strong>
               </nav>
             </div>
-            <div className="top-control">
-              <Select
-                disabled={entering}
-                className="region-select"
-                searchable
-                icon={<Globe size={15} />}
-                aria-label="区域范围"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-              >
-                <option value="all">全部区域</option>
-                {regions.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {regionLabel(r.id)}
-                  </option>
-                ))}
-                {!regions.some((r) => r.id === region) && region !== "all" && (
-                  <option value={region}>{regionLabel(region)}</option>
-                )}
-              </Select>
-            </div>
             <div className="top-right">
-              <div className="top-control account-control">
-                <Select
-                  disabled={entering}
-                  className="account-select"
-                  searchable
-                  icon={<Cloud size={15} />}
-                  aria-label="AWS 账户"
-                  value={accountId}
-                  onChange={(e) => setAccountId(e.target.value)}
-                >
-                  <option value="all">
-                    {entering || accounts.length ? "全部账户" : "未添加账户"}
-                  </option>
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <button
-                disabled={entering}
-                className="button account-manager-button"
-                aria-label="AWS 账户管理"
-                onClick={() => setManageAccounts(true)}
-              >
-                <UsersRound size={16} /> <span>AWS 账户管理</span>
-              </button>
               {!demo && (
                 <button
                   disabled={entering}
@@ -364,9 +308,6 @@ export default function App() {
               toast("登录有效期已更新");
             }}
           />
-        )}
-        {manageAccounts && (
-          <Accounts onClose={() => setManageAccounts(false)} />
         )}
         <div className="toasts" aria-live="polite">
           {notices.map((n) => (

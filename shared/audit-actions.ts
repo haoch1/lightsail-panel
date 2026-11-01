@@ -27,6 +27,10 @@ const labels: Record<string, string> = {
   "traffic-limit": "设置自动关机",
   "traffic-auto-stop": "执行自动关机",
   "traffic-auto-stop-check": "检查自动关机规则",
+  "notification-settings": "设置 Telegram 通知",
+  "notification-sent": "发送 Telegram 通知",
+  "notification-failed": "发送 Telegram 通知",
+  "notification-retry": "重试 Telegram 通知",
 };
 
 export function auditActionLabel(action: string) {

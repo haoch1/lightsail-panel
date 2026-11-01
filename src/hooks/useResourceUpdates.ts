@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { LaunchNetworkJob } from "../../shared/types";
-import { api, invalidateAudit } from "../lib/api";
+import { api, invalidateAudit, invalidateNotifications } from "../lib/api";
 import { resourceCache } from "../lib/resource-cache";
 import { matchesUpdate } from "../../shared/resource-update";
 let jobs: LaunchNetworkJob[] = [];
@@ -99,6 +99,7 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
     const visible = () => {
       if (!document.hidden) {
         invalidateAudit();
+        invalidateNotifications();
         revalidateSnapshots();
         void load();
       }
@@ -156,6 +157,8 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
         streaming = true;
         lastEventAt = Date.now();
         if (data === "audit" || data === "ready") invalidateAudit();
+        if (data === "notifications" || data === "ready")
+          invalidateNotifications();
         if (data === "operations" || data === "ready") void load();
         if (data.startsWith("snapshot:"))
           snapshotChanged(decodeURIComponent(data.slice(9)));
@@ -172,6 +175,7 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
         !document.hidden
       ) {
         invalidateAudit();
+        invalidateNotifications();
         revalidateSnapshots();
       }
     }, 30000);

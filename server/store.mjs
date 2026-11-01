@@ -15,8 +15,8 @@ import { auditDefaultDetail } from "../shared/audit-actions.ts";
 export class Store {
   onClose = new Set();
   onEvent = new Set();
-  emit(type) {
-    for (const listener of this.onEvent) listener(type);
+  emit(type, data) {
+    for (const listener of this.onEvent) listener(type, data);
   }
   constructor(dir) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
@@ -219,7 +219,10 @@ export class Store {
     this.db.exec(
       "DELETE FROM audit WHERE id IN (SELECT id FROM audit ORDER BY at DESC LIMIT -1 OFFSET 5000)",
     );
-    this.emit("audit");
+    this.emit(
+      "audit",
+      this.db.prepare("SELECT * FROM audit WHERE id=?").get(id),
+    );
     return id;
   }
   updateAudit(id, { status, detail }) {
@@ -229,7 +232,11 @@ export class Store {
         "UPDATE audit SET status=?,detail=? WHERE id=? AND status='submitted' AND (status<>? OR detail<>?)",
       )
       .run(status, text, id, status, text).changes;
-    if (changed) this.emit("audit");
+    if (changed)
+      this.emit(
+        "audit",
+        this.db.prepare("SELECT * FROM audit WHERE id=?").get(id),
+      );
     return Number(changed);
   }
   logs() {

@@ -3,7 +3,7 @@
 [![Docker CI](https://github.com/haoch1/lightsail-panel/actions/workflows/ci.yml/badge.svg)](https://github.com/haoch1/lightsail-panel/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-LightSail Panel 是 Amazon Lightsail 的自托管中文管理面板，支持多账户与跨区域资源管理、网页 SSH、流量统计、阈值自动关机和登录有效期设置。
+LightSail Panel 是 Amazon Lightsail 的自托管中文管理面板，支持多账户与跨区域资源管理、网页 SSH、流量统计、阈值自动关机、Telegram 通知和登录有效期设置。
 
 应用采用 React、TypeScript 和 Node.js 24，使用 AWS SDK for JavaScript v3 调用 Lightsail 与 STS API。账户凭证以 AES-256-GCM 加密保存，应用数据持久化至 SQLite。
 
@@ -34,8 +34,9 @@ LightSail Panel 是 Amazon Lightsail 的自托管中文管理面板，支持多�
 | 流量统计 | 本月、近 7 天、近 30 天；入站、出站与合计流量；每日柱状图与可折叠明细                                                                       |
 | 自动关机 | 每台实例独立设置 0.1–100% 的套餐流量阈值；按本月入站＋出站合计判断；每 5 分钟后台检查并停止达到阈值的实例                                   |
 | 登录管理 | 12 小时、1 天、7 天、30 天、90 天有效期；默认 30 天；当前浏览器会话续期与退出                                                               |
-| 账户管理 | Access Key ID 与 Secret Access Key 身份验证、加密保存、重新验证和移除                                                                       |
+| 账户管理 | 在设置页管理 Access Key ID 与 Secret Access Key；支持身份验证、加密保存、重新验证和移除                                                     |
 | 操作日志 | 操作名称、目标、处理状态及结果详情；状态实时更新；日志清理                                                                                  |
+| Telegram | 可选通知类型、每日汇总、消息示例、测试通知、持久化投递队列与失败重试；详见 [Telegram 通知](docs/TELEGRAM.md)                                |
 
 ## Docker 部署
 
@@ -83,7 +84,7 @@ curl -fsS http://127.0.0.1:8090/api/health
 健康检查返回示例：
 
 ```json
-{ "ok": true, "version": "1.8.8", "service": "lightsail" }
+{ "ok": true, "version": "1.9.0", "service": "lightsail" }
 ```
 
 远程连接可使用 SSH 端口转发：
@@ -146,7 +147,7 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 
 ### 将凭证添加到面板
 
-1. 登录 LightSail Panel，点击右上角 **AWS 账户管理**。
+1. 登录 LightSail Panel，进入侧栏 **设置 → AWS 账户**。
 2. 选择 **添加 AWS 账户**，填写以下三项：
 
    | 字段              | 内容                                    |
@@ -157,7 +158,7 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 
 3. 点击 **验证并保存**。应用通过 `STS GetCallerIdentity` 验证身份，成功后加密保存凭证。
 
-账户验证仅确认凭证身份。资源操作受 IAM 权限、区域状态和配额限制，目标区域在资源页面选择。
+账户验证仅确认凭证身份。资源操作受 IAM 权限、区域状态和配额限制，创建实例和分配静态 IP 时选择目标账户与区域；其余资源操作沿用目标资源的账户与区域。
 
 密钥和 CSV 不应提交至 Git 仓库。移除面板账户不会停用 AWS Access Key 或删除云资源；撤销访问需在 AWS **Security credentials → Access keys** 中停用或删除密钥。
 
@@ -165,7 +166,7 @@ ssh -N -L 8090:127.0.0.1:8090 user@server
 
 ### 查询与管理实例
 
-顶部区域与账户选择器默认为 **全部区域** 与 **全部账户**。实例页汇总实例总数、运行中及已停止数量，支持名称、IP 和状态筛选；**操作** 菜单提供单实例管理，列表复选框支持批量操作。
+资源页汇总全部已接入账户与区域，顶部不再提供全局区域和账户筛选。实例页汇总实例总数、运行中及已停止数量，支持名称、IP 和状态筛选；**操作** 菜单提供单实例管理，列表复选框支持批量操作。
 
 价格按 AWS 套餐月价展示，停止后仍计费。停止与重启会中断服务，删除不可恢复。
 
@@ -247,6 +248,10 @@ Docker 镜像内置 OpenSSH 客户端，源码部署须安装该客户端。反�
 移动端导航支持关闭按钮、遮罩和 Esc 退出；打开时锁定背景滚动与键盘焦点。下拉选项按视口空间向上或向下展开，保持页面滚动位置。
 
 界面支持浅色、暗色和跟随系统主题，提供可搜索的资源选择器、键盘操作和移动端卡片布局。控件、弹窗、表格及响应式断点见 [界面规范](docs/UI.md)。
+
+### Telegram 通知
+
+在 **设置 → Telegram 通知** 配置 Bot Token、Chat ID 与通知类型，保存后测试投递。通知默认关闭，后台发送独立于浏览器，复用既有采集与操作结果，不增加 AWS API 查询。Token 加密保存；设置页显示最近 20 条投递结果。具体触发条件、日报时区、重试和配置步骤见 [Telegram 通知文档](docs/TELEGRAM.md)。
 
 ## HTTPS 反向代理
 
@@ -434,7 +439,7 @@ PANEL_IMAGE=lightsail-panel:local docker compose up -d --pull never
 
 GitHub Actions 在 amd64 和 arm64 原生 runner 上完成构建、测试、容器启动及 Compose 部署验证后发布镜像；Pull Request 仅验证。容器以非 root 用户运行，启用 `no-new-privileges` 并移除 Linux capabilities。
 
-演示入口：`/lightsail?demo=1`。数据与操作在浏览器内模拟，包括流量进度、自动关机设置和 SSH 终端，不调用 AWS API。
+演示入口：`/lightsail?demo=1`。数据与操作在浏览器内模拟，包括流量进度、自动关机设置、SSH 终端及设置页，不调用 AWS 或 Telegram API。演示模式请勿输入真实凭证。
 
 ## 许可证
 

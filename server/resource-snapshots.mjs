@@ -197,7 +197,7 @@ export class ResourceSnapshots {
             entry.expires,
             value,
           );
-          this.store.emit("snapshot:" + encodeURIComponent(key));
+          this.store.emit("snapshot:" + encodeURIComponent(key), { value });
         }
         return value;
       })
@@ -206,7 +206,9 @@ export class ResourceSnapshots {
           entry.error = scrubError(error);
           entry.expires = nextRefreshAt(this.now());
           if (!entry.value && error.result) entry.value = error.result;
-          this.store.emit("snapshot:" + encodeURIComponent(key));
+          this.store.emit("snapshot:" + encodeURIComponent(key), {
+            error: entry.error,
+          });
         }
         if (!entry.value) throw error;
         return entry.value;

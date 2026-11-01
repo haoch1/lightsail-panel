@@ -1,0 +1,199 @@
+.settings-page {
+  display: grid;
+  gap: 24px;
+}
+.settings-page > .page-heading {
+  margin-bottom: 0;
+}
+.settings-page .form-panel {
+  margin-bottom: 0;
+  min-width: 0;
+}
+.settings-page .section-heading h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settings-page .section-heading .check-label {
+  margin: 0;
+}
+.settings-accounts .account-manager-toolbar {
+  margin-bottom: 20px;
+}
+.settings-accounts .account-manager-toolbar h2 {
+  margin: 0 auto 0 0;
+}
+.settings-accounts .account-table {
+  margin-bottom: 0;
+}
+.settings-accounts .row-actions {
+  flex-wrap: nowrap;
+}
+.settings-accounts .account-table table {
+  min-width: 640px;
+}
+.notification-settings > .section-heading {
+  margin-bottom: 24px;
+}
+.notification-settings form > .check-label {
+  margin: -2px 0 20px;
+}
+.notification-types {
+  border: 0;
+  border-top: 1px solid var(--border);
+  padding: 20px 0 0;
+  margin: 24px 0;
+  min-width: 0;
+}
+.notification-types legend {
+  float: left;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  padding: 0;
+  font-weight: 500;
+}
+.notification-selection-actions {
+  display: flex;
+  gap: 8px;
+}
+.notification-type-grid {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px 24px;
+}
+.notification-report-settings {
+  margin-top: 20px;
+}
+.notification-report-settings input[type="time"] {
+  height: 40px;
+  min-height: 40px;
+}
+.notification-preview {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.notification-preview .section-heading {
+  margin-bottom: 16px;
+}
+.notification-preview .section-heading h3 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+.notification-preview .custom-select {
+  width: 200px;
+}
+.notification-example {
+  border: 1px solid var(--border);
+  background: var(--subtle);
+  border-radius: 8px;
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.notification-example b {
+  font-weight: 600;
+}
+.notification-message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.notification-example blockquote {
+  margin: 12px 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--control-border);
+  white-space: pre-wrap;
+}
+.settings-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+.notification-table th:first-child {
+  width: 180px;
+}
+.notification-table th:last-child {
+  width: 140px;
+}
+.notification-table details > summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.notification-message {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin-bottom: 0;
+}
+.notification-status {
+  font-size: 13px;
+  color: var(--muted);
+}
+.notification-status.sent {
+  color: var(--success);
+}
+.notification-status.failed {
+  color: var(--danger);
+}
+.settings-loading {
+  min-height: 200px;
+  color: var(--muted);
+}
+@media (min-width: 901px) and (max-width: 1200px) {
+  .breadcrumb {
+    display: flex;
+  }
+}
+@media (max-width: 1000px) {
+  .notification-type-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .settings-page {
+    gap: 20px;
+  }
+  .settings-accounts .account-table table {
+    min-width: 0;
+  }
+  .settings-accounts .account-manager-toolbar {
+    gap: 12px;
+  }
+  .settings-accounts .account-manager-toolbar > .button {
+    margin-left: auto;
+  }
+  .notification-type-grid {
+    gap: 16px 12px;
+  }
+  .notification-preview .section-heading {
+    flex-wrap: wrap;
+  }
+  .notification-table th:first-child,
+  .notification-table th:last-child {
+    width: auto;
+  }
+  .notification-history .responsive-table tr {
+    gap: 18px;
+  }
+  .notification-history .responsive-table td {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 360px) {
+  .notification-type-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

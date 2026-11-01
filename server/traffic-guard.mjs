@@ -175,6 +175,7 @@ export class TrafficGuard {
   async check(rule) {
     const now = this.clock();
     if (!this.saveProgress(rule, { nextCheckAt: nextRefreshAt(now) })) return;
+    let stopAttempted = false;
     try {
       const instance = await this.instance(rule);
       if (!this.active(rule)) return;
@@ -252,6 +253,7 @@ export class TrafficGuard {
         service: "lightsail",
         action: "stop",
       };
+      stopAttempted = true;
       const result = await this.gateway.perform(target);
       if (this.closed) return;
       const detail = `本月入站＋出站达到 ${usedPercent.toFixed(2)}%，阈值 ${rule.thresholdPercent}%`;
@@ -293,7 +295,9 @@ export class TrafficGuard {
       if (rule.lastError !== detail) {
         this.store.audit({
           account: rule.accountId,
-          action: "traffic-auto-stop-check",
+          action: stopAttempted
+            ? "traffic-auto-stop"
+            : "traffic-auto-stop-check",
           target: rule.id,
           status: "failed",
           detail,

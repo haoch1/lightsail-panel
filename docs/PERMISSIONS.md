@@ -47,3 +47,5 @@
 - [SetIpAddressType](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_SetIpAddressType.html)
 - [GetInstanceAccessDetails](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_GetInstanceAccessDetails.html)、[临时 SSH 凭证](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_InstanceAccessDetails.html)、[DownloadDefaultKeyPair](https://docs.aws.amazon.com/lightsail/2016-11-28/api-reference/API_DownloadDefaultKeyPair.html)
 - [指标及保留期](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-resource-health-metrics.html)、[流量额度与计费](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-faq-data-transfer-allowance.html)
+
+Telegram 通知在面板服务端通过 HTTPS 发送，复用既有资源快照与操作结果，无需新增 AWS IAM 权限或启用计费查询接口。

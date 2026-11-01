@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cloneElement, isValidElement, useId } from "react";
 import Select from "./Select";
+import { Input } from "./Input";
 import { ignoreAutofill } from "../../lib/input-autofill";
 export function Field({
   label,
@@ -16,7 +17,8 @@ export function Field({
     isValidElement(children) &&
     ((typeof children.type === "string" &&
       ["input", "select", "textarea"].includes(children.type)) ||
-      children.type === Select);
+      children.type === Select ||
+      children.type === Input);
   const control = native
     ? cloneElement(
         children as React.ReactElement<{

@@ -13,6 +13,8 @@ import { registerInstances } from "./http/instances.mjs";
 import { registerMonitoring } from "./http/monitoring.mjs";
 import { registerNetworking } from "./http/networking.mjs";
 import { registerSsh } from "./http/ssh.mjs";
+import { registerSettings } from "./http/settings.mjs";
+import { Notifications } from "./notifications.mjs";
 import { SshSessions } from "./ssh/sessions.mjs";
 import { ResourceSnapshots } from "./resource-snapshots.mjs";
 import { LaunchNetworkQueue } from "./launch-network.mjs";
@@ -28,11 +30,14 @@ export function createApp(
     dist = resolve("dist"),
     sshOpener,
     collectResources = false,
+    notificationSender,
   } = {},
 ) {
   const app = express();
   const reads = new ResourceSnapshots(store, gateway);
   app.locals.snapshots = reads;
+  const notifications = new Notifications(store, { send: notificationSender });
+  app.locals.notifications = notifications;
   const ssh = new SshSessions(store, gateway, {
     publicOrigin,
     opener: sshOpener,
@@ -198,6 +203,7 @@ export function createApp(
   const services = {
     store,
     gateway,
+    notifications,
     ssh,
     read: reads.read.bind(reads),
     ...routeContext(store),
@@ -238,6 +244,8 @@ export function createApp(
   registerNetworking(app, services);
   registerAudit(app, services);
   registerEvents(app, services);
+  registerSettings(app, services);
+  notifications.start();
   if (collectResources) reads.start();
   app.use("/api", (_req, res) => res.status(404).json({ error: "接口不存在" }));
   if (existsSync(dist)) {

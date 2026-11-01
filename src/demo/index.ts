@@ -1,6 +1,11 @@
 import { aggregateTraffic, trafficRange } from "../../shared/traffic.mjs";
 import { normalizePortRule, portRuleCovered } from "../../shared/firewall";
 import { auditDefaultDetail } from "../../shared/audit-actions";
+import { defaultNotifications } from "../../shared/notifications";
+import type {
+  NotificationSettings,
+  NotificationRecord,
+} from "../../shared/notifications";
 import type {
   Account,
   AuditEntry,
@@ -123,6 +128,9 @@ const logs: AuditEntry[] = [
 ];
 const rules = new Map<string, PortInfo[]>();
 const trafficLimits = new Map<string, TrafficLimitRule>();
+let notificationSettings: NotificationSettings =
+  structuredClone(defaultNotifications);
+const notificationHistory: NotificationRecord[] = [];
 let nextIp = 90;
 function audit(action: string, target: string) {
   logs.unshift({
@@ -143,6 +151,42 @@ export async function demoApi(
   await new Promise((r) => setTimeout(r, 120));
   const [p, search] = path.split("?"),
     q = new URLSearchParams(search);
+  if (p === "/settings") {
+    if (method === "PUT") {
+      const { clearToken, ...input } = body.notifications;
+      const configured = clearToken
+        ? false
+        : !!input.telegramToken || notificationSettings.telegramConfigured;
+      if (input.telegramEnabled && (!configured || !input.telegramChatId))
+        throw Error("启用 Telegram 前须填写 Bot Token 和 Chat ID");
+      notificationSettings = {
+        ...input,
+        telegramToken: "",
+        telegramConfigured: configured,
+      };
+      audit("notification-settings", "Telegram");
+    }
+    return { notifications: structuredClone(notificationSettings) };
+  }
+  if (p === "/notifications") return { items: [...notificationHistory] };
+  if (p === "/notifications/test") {
+    if (
+      !notificationSettings.telegramEnabled ||
+      !notificationSettings.telegramConfigured
+    )
+      throw Error("请先保存并启用 Telegram 配置");
+    notificationHistory.unshift({
+      id: crypto.randomUUID(),
+      at: new Date().toISOString(),
+      type: "test",
+      title: "Telegram 测试通知",
+      message: "演示模式：仅模拟发送，未访问 Telegram。",
+      status: "sent",
+      attempts: 1,
+    });
+    notificationHistory.splice(20);
+    return { queued: true };
+  }
   const matches = (
     i: { accountId: string; region: string },
     a = q.get("accountId"),

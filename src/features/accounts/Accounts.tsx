@@ -11,7 +11,13 @@ import {
 import { api } from "../../lib/api";
 import AddAccount from "./AddAccount";
 
-export default function Accounts({ onClose }: { onClose: () => void }) {
+export default function Accounts({
+  onClose = () => {},
+  embedded = false,
+}: {
+  onClose?: () => void;
+  embedded?: boolean;
+}) {
   const { accounts, toast, refreshAccounts, demo } = usePanel();
   const [add, setAdd] = useState(false);
   const [remove, setRemove] = useState<Account | null>(null);
@@ -74,87 +80,86 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
         </div>
       </>
     );
-  else
-    content = (
-      <>
-        <div className="account-manager-toolbar">
-          <button
-            className="button primary"
-            onClick={() => setAdd(true)}
-            disabled={!!busy}
-          >
-            <Plus size={15} /> 添加 AWS 账户
-          </button>
-        </div>
-        <div className="table-wrap account-table">
-          <table className="responsive-table">
-            <thead>
-              <tr>
-                <th>账户</th>
-                <th>AWS Account ID</th>
-                <th>凭证</th>
-                <th>操作</th>
+
+  const list = (
+    <>
+      <div className="account-manager-toolbar">
+        {embedded && <h2>AWS 账户</h2>}
+        <button
+          className="button primary"
+          onClick={() => setAdd(true)}
+          disabled={!!busy}
+        >
+          <Plus size={15} /> 添加 AWS 账户
+        </button>
+      </div>
+      <div className="table-wrap account-table">
+        <table className="responsive-table">
+          <thead>
+            <tr>
+              <th>账户</th>
+              <th>AWS Account ID</th>
+              <th>凭证</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {accounts.map((account) => (
+              <tr key={account.id}>
+                <td data-label="账户">
+                  <strong>{account.name}</strong>
+                </td>
+                <td data-label="AWS Account ID" className="numeric">
+                  {account.awsAccountId}
+                </td>
+                <td data-label="凭证">
+                  <KeyRound size={12} className="inline-icon" />
+                  {account.keyHint}
+                </td>
+                <td data-label="操作">
+                  <div className="row-actions">
+                    <RefreshButton
+                      text="验证"
+                      className="small"
+                      loading={busy === account.id}
+                      onClick={async () => {
+                        if (busy) return;
+                        setBusy(account.id);
+                        try {
+                          await api("/accounts/" + account.id + "/verify", {});
+                          toast(demo ? "演示验证完成" : "AWS 身份验证通过");
+                        } catch (e) {
+                          toast((e as Error).message, "error");
+                        } finally {
+                          setBusy("");
+                        }
+                      }}
+                    />
+                    <button
+                      className="button small danger-text"
+                      disabled={!!busy}
+                      aria-label={"删除账户 " + account.name}
+                      onClick={() => setRemove(account)}
+                    >
+                      <Trash2 size={15} /> 删除
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {accounts.map((account) => (
-                <tr key={account.id}>
-                  <td data-label="账户">
-                    <strong>{account.name}</strong>
-                  </td>
-                  <td data-label="AWS Account ID" className="numeric">
-                    {account.awsAccountId}
-                  </td>
-                  <td data-label="凭证">
-                    <KeyRound size={12} className="inline-icon" />
-                    {account.keyHint}
-                  </td>
-                  <td data-label="操作">
-                    <div className="row-actions">
-                      <RefreshButton
-                        text="验证"
-                        className="small"
-                        loading={busy === account.id}
-                        onClick={async () => {
-                          if (busy) return;
-                          setBusy(account.id);
-                          try {
-                            await api(
-                              "/accounts/" + account.id + "/verify",
-                              {},
-                            );
-                            toast(demo ? "演示验证完成" : "AWS 身份验证通过");
-                          } catch (e) {
-                            toast((e as Error).message, "error");
-                          } finally {
-                            setBusy("");
-                          }
-                        }}
-                      />
-                      <button
-                        className="button small danger-text"
-                        disabled={!!busy}
-                        aria-label={"删除账户 " + account.name}
-                        onClick={() => setRemove(account)}
-                      >
-                        <Trash2 size={15} /> 删除
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {!accounts.length && (
-            <Empty
-              title="尚未添加 AWS 账户"
-              description="使用 Access Key ID 与 Secret Access Key 添加账户。"
-            />
-          )}
-        </div>
-      </>
-    );
-  return (
+            ))}
+          </tbody>
+        </table>
+        {!accounts.length && (
+          <Empty
+            title="尚未添加 AWS 账户"
+            description="使用 Access Key ID 与 Secret Access Key 添加账户。"
+          />
+        )}
+      </div>
+    </>
+  );
+  if (!add && !remove) content = list;
+  const modal = (
     <Modal
       title={add ? "添加 AWS 账户" : remove ? "移除 AWS 账户" : "AWS 账户"}
       description={
@@ -176,5 +181,13 @@ export default function Accounts({ onClose }: { onClose: () => void }) {
     >
       {content}
     </Modal>
+  );
+  return embedded ? (
+    <>
+      {list}
+      {(add || remove) && modal}
+    </>
+  ) : (
+    modal
   );
 }
