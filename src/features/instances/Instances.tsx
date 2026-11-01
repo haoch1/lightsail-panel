@@ -41,7 +41,6 @@ import {
   SearchInput,
   State,
   targetOf,
-  when,
 } from "../../components/ui";
 import Select from "../../components/ui/Select";
 import { ActionMenu } from "../../components/ui/ActionMenu";
@@ -161,7 +160,7 @@ export default function Instances() {
           <RefreshButton onClick={refresh} loading={loading} />
           <button
             className="button primary"
-            onClick={() => navigate("/lightsail/launch")}
+            onClick={() => navigate("/launch")}
           >
             <Rocket size={16} />
             创建实例
@@ -189,18 +188,6 @@ export default function Instances() {
                 : "—"}
             </strong>
           </span>
-        </div>
-        <div className="instance-times">
-          {data?.at && (
-            <span
-              title={`实例更新：${when(data.itemsAt || data.at)}${usage.at ? `\n流量更新：${when(usage.at)}` : ""}`}
-            >
-              上次刷新{" "}
-              {when(
-                [data.itemsAt || data.at, usage.at].filter(Boolean).sort()[0],
-              )}
-            </span>
-          )}
         </div>
       </div>
       <ScanNotices scan={data} />
@@ -525,7 +512,7 @@ export default function Instances() {
                   className="button"
                   onClick={() =>
                     accounts.length
-                      ? navigate("/lightsail/launch")
+                      ? navigate("/launch")
                       : openAccounts()
                   }
                 >

@@ -1,6 +1,5 @@
 import { useInstances } from "../../hooks/useInstances";
 import ScanNotices from "../../components/ScanNotices";
-import { regionLabel } from "../../../shared/regions";
 import { Shield } from "lucide-react";
 import { useState } from "react";
 import type { Scan } from "../../../shared/types";
@@ -30,6 +29,7 @@ export default function Firewall() {
       <section className="resource-picker">
         <Field label="实例">
           <Select
+            aria-label="选择实例"
             searchable
             disabled={initialLoading}
             value={instance ? key(instance) : ""}
@@ -40,7 +40,7 @@ export default function Firewall() {
             </option>
             {data.data?.items.map((i) => (
               <option key={key(i)} value={key(i)}>
-                {i.name} · {i.accountName} · {regionLabel(i.region)}
+                {i.name}
               </option>
             ))}
           </Select>

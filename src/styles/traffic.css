@@ -8,7 +8,7 @@
   color: var(--muted);
 }
 .traffic-instance-picker .custom-select {
-  width: min(520px, 100%);
+  width: min(240px, 100%);
   min-width: 0;
 }
 .traffic-content .toolbar {
@@ -329,7 +329,7 @@
   margin: 0;
 }
 .resource-picker .custom-select {
-  width: min(520px, 100%);
+  width: min(240px, 100%);
 }
 .resource-picker .field > label {
   color: var(--muted);

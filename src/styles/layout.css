@@ -635,11 +635,6 @@ tr[data-selected] {
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums lining-nums;
 }
-.instance-times {
-  color: var(--muted);
-  font-size: var(--font-xs);
-  font-variant-numeric: tabular-nums;
-}
 .toolbar-actions,
 .toolbar-filters,
 .row-actions {

@@ -39,7 +39,9 @@
   font-size: var(--font-sm);
 }
 .resource-picker .custom-select {
-  width: min(100%, 520px);
+  width: min(100%, 240px);
+  max-width: 240px;
+  min-width: 0;
 }
 .resource-note {
   margin: 12px 0 0;

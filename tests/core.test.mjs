@@ -474,7 +474,16 @@ test("entry bootstraps only verified session metadata, escapes HTML, and never c
     assert.ok(raw);
     return { html, data: JSON.parse(raw) };
   }
-  for (const path of ["/lightsail", "/audit", "/index.html"]) {
+  for (const path of [
+    "/instances",
+    "/traffic",
+    "/launch",
+    "/ips",
+    "/firewall",
+    "/settings",
+    "/audit",
+    "/index.html",
+  ]) {
     const anonymous = await read(path);
     assert.deepEqual(anonymous.data, {
       initialized: true,
@@ -496,7 +505,7 @@ test("entry bootstraps only verified session metadata, escapes HTML, and never c
   }
   store.deleteSession(session.token);
   assert.equal(
-    (await read("/lightsail", "panel_session=" + session.token)).data
+    (await read("/instances", "panel_session=" + session.token)).data
       .authenticated,
     false,
   );

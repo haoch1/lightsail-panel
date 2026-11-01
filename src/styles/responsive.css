@@ -10,10 +10,6 @@
     flex: 1;
   }
   .topbar-left .breadcrumb {
-    display: flex;
-  }
-  .topbar-left .breadcrumb > span,
-  .topbar-left .breadcrumb > svg {
     display: none;
   }
   .topbar > .top-control {
@@ -91,9 +87,6 @@
   .topbar .account-select {
     width: 128px;
   }
-  .topbar-left .breadcrumb {
-    display: none;
-  }
   .topbar .select-trigger {
     padding: 9px 10px;
   }
@@ -121,7 +114,6 @@
   .resource-picker .custom-select {
     width: 100%;
   }
-  .resource-picker .select-value,
   .form-panel .select-value {
     white-space: normal;
     overflow-wrap: anywhere;

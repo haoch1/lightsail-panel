@@ -69,7 +69,7 @@ test("entry hydration reads bounded authorized snapshots without AWS, excludes o
     { accountId: "removed" },
   );
   add("/ssh-access", { privateKey: "NEVER_EMBED" });
-  const rows = cache.initial("/lightsail");
+  const rows = cache.initial("/instances");
   assert.equal(rows[0][1].items[0].id, "one");
   assert.ok(rows[0][1].snapshotStale);
   assert.equal(cache.active, 0);
@@ -83,17 +83,17 @@ test("entry hydration reads bounded authorized snapshots without AWS, excludes o
   );
   assert.ok(
     cache
-      .initial("/lightsail/launch")
+      .initial("/launch")
       .some(([key]) => key.startsWith("/catalog?")),
   );
   assert.ok(
     cache
-      .initial("/lightsail/traffic")
+      .initial("/traffic")
       .some(([key]) => key.startsWith("/traffic?")),
   );
   const bytes = Buffer.byteLength(JSON.stringify(rows[0]));
-  assert.equal(cache.initial("/lightsail", bytes).length, 1);
-  assert.deepEqual(cache.initial("/lightsail", 1), []);
+  assert.equal(cache.initial("/instances", bytes).length, 1);
+  assert.deepEqual(cache.initial("/instances", 1), []);
 });
 
 test("durable snapshots serve expired data immediately, deduplicate refreshes, and survive a service restart", async (t) => {

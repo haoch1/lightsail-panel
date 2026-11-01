@@ -87,7 +87,7 @@ export default function Auth({
             {initialized ? "登录" : "创建管理员并进入"}
           </PendingButton>
         </form>
-        <a className="demo-entry" href="/lightsail?demo=1">
+        <a className="demo-entry" href="/instances?demo=1">
           <FlaskConical size={15} />
           先预览演示面板
           <ArrowUpRight size={14} />

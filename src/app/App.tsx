@@ -33,18 +33,18 @@ import { ThemeControl } from "./theme";
 import { useResourceUpdates } from "../hooks/useResourceUpdates";
 import { bootstrap } from "../lib/bootstrap";
 const nav = [
-  { path: "/lightsail", label: "Lightsail 实例", icon: Cloud },
-  { path: "/lightsail/launch", label: "创建实例", icon: Rocket },
-  { path: "/lightsail/ips", label: "静态 IP", icon: Timer },
-  { path: "/lightsail/firewall", label: "防火墙", icon: Shield },
-  { path: "/lightsail/traffic", label: "流量统计", icon: ArrowDownUp },
+  { path: "/instances", label: "Lightsail 实例", icon: Cloud },
+  { path: "/launch", label: "创建实例", icon: Rocket },
+  { path: "/ips", label: "静态 IP", icon: Timer },
+  { path: "/firewall", label: "防火墙", icon: Shield },
+  { path: "/traffic", label: "流量统计", icon: ArrowDownUp },
   { path: "/audit", label: "操作日志", icon: ScrollText },
   { path: "/settings", label: "设置", icon: SettingsIcon },
 ];
 const validPath = (path: string) =>
-  nav.some((n) => n.path === path) ? path : "/lightsail";
+  nav.some((n) => n.path === path) ? path : "/instances";
 const initialPath = validPath(location.pathname);
-if (initialPath !== location.pathname)
+if (initialPath !== location.pathname || location.hash)
   history.replaceState(null, "", initialPath + location.search);
 export default function App() {
   const demo = isDemo();
@@ -81,7 +81,7 @@ export default function App() {
   const accounts = accountData.data?.items || [];
   const selected = accounts[0];
   const regionData = useApi<{ items: Region[] }>(
-    selected && path === "/lightsail/launch"
+    selected && path === "/launch"
       ? `/regions?accountId=${selected.id}&service=lightsail`
       : null,
   );
@@ -116,7 +116,8 @@ export default function App() {
     return () => window.removeEventListener("panel:unauthorized", expired);
   }, []);
   function navigate(next: string) {
-    history.pushState(null, "", next + (demo ? "?demo=1" : ""));
+    if (path !== next)
+      history.pushState(null, "", next + (demo ? "?demo=1" : ""));
     setPath(next);
     setMobile(false);
     window.scrollTo(0, 0);
@@ -150,10 +151,10 @@ export default function App() {
         )}
       </div>
     );
-  } else if (path === "/lightsail/launch") page = <Launch />;
-  else if (path === "/lightsail/ips") page = <StaticIps />;
-  else if (path === "/lightsail/firewall") page = <Firewall />;
-  else if (path === "/lightsail/traffic") page = <TrafficPage />;
+  } else if (path === "/launch") page = <Launch />;
+  else if (path === "/ips") page = <StaticIps />;
+  else if (path === "/firewall") page = <Firewall />;
+  else if (path === "/traffic") page = <TrafficPage />;
   else if (path === "/audit") page = <Audit />;
   else if (path === "/settings")
     page = (
@@ -183,10 +184,10 @@ export default function App() {
         <Sidebar open={mobile} onOpenChange={setMobile} id="panel-navigation">
           <a
             className="brand"
-            href={"/lightsail" + (demo ? "?demo=1" : "")}
+            href={"/instances" + (demo ? "?demo=1" : "")}
             onClick={(e) => {
               e.preventDefault();
-              navigate("/lightsail");
+              navigate("/instances");
             }}
           >
             <Cloud size={21} />
@@ -254,7 +255,7 @@ export default function App() {
               ) : (
                 <button
                   disabled={entering}
-                  className="icon-button"
+                  className="icon-button topbar-logout"
                   aria-label="退出登录"
                   title="退出登录"
                   onClick={async () => {
@@ -262,7 +263,7 @@ export default function App() {
                     location.reload();
                   }}
                 >
-                  <LogOut size={16} />
+                  <LogOut size={18} />
                 </button>
               )}
             </div>

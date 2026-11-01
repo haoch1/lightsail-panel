@@ -116,10 +116,10 @@ export class ResourceSnapshots {
           "/traffic",
           "/catalog",
         ].includes(resource) ||
-        (resource === "/catalog" && path !== "/lightsail/launch") ||
+        (resource === "/catalog" && path !== "/launch") ||
         (resource === "/traffic" &&
           q.get("range") !== "month" &&
-          path !== "/lightsail/traffic")
+          path !== "/traffic")
       )
         continue;
       // HTML reads existing snapshots only; they never start or await an AWS request.
