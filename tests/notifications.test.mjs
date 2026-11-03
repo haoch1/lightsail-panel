@@ -17,7 +17,9 @@ import {
   notificationIcon,
   notificationChoices,
   notificationExamples,
+  dailyNotificationSummary,
 } from "../shared/notifications.ts";
+import { regionFlag, regionNames } from "../shared/regions.ts";
 
 const root =
   process.platform === "win32"
@@ -184,7 +186,7 @@ test("notification formatting escapes resource text, shares preview styles, and 
   };
   const html = formatNotification(source, true, "Asia/Shanghai");
   assert.match(html, /^<b>🔴 流量保护关机失败<\/b>/);
-  assert.match(html, /<b>&lt;web&gt;&amp;&lt;\/blockquote&gt;<\/b>/);
+  assert.match(html, /<b>🇸🇬 &lt;web&gt;&amp;&lt;\/blockquote&gt;<\/b>/);
   assert.doesNotMatch(html, /QA|ap-southeast-1|账户|区域/);
   assert.match(html, /本月流量 <b>95\.1%<\/b>/);
   assert.match(html, /已用 1902\.4 \/ 2000\.0 GB · 剩余 97\.6 GB/);
@@ -236,6 +238,40 @@ test("daily preview dates follow the report timezone and preserve the queued rep
     ),
     /^<b>🟢 LightSail 实例日报 2026-10-31<\/b>/,
   );
+});
+
+test("daily summaries share the preview layout, use AWS country flags, and keep unavailable data distinct from zero", () => {
+  const instance = {
+    name: "Lightsail-SG",
+    region: "ap-southeast-1",
+    state: "running",
+    usedBytes: 77.88 * 1024 ** 3,
+    allowanceBytes: 200 * 1024 ** 3,
+  };
+  const expected =
+    "实例：1 · 运行中：1 · 已停止：0\n\n🇸🇬 Lightsail-SG · 运行\n本月流量 77.88 GB / 200.0 GB";
+  assert.equal(dailyNotificationSummary([instance]), expected);
+  assert.equal(notificationExamples.daily.message, expected);
+  assert.match(
+    dailyNotificationSummary([{ ...instance, usedBytes: 0 }]),
+    /本月流量 0\.00 GB \/ 200\.0 GB/,
+  );
+  assert.match(
+    dailyNotificationSummary([{ ...instance, usedBytes: undefined }]),
+    /本月流量 待同步 \/ 200\.0 GB/,
+  );
+  assert.match(
+    dailyNotificationSummary([{ ...instance, allowanceBytes: undefined }]),
+    /77\.88 GB \/ 额度待同步/,
+  );
+  assert.doesNotMatch(
+    dailyNotificationSummary([{ ...instance, allowanceBytes: -1 }]),
+    /-1|0\.0 GB/,
+  );
+  for (const region of Object.keys(regionNames))
+    assert.ok(regionFlag(region), region);
+  assert.equal(regionFlag("eu-west-1"), "🇮🇪");
+  assert.equal(regionFlag("unknown-region"), "");
 });
 
 test("traffic protection request failures notify with the default event selection without changing stop behavior", async (t) => {
@@ -323,6 +359,11 @@ test("status and IP observations establish a silent durable baseline and ignore 
     state: "stopped",
   });
   assert.equal(f.service.records()[0].type, "status");
+  assert.equal(f.service.records()[0].region, "us-east-1");
+  assert.match(
+    formatNotification(f.service.records()[0], true),
+    /<b>🇺🇸 web<\/b>/,
+  );
   observe({ ...item, state: "stopped" });
   assert.equal(f.service.records().length, 1);
   observe({ ...item, createdAt: "replacement", state: "running" });
@@ -360,7 +401,10 @@ test("real snapshot read failures notify once and recovery uses existing AWS rea
     key,
     async () => {
       calls++;
-      return { items: [], errors: [] };
+      return {
+        items: [{ id: "web", name: "web", region: "us-east-1" }],
+        errors: [],
+      };
     },
     true,
   );
@@ -369,6 +413,133 @@ test("real snapshot read failures notify once and recovery uses existing AWS rea
     f.service.records().map((r) => r.type),
     ["monitor-recovery", "monitor-error"],
   );
+  const recovery = f.service.records()[0];
+  assert.match(recovery.message, /查询已恢复/);
+  assert.match(
+    formatNotification(recovery, true),
+    /<b>🇺🇸 web<\/b>\n查询已恢复/,
+  );
+});
+
+test("daily allowance matches the exact cached account, region and bundle without additional AWS reads", (t) => {
+  const now = Date.parse("2026-11-03T01:00:00Z");
+  const f = fixture(t, { now: () => now });
+  const account = f.store.saveAccount(
+    { name: "main", region: "ap-southeast-1" },
+    {},
+  );
+  const other = f.store.saveAccount(
+    { name: "other", region: "ap-southeast-1" },
+    {},
+  );
+  const save = (path, query, value) =>
+    f.store.saveSnapshot(
+      snapshotKey(path, query),
+      query.accountId,
+      now,
+      now + 300000,
+      value,
+    );
+  const base = { accountId: account.id, region: "ap-southeast-1" };
+  save("/instances", base, {
+    items: [
+      {
+        ...base,
+        id: "web",
+        name: "Lightsail-SG",
+        state: "running",
+        instanceType: "micro",
+      },
+      {
+        ...base,
+        id: "missing-bundle",
+        name: "unknown-plan",
+        state: "stopped",
+        instanceType: "different",
+      },
+    ],
+    errors: [],
+  });
+  save("/bundles", base, { types: [{ id: "micro", transfer: 200 }] });
+  save(
+    "/bundles",
+    { ...base, accountId: other.id },
+    {
+      types: [
+        { id: "micro", transfer: 9999 },
+        { id: "different", transfer: 9999 },
+      ],
+    },
+  );
+  save(
+    "/bundles",
+    { ...base, region: "us-east-1" },
+    {
+      types: [
+        { id: "micro", transfer: 8888 },
+        { id: "different", transfer: 8888 },
+      ],
+    },
+  );
+  for (const id of ["web", "missing-bundle"])
+    save(
+      "/traffic",
+      { ...base, id, range: "month", utcOffsetMinutes: 480 },
+      {
+        start: "2026-10-31T16:00:00.000Z",
+        totals: { combined: 77.88 * 1024 ** 3 },
+        warnings: [],
+      },
+    );
+  f.service.update(input({ events: ["daily"] }));
+  f.service.daily();
+  const [record] = f.service.records();
+  assert.match(
+    record.message,
+    /🇸🇬 Lightsail-SG · 运行\n本月流量 77\.88 GB \/ 200\.0 GB/,
+  );
+  assert.match(
+    record.message,
+    /unknown-plan · 停止\n本月流量 77\.88 GB \/ 额度待同步/,
+  );
+  assert.doesNotMatch(record.message, /9999|8888|总流量|共享流量|费用|余额/);
+  f.service.update(input({ events: ["operation-failed"] }));
+  f.store.audit({
+    account: account.id,
+    action: "stop",
+    target: "web",
+    status: "failed",
+    detail: "IAM 拒绝请求",
+  });
+  assert.equal(f.service.records()[0].region, "ap-southeast-1");
+  assert.match(
+    formatNotification(f.service.records()[0], true),
+    /<b>🇸🇬 web<\/b>/,
+  );
+  save(
+    "/instances",
+    { ...base, region: "us-east-1" },
+    {
+      items: [
+        {
+          ...base,
+          region: "us-east-1",
+          id: "web",
+          name: "web",
+          state: "running",
+        },
+      ],
+      errors: [],
+    },
+  );
+  f.store.audit({
+    account: account.id,
+    action: "stop",
+    target: "web",
+    status: "failed",
+    detail: "IAM 拒绝请求",
+  });
+  assert.equal(f.service.records()[0].region, undefined);
 });
 
 test("Telegram rate limits persist global backoff and redact tokens; permanent errors stop retrying", async (t) => {

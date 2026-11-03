@@ -7,6 +7,7 @@ import {
   defaultNotifications,
   formatNotification,
   notificationChoices,
+  dailyNotificationSummary,
 } from "../shared/notifications.ts";
 
 const types = notificationChoices.map((item) => item.value);
@@ -289,7 +290,7 @@ export class Notifications {
         return item;
       });
   }
-  enqueue(type, key, title, message, { test = false, usage } = {}) {
+  enqueue(type, key, title, message, { test = false, usage, region } = {}) {
     const n = this.settings(true);
     if (!this.ready(n) || (!test && !n.events.includes(type))) return false;
     const destination = this.destination(n);
@@ -318,6 +319,7 @@ export class Notifications {
       title: clip(title, 100),
       message: clip(message, 3000),
       ...(usage && { usage }),
+      ...(region && { region }),
       destination,
       status: "queued",
       attempts: 0,
@@ -337,6 +339,24 @@ export class Notifications {
       )
       .get(row.id);
     let region = tracked && JSON.parse(tracked.body).region;
+    if (!region && row.target && !row.action.startsWith("static-ip-")) {
+      const regions = new Set();
+      for (const snapshot of this.store.snapshots()) {
+        const [path, search] = snapshot.key.split("?");
+        const q = new URLSearchParams(search);
+        if (
+          path === "/instances" &&
+          q.get("accountId") === row.account &&
+          q.get("region") &&
+          q.get("region") !== "all" &&
+          snapshot.value.items?.some(
+            (item) => item.id === row.target || item.name === row.target,
+          )
+        )
+          regions.add(q.get("region"));
+      }
+      if (regions.size === 1) region = [...regions][0];
+    }
     const rules = autoStop
       ? this.store
           .trafficLimits()
@@ -361,7 +381,10 @@ export class Notifications {
       (autoStop ? "流量保护关机" : auditActionLabel(row.action)) +
         (row.status === "failed" ? "失败" : "成功"),
       `目标：${row.target || "—"}\n${autoStop && row.status === "success" && rule ? `阈值 ${rule.thresholdPercent}%` : row.detail || ""}`,
-      { usage: rule && { used: rule.usedBytes, total: rule.allowanceBytes } },
+      {
+        region,
+        usage: rule && { used: rule.usedBytes, total: rule.allowanceBytes },
+      },
     );
   }
   snapshot(key, { value, error }) {
@@ -397,6 +420,7 @@ export class Notifications {
           `${stateKey}:error:${this.now()}`,
           label + "异常",
           context + error,
+          { region: q.get("region") },
         );
       this.state(stateKey, { ...old, error: true });
       return;
@@ -407,7 +431,8 @@ export class Notifications {
         "monitor-recovery",
         `${stateKey}:recovery:${this.now()}`,
         label + "恢复",
-        context,
+        context + "查询已恢复",
+        { region: q.get("region") },
       );
     const items = Object.create(null);
     if (path === "/instances")
@@ -433,6 +458,7 @@ export class Notifications {
             `${stateKey}:${item.id}:state:${this.now()}`,
             "实例状态变化",
             `实例：${item.name}\n${states[previous.state] || previous.state} → ${states[current.state] || current.state}`,
+            { region: item.region || q.get("region") },
           );
         if (
           previous.state === "running" &&
@@ -454,6 +480,7 @@ export class Notifications {
               ]
                 .filter(Boolean)
                 .join("\n"),
+            { region: item.region || q.get("region") },
           );
       }
     this.state(stateKey, { error: false, items });
@@ -503,6 +530,7 @@ export class Notifications {
     const accounts = new Map(this.store.accounts().map((a) => [a.id, a.name]));
     const instances = new Map();
     const traffic = new Map();
+    const catalogs = new Map();
     for (const row of snapshots) {
       const [path, search] = row.key.split("?");
       const q = new URLSearchParams(search);
@@ -518,6 +546,14 @@ export class Notifications {
           if (!instances.has(key)) instances.set(key, { ...i, at: row.at });
         }
       if (
+        ["/bundles", "/catalog"].includes(path) &&
+        !row.value.warnings?.length &&
+        Array.isArray(row.value.types)
+      ) {
+        const key = JSON.stringify([q.get("accountId"), q.get("region")]);
+        if (!catalogs.has(key)) catalogs.set(key, row.value.types);
+      }
+      if (
         path === "/traffic" &&
         q.get("range") === "month" &&
         !row.value.warnings?.length
@@ -531,10 +567,7 @@ export class Notifications {
       }
     }
     const items = [...instances.values()];
-    const lines = [
-      `实例：${items.length} · 运行中：${items.filter((i) => i.state === "running").length} · 已停止：${items.filter((i) => i.state === "stopped").length}`,
-    ];
-    for (const i of items.slice(0, 5)) {
+    const summary = items.map((i) => {
       const row = traffic.get(JSON.stringify([i.accountId, i.region, i.id]));
       // Do not carry the previous month's traffic across a calendar boundary.
       const offset =
@@ -552,24 +585,24 @@ export class Notifications {
             offset,
           ).start.toISOString();
       const bytes = currentMonth ? row?.value.totals?.combined : undefined;
-      lines.push(
-        [
-          `${clip(i.name, 32)} · ${states[i.state] || i.state}`,
-          Number.isFinite(bytes) && bytes >= 0
-            ? `本月流量 ${(bytes / 1024 ** 3).toFixed(2)} GB`
-            : "流量数据尚未就绪",
-        ].join("\n"),
-      );
-    }
-    if (!items.length) lines.push("暂无实例采集数据");
-    if (items.length > 5)
-      lines.push(`另有 ${items.length - 5} 台实例，请查看面板`);
+      const bundle = catalogs
+        .get(JSON.stringify([i.accountId, i.region]))
+        ?.find((b) => b.id === i.instanceType);
+      return {
+        ...i,
+        usedBytes: bytes,
+        allowanceBytes:
+          Number.isFinite(bundle?.transfer) && bundle.transfer > 0
+            ? bundle.transfer * 1024 ** 3
+            : undefined,
+      };
+    });
     if (
       this.enqueue(
         "daily",
         `daily:${date}:${n.timezone}`,
         `LightSail 实例日报 ${date}`,
-        lines.join("\n\n"),
+        dailyNotificationSummary(summary),
       )
     )
       this.state("daily:" + n.timezone, { date });

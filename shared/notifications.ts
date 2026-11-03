@@ -1,3 +1,5 @@
+import { regionFlag } from "./regions.ts";
+
 export const notificationChoices = [
   {
     value: "operation-success",
@@ -72,6 +74,7 @@ export interface NotificationRecord {
   error?: string;
   nextAt?: number;
   sentAt?: string;
+  region?: string;
   usage?: { used: number; total: number };
 }
 export const notificationStatus = {
@@ -85,12 +88,53 @@ export interface NotificationMessage {
   message?: string;
   type?: NotificationType | "test";
   at?: string | number;
+  region?: string;
   usage?: { used: number; total: number };
 }
 const clipMessage = (value: string, limit: number) =>
   Array.from(value).slice(0, limit).join("");
 const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+interface DailyNotificationInstance {
+  name: string;
+  region: string;
+  state: string;
+  usedBytes?: number;
+  allowanceBytes?: number;
+}
+export function dailyNotificationSummary(items: DailyNotificationInstance[]) {
+  const lines = [
+    `实例：${items.length} · 运行中：${items.filter((i) => i.state === "running").length} · 已停止：${items.filter((i) => i.state === "stopped").length}`,
+  ];
+  const states: Record<string, string> = {
+    running: "运行",
+    stopped: "停止",
+    pending: "启动中",
+    stopping: "停止中",
+    shutting_down: "删除中",
+    terminated: "已删除",
+  };
+  for (const i of items.slice(0, 5)) {
+    const used = i.usedBytes,
+      total = i.allowanceBytes;
+    const hasUsed = used !== undefined && Number.isFinite(used) && used >= 0;
+    const hasTotal = total !== undefined && Number.isFinite(total) && total > 0;
+    const traffic =
+      !hasUsed && !hasTotal
+        ? "流量数据尚未就绪"
+        : `本月流量 ${hasUsed ? (used / 1024 ** 3).toFixed(2) + " GB" : "待同步"} / ${hasTotal ? (total / 1024 ** 3).toFixed(1) + " GB" : "额度待同步"}`;
+    lines.push(
+      [
+        `${regionFlag(i.region)} ${clipMessage(i.name, 32)} · ${states[i.state] || i.state}`.trim(),
+        traffic,
+      ].join("\n"),
+    );
+  }
+  if (!items.length) lines.push("暂无实例采集数据");
+  if (items.length > 5)
+    lines.push(`另有 ${items.length - 5} 台实例，请查看面板`);
+  return lines.join("\n\n");
+}
 export function notificationIcon(item: NotificationMessage) {
   if (
     item.type === "operation-failed" ||
@@ -139,7 +183,9 @@ export function formatNotification(
         ?.replace(pattern, "")
         .trim() || "";
     const name = field(/^(?:目标|实例)：/);
-    if (name && name !== "—") body.push(bold(clipMessage(name, 48)));
+    const flag = regionFlag(item.region || field(/^区域：/));
+    if (name && name !== "—")
+      body.push(bold((flag ? flag + " " : "") + clipMessage(name, 48)));
     message = lines
       .filter((line) => !/^(?:目标|实例|账户|区域)：/.test(line))
       .join(" ")
@@ -189,36 +235,50 @@ export const notificationExamples: Record<
 > = {
   "operation-success": {
     title: "开放防火墙端口成功",
+    region: "ap-southeast-1",
     message: "实例：web-server\nTCP 443 · 0.0.0.0/0",
   },
   "operation-failed": {
     title: "停止实例失败",
+    region: "ap-southeast-1",
     message: "实例：web-server\nAWS 拒绝请求，请检查 IAM 权限",
   },
   "traffic-stop": {
     title: "流量保护关机成功",
+    region: "ap-southeast-1",
     message: "实例：web-server\n阈值 95%",
     usage: { used: 1902.4 * 1024 ** 3, total: 2000 * 1024 ** 3 },
   },
   status: {
     title: "实例状态变化",
+    region: "ap-southeast-1",
     message: "实例：web-server\n运行中 → 已停止",
   },
   ip: {
     title: "公网 IP 变化",
+    region: "ap-southeast-1",
     message: "实例：web-server\nIPv4：198.51.100.10 → 198.51.100.20",
   },
   "monitor-error": {
     title: "实例监控异常",
+    region: "ap-southeast-1",
     message: "实例：web-server\nAWS 查询超时",
   },
   "monitor-recovery": {
     title: "实例监控恢复",
-    message: "实例：web-server",
+    region: "ap-southeast-1",
+    message: "实例：web-server\n查询已恢复",
   },
   daily: {
     title: "LightSail 实例日报",
-    message:
-      "实例：2 · 运行中：1 · 已停止：1\n\nweb-server · 运行中\n本月流量 350.56 GB\n\nbackup-server · 已停止\n本月流量 12.30 GB",
+    message: dailyNotificationSummary([
+      {
+        name: "Lightsail-SG",
+        region: "ap-southeast-1",
+        state: "running",
+        usedBytes: 77.88 * 1024 ** 3,
+        allowanceBytes: 200 * 1024 ** 3,
+      },
+    ]),
   },
 };

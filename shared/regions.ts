@@ -28,6 +28,28 @@ export const optInRegionIds = new Set([
 ]);
 export const regionLabel = (id: string) =>
   regionNames[id] ? `${regionNames[id]} · ${id}` : id;
+const regionFlags: Record<string, string> = {
+  "ap-east-1": "🇭🇰",
+  "ap-northeast-1": "🇯🇵",
+  "ap-northeast-2": "🇰🇷",
+  "ap-south-1": "🇮🇳",
+  "ap-southeast-1": "🇸🇬",
+  "ap-southeast-2": "🇦🇺",
+  "ap-southeast-3": "🇮🇩",
+  "ap-southeast-5": "🇲🇾",
+  "ca-central-1": "🇨🇦",
+  "eu-central-1": "🇩🇪",
+  "eu-north-1": "🇸🇪",
+  "eu-south-2": "🇪🇸",
+  "eu-west-1": "🇮🇪",
+  "eu-west-2": "🇬🇧",
+  "eu-west-3": "🇫🇷",
+  "sa-east-1": "🇧🇷",
+  "us-east-1": "🇺🇸",
+  "us-east-2": "🇺🇸",
+  "us-west-2": "🇺🇸",
+};
+export const regionFlag = (id = "") => regionFlags[id] || "";
 export const awsRegionOptions = Object.entries(regionNames).map(
   ([id, name]) => ({
     id,
