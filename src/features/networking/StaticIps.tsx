@@ -1,6 +1,6 @@
 import { Form } from "../../components/ui/Form";
 import { regionLabel } from "../../../shared/regions";
-import { Plus, Timer } from "lucide-react";
+import { Globe, Plus } from "lucide-react";
 import { useState } from "react";
 import type { ScopedStaticIp } from "../../../shared/types";
 import { usePanel } from "../../app/context";
@@ -92,7 +92,7 @@ export default function StaticIps() {
       <div className="page-heading">
         <div>
           <h1>
-            <Timer size={23} />
+            <Globe size={23} />
             静态 IP
           </h1>
         </div>

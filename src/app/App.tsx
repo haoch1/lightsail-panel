@@ -8,12 +8,13 @@ import {
   CheckCircle,
   ChevronRight,
   Cloud,
+  Globe,
   LogOut,
   Menu,
   Rocket,
   ScrollText,
+  Server,
   Shield,
-  Timer,
   Settings as SettingsIcon,
   X,
 } from "lucide-react";
@@ -34,13 +35,13 @@ import { ThemeControl } from "./theme";
 import { useResourceUpdates } from "../hooks/useResourceUpdates";
 import { bootstrap } from "../lib/bootstrap";
 const nav = [
-  { path: "/instances", label: "Lightsail 实例", icon: Cloud },
+  { path: "/instances", label: "实例管理", icon: Server },
   { path: "/launch", label: "创建实例", icon: Rocket },
-  { path: "/ips", label: "静态 IP", icon: Timer },
+  { path: "/ips", label: "静态 IP", icon: Globe },
   { path: "/firewall", label: "防火墙", icon: Shield },
   { path: "/traffic", label: "流量统计", icon: ArrowDownUp },
   { path: "/audit", label: "操作日志", icon: ScrollText },
-  { path: "/settings", label: "设置", icon: SettingsIcon },
+  { path: "/settings", label: "系统设置", icon: SettingsIcon },
 ];
 const validPath = (path: string) =>
   nav.some((n) => n.path === path) ? path : "/instances";
@@ -225,6 +226,20 @@ export default function App() {
           </nav>
           <div className="side-appearance">
             <ThemeControl compact />
+            {!demo && (
+              <button
+                type="button"
+                disabled={entering}
+                className="sidebar-logout"
+                onClick={async () => {
+                  await api("/logout", {});
+                  location.reload();
+                }}
+              >
+                <LogOut size={15} />
+                <span>退出登录</span>
+              </button>
+            )}
           </div>
         </Sidebar>
         <div className="workspace">
@@ -248,34 +263,19 @@ export default function App() {
                 {nav.find((n) => n.path === path)?.label}
               </span>
             </div>
-            <div className="top-right">
-              {demo && (
+            {demo && (
+              <div className="top-right">
                 <span
                   className="demo-indicator"
                   title="所有数据和操作均为本地示例"
                 >
                   演示模式
                 </span>
-              )}
-              {demo ? (
                 <a className="demo-exit" href="/">
                   退出演示 <ArrowUpRight size={13} />
                 </a>
-              ) : (
-                <button
-                  disabled={entering}
-                  className="icon-button topbar-logout"
-                  aria-label="退出登录"
-                  title="退出登录"
-                  onClick={async () => {
-                    await api("/logout", {});
-                    location.reload();
-                  }}
-                >
-                  <LogOut size={18} />
-                </button>
-              )}
-            </div>
+              </div>
+            )}
           </header>
           <main>
             {accountData.error && (

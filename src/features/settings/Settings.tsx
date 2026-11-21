@@ -81,7 +81,7 @@ export default function Settings({
       <div className="page-heading">
         <h1>
           <SettingsIcon size={23} />
-          设置
+          系统设置
         </h1>
       </div>
       <section

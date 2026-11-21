@@ -5,7 +5,7 @@ import {
   ArrowDownUp,
   ArrowLeftRight,
   ChevronRight,
-  Cloud,
+  Server,
   Gauge,
   Network,
   Play,
@@ -153,7 +153,7 @@ export default function Instances() {
       <div className="page-heading instances-heading">
         <div>
           <h1>
-            <Cloud size={23} /> Lightsail 实例
+            <Server size={23} /> 实例管理
           </h1>
         </div>
         <div className="row-actions">
