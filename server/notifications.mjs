@@ -174,7 +174,10 @@ export class Notifications {
     this.abort = new AbortController();
     store.db
       .exec(`CREATE TABLE IF NOT EXISTS notification_outbox(id TEXT PRIMARY KEY,at INTEGER NOT NULL,body TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS notification_state(key TEXT PRIMARY KEY,at INTEGER NOT NULL,body TEXT NOT NULL);`);
+      CREATE INDEX IF NOT EXISTS notification_outbox_at ON notification_outbox(at DESC);
+      CREATE INDEX IF NOT EXISTS notification_outbox_status ON notification_outbox(json_extract(body, '$.status'));
+      CREATE TABLE IF NOT EXISTS notification_state(key TEXT PRIMARY KEY,at INTEGER NOT NULL,body TEXT NOT NULL);
+      CREATE INDEX IF NOT EXISTS notification_state_at ON notification_state(at DESC);`);
     this.listener = (type, data) => {
       if (this.closed) return;
       // Notification failures must not change the outcome of AWS operations.
@@ -341,15 +344,20 @@ export class Notifications {
     let region = tracked && JSON.parse(tracked.body).region;
     if (!region && row.target && !row.action.startsWith("static-ip-")) {
       const regions = new Set();
-      for (const snapshot of this.store.snapshots()) {
-        const [path, search] = snapshot.key.split("?");
+      const rows = this.store.db
+        .prepare(
+          "SELECT key, value FROM resource_snapshots WHERE account_id=? AND key LIKE '/instances?%'",
+        )
+        .all(row.account);
+      for (const snapshot of rows) {
+        const [, search] = snapshot.key.split("?");
         const q = new URLSearchParams(search);
+        const value = JSON.parse(snapshot.value);
         if (
-          path === "/instances" &&
           q.get("accountId") === row.account &&
           q.get("region") &&
           q.get("region") !== "all" &&
-          snapshot.value.items?.some(
+          value.items?.some(
             (item) => item.id === row.target || item.name === row.target,
           )
         )

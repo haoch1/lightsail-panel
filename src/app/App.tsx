@@ -192,8 +192,12 @@ export default function App() {
               navigate("/instances");
             }}
           >
-            <Cloud size={21} />
-            <strong>LightSail Panel</strong>
+            <span className="brand-mark" aria-hidden="true">
+              <Cloud size={18} />
+            </span>
+            <span className="brand-text">
+              <strong>LightSail Panel</strong>
+            </span>
           </a>
           <button
             className="icon-button sidebar-close"
@@ -240,6 +244,9 @@ export default function App() {
                 <ChevronRight size={12} />
                 <strong>{nav.find((n) => n.path === path)?.label}</strong>
               </nav>
+              <span className="mobile-page-title">
+                {nav.find((n) => n.path === path)?.label}
+              </span>
             </div>
             <div className="top-right">
               {demo && (

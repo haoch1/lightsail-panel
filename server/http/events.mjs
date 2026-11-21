@@ -5,30 +5,48 @@ export function registerEvents(app, { store }) {
       return res.status(403).json({ error: "事件连接必须来自面板页面" });
     res.set({ "Content-Type": "text/event-stream", "X-Accel-Buffering": "no" });
     res.flushHeaders();
+    let closed = false;
+    let expiry;
+    const scheduleExpiry = (expiresAt) => {
+      clearTimeout(expiry);
+      expiry = setTimeout(() => {
+        const active = store.sessionByHash(req.panelSession.hash);
+        if (!active) close();
+        else scheduleExpiry(active.expires);
+      }, Math.min(2147483647, Math.max(0, expiresAt - Date.now())));
+      expiry.unref();
+    };
     const notify = (type) => {
+      if (closed || res.writableEnded) return close();
       if (!store.sessionByHash(req.panelSession.hash)) {
         close();
         return;
       }
-      if (!res.write(`data: ${type}\n\n`)) close();
+      try {
+        if (!res.write(`data: ${type}\n\n`)) close();
+      } catch {
+        close();
+      }
     };
     const heartbeat = setInterval(() => notify("heartbeat"), 15000);
     heartbeat.unref();
-    const expiry = setTimeout(
-      () => close(),
-      Math.min(2147483647, Math.max(0, req.panelSession.expires - Date.now())),
-    );
-    expiry.unref();
+    scheduleExpiry(req.panelSession.expires);
     function close() {
+      if (closed) return;
+      closed = true;
       clearInterval(heartbeat);
       clearTimeout(expiry);
       store.onEvent.delete(notify);
       store.onClose.delete(close);
-      res.end();
+      if (!res.writableEnded) res.end();
     }
     store.onEvent.add(notify);
     store.onClose.add(close);
     req.on("close", close);
-    res.write("data: ready\n\n");
+    try {
+      res.write("data: ready\n\n");
+    } catch {
+      close();
+    }
   });
 }

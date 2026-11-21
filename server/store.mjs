@@ -15,8 +15,15 @@ import { auditDefaultDetail } from "../shared/audit-actions.ts";
 export class Store {
   onClose = new Set();
   onEvent = new Set();
+  _accountsCache = null;
   emit(type, data) {
-    for (const listener of this.onEvent) listener(type, data);
+    for (const listener of [...this.onEvent]) {
+      try {
+        listener(type, data);
+      } catch {
+        this.onEvent.delete(listener);
+      }
+    }
   }
   constructor(dir) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
@@ -32,16 +39,19 @@ export class Store {
       this.key = readFileSync(keyPath);
     }
     this.db = new DatabaseSync(join(dir, "panel.sqlite"));
-    this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
+    this.db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;
       CREATE TABLE IF NOT EXISTS config(key TEXT PRIMARY KEY,value TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS accounts(id TEXT PRIMARY KEY,meta TEXT NOT NULL,secret TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS sessions(hash TEXT PRIMARY KEY,csrf TEXT NOT NULL,expires INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS traffic_limits(id TEXT PRIMARY KEY,body TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS resource_snapshots(key TEXT PRIMARY KEY,account_id TEXT NOT NULL,at INTEGER NOT NULL,expires INTEGER NOT NULL,value TEXT NOT NULL);
+      CREATE INDEX IF NOT EXISTS resource_snapshots_at ON resource_snapshots(at DESC);
+      CREATE INDEX IF NOT EXISTS resource_snapshots_account ON resource_snapshots(account_id);
       CREATE TABLE IF NOT EXISTS launch_network(id TEXT PRIMARY KEY,body TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS launch_network_status ON launch_network(json_extract(body, '$.status'));
       CREATE INDEX IF NOT EXISTS launch_network_at ON launch_network(json_extract(body, '$.at'));
-      CREATE TABLE IF NOT EXISTS audit(id TEXT PRIMARY KEY,at TEXT NOT NULL,account TEXT,action TEXT NOT NULL,target TEXT,status TEXT NOT NULL,detail TEXT);`);
+      CREATE TABLE IF NOT EXISTS audit(id TEXT PRIMARY KEY,at TEXT NOT NULL,account TEXT,action TEXT NOT NULL,target TEXT,status TEXT NOT NULL,detail TEXT);
+      CREATE INDEX IF NOT EXISTS audit_at ON audit(at DESC);`);
   }
   config(key, value) {
     if (value !== undefined)
@@ -131,10 +141,13 @@ export class Store {
         .run(this.hash(token));
   }
   accounts() {
-    return this.db
-      .prepare("SELECT id,meta FROM accounts")
-      .all()
-      .map((r) => ({ id: r.id, ...JSON.parse(r.meta) }));
+    if (!this._accountsCache) {
+      this._accountsCache = this.db
+        .prepare("SELECT id,meta FROM accounts")
+        .all()
+        .map((r) => ({ id: r.id, ...JSON.parse(r.meta) }));
+    }
+    return this._accountsCache.map((a) => ({ ...a }));
   }
   account(id) {
     const r = this.db.prepare("SELECT * FROM accounts WHERE id=?").get(id);
@@ -150,23 +163,37 @@ export class Store {
     };
   }
   saveAccount(meta, credentials, id = randomUUID()) {
+    this._accountsCache = null;
     this.db
       .prepare("INSERT OR REPLACE INTO accounts VALUES(?,?,?)")
       .run(id, JSON.stringify(meta), this.encrypt(credentials));
     return { id, ...meta };
   }
   deleteAccount(id) {
-    this.db.prepare("DELETE FROM accounts WHERE id=?").run(id);
-    this.db
-      .prepare(
-        "DELETE FROM resource_snapshots WHERE account_id=? OR account_id='all'",
-      )
-      .run(id);
-    this.db
-      .prepare(
-        "DELETE FROM traffic_limits WHERE json_extract(body, '$.accountId')=?",
-      )
-      .run(id);
+    this._accountsCache = null;
+    this.db.exec("BEGIN");
+    try {
+      this.db.prepare("DELETE FROM accounts WHERE id=?").run(id);
+      this.db
+        .prepare(
+          "DELETE FROM resource_snapshots WHERE account_id=? OR account_id='all'",
+        )
+        .run(id);
+      this.db
+        .prepare(
+          "DELETE FROM traffic_limits WHERE json_extract(body, '$.accountId')=?",
+        )
+        .run(id);
+      this.db
+        .prepare(
+          "DELETE FROM launch_network WHERE json_extract(body, '$.accountId')=?",
+        )
+        .run(id);
+      this.db.exec("COMMIT");
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
   }
   snapshots() {
     return this.db

@@ -64,10 +64,10 @@ export default function SshTerminal({
       scrollback: 5000,
       allowProposedApi: false,
       theme: {
-        background: "#202020",
-        foreground: "#ededed",
-        cursor: "#ededed",
-        selectionBackground: "#ffffff40",
+        background: "#111113",
+        foreground: "#f4f4f5",
+        cursor: "#fafafa",
+        selectionBackground: "rgba(255, 255, 255, 0.22)",
       },
       disableStdin: true,
     });
@@ -287,6 +287,16 @@ export default function SshTerminal({
     }
   }
 
+  function sendKey(sequence: string) {
+    if (status !== "connected") return;
+    if (demo) {
+      terminalRef.current?.input(sequence, true);
+    } else if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({ type: "input", data: sequence }));
+    }
+    terminalRef.current?.focus();
+  }
+
   return (
     <Modal
       wide
@@ -377,6 +387,30 @@ export default function SshTerminal({
           }}
           onKeyDown={(e) => e.stopPropagation()}
         />
+      </div>
+      <div className="ssh-quick-keys" role="toolbar" aria-label="终端快捷键">
+        {(
+          [
+            ["Esc", "\x1b"],
+            ["Tab", "\t"],
+            ["Ctrl+C", "\x03"],
+            ["Ctrl+D", "\x04"],
+            ["↑", "\x1b[A"],
+            ["↓", "\x1b[B"],
+            ["←", "\x1b[D"],
+            ["→", "\x1b[C"],
+          ] as [string, string][]
+        ).map(([label, seq]) => (
+          <button
+            key={label}
+            type="button"
+            className="ssh-key-btn"
+            disabled={status !== "connected"}
+            onClick={() => sendKey(seq)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
       {(error || demo) && (
         <div

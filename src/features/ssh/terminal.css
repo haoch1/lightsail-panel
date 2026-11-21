@@ -56,9 +56,9 @@
   flex: 1;
   min-height: 0;
   min-width: 0;
-  background: #202020;
+  background: #111113;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: var(--radius-panel);
   padding: 12px;
   overflow: hidden;
   text-align: left;
@@ -74,9 +74,42 @@
   height: 100%;
 }
 .ssh-terminal .xterm-viewport {
-  background-color: #202020;
+  background-color: #111113;
   /* xterm's scrollable element handles history; this layer is only a backdrop. */
   overflow: hidden;
+}
+.ssh-quick-keys {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.ssh-quick-keys::-webkit-scrollbar {
+  display: none;
+}
+.ssh-key-btn {
+  flex: 0 0 auto;
+  min-width: 42px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--control-border);
+  background: var(--subtle);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.ssh-key-btn:active:not(:disabled) {
+  background: var(--surface-hover);
+}
+.ssh-key-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .ssh-terminal .xterm-scrollable-element > .scrollbar > .slider {
   border-radius: 4px;
@@ -96,9 +129,15 @@
   margin-top: 12px;
   overflow-wrap: anywhere;
 }
+@media (max-width: 760px), (pointer: coarse) {
+  .ssh-quick-keys {
+    display: flex;
+  }
+}
 @media (max-width: 760px) {
   .modal.wide.ssh-modal.fullscreen {
     padding: 14px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
   }
   .ssh-toolbar {
     gap: 10px;

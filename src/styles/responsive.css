@@ -60,33 +60,6 @@
   }
 }
 @media (max-width: 600px) {
-  .topbar {
-    display: grid;
-    grid-template-columns: 34px minmax(0, 1fr);
-  }
-  .topbar-left {
-    grid-column: 1;
-  }
-  .top-right {
-    grid-column: 2;
-    width: 100%;
-    gap: 8px;
-  }
-  .topbar > .top-control {
-    grid-column: 1 / -1;
-    width: 100%;
-    margin: 0;
-  }
-  .top-right .account-control {
-    flex: 1;
-  }
-  .top-right .account-select {
-    width: 100%;
-    min-width: 80px;
-  }
-  .topbar .account-select {
-    width: 128px;
-  }
   .topbar .select-trigger {
     padding: 9px 10px;
   }
