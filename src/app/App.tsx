@@ -72,7 +72,9 @@ export default function App() {
     { id: number; message: string; type: string }[]
   >([]);
   const [authError, setAuthError] = useState("");
-  useResourceUpdates(!!auth?.authenticated, demo);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+  useResourceUpdates(!!auth?.authenticated && !loggingOut, demo);
   const toast: ToastFn = (message, type = "success") => {
     const id = Date.now() + Math.random();
     setNotices((n) => [...n.slice(-3), { id, message, type }]);
@@ -224,18 +226,37 @@ export default function App() {
           </nav>
           <div className="side-appearance">
             <ThemeControl compact />
+            {logoutError && (
+              <div role="alert" className="error-box">
+                {logoutError}
+              </div>
+            )}
             {!demo && (
               <button
                 type="button"
-                disabled={entering}
+                disabled={entering || loggingOut}
+                aria-busy={loggingOut}
                 className="sidebar-logout"
                 onClick={async () => {
-                  await api("/logout", {});
-                  location.reload();
+                  setLogoutError("");
+                  setLoggingOut(true);
+                  try {
+                    await api("/logout", {});
+                    location.reload();
+                  } catch {
+                    setLogoutError("未能确认退出，请检查网络后重试。");
+                    setLoggingOut(false);
+                  }
                 }}
               >
                 <LogOut size={15} />
-                <span>退出登录</span>
+                <span>
+                  {loggingOut
+                    ? "正在退出"
+                    : logoutError
+                      ? "重试退出"
+                      : "退出登录"}
+                </span>
               </button>
             )}
           </div>

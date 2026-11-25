@@ -243,7 +243,7 @@ export function createApp(
   registerMonitoring(app, services);
   registerNetworking(app, services);
   registerAudit(app, services);
-  registerEvents(app, services);
+  app.locals.closeEvents = registerEvents(app, services);
   registerSettings(app, services);
   notifications.start();
   if (collectResources) reads.start();

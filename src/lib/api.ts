@@ -14,6 +14,10 @@ export function invalidateNotifications(settings = false) {
   window.dispatchEvent(new Event("panel:notifications-updated"));
 }
 function changed(path: string, body: unknown) {
+  if (path === "/logout") {
+    setCsrf("");
+    return;
+  }
   invalidateAudit();
   if (path === "/settings" || path === "/notifications/test") {
     invalidateNotifications(path === "/settings");

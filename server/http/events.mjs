@@ -1,6 +1,9 @@
 /** Notifications contain no resource data; clients re-read authenticated local endpoints. */
 export function registerEvents(app, { store }) {
+  const clients = new Set();
+  let draining = false;
   app.get("/api/events", (req, res) => {
+    if (draining) return res.sendStatus(503);
     if (req.headers["sec-fetch-site"] === "cross-site")
       return res.status(403).json({ error: "事件连接必须来自面板页面" });
     res.set({ "Content-Type": "text/event-stream", "X-Accel-Buffering": "no" });
@@ -37,11 +40,11 @@ export function registerEvents(app, { store }) {
       clearInterval(heartbeat);
       clearTimeout(expiry);
       store.onEvent.delete(notify);
-      store.onClose.delete(close);
+      clients.delete(close);
       if (!res.writableEnded) res.end();
     }
     store.onEvent.add(notify);
-    store.onClose.add(close);
+    clients.add(close);
     req.on("close", close);
     try {
       res.write("data: ready\n\n");
@@ -49,4 +52,10 @@ export function registerEvents(app, { store }) {
       close();
     }
   });
+  const drain = () => {
+    draining = true;
+    for (const close of clients) close();
+  };
+  store.onClose.add(drain);
+  return drain;
 }

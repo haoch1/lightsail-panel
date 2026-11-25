@@ -78,7 +78,21 @@ jobs:
             exit 1
           '
           test "$(docker inspect --format '{{.Architecture}}' "${IMAGE_NAME}:sha-${GITHUB_SHA}-amd64")" = amd64
-          docker stop --time 10 lightsail-panel-test
+          # Keep a logged-in browser's event stream open throughout shutdown.
+          python3 - <<'PY'
+          import json, secrets, subprocess, urllib.request
+          base = 'http://127.0.0.1:8090'
+          request = urllib.request.Request(base + '/api/setup',
+              data=json.dumps({'password': secrets.token_urlsafe(24)}).encode(),
+              headers={'Content-Type': 'application/json'})
+          with urllib.request.urlopen(request, timeout=5) as login:
+              cookie = login.headers['Set-Cookie'].split(';', 1)[0]
+          events = urllib.request.Request(base + '/api/events', headers={'Cookie': cookie})
+          with urllib.request.urlopen(events, timeout=15) as stream:
+              assert stream.readline().strip() == b'data: ready'
+              subprocess.run(['docker', 'stop', '--time', '10', 'lightsail-panel-test'], check=True)
+              assert stream.read().strip() == b''
+          PY
           test "$(docker inspect --format '{{.State.ExitCode}}' lightsail-panel-test)" = 0
       - name: Publish tested platform image
         if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))

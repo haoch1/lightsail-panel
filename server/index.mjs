@@ -15,7 +15,11 @@ const server = app.listen(port, host, () =>
   console.log(`lightsail-panel: http://${host}:${port}`),
 );
 app.locals.ssh.attach(server);
+let stopping = false;
 function close() {
+  if (stopping) return;
+  stopping = true;
+  app.locals.closeEvents();
   stopIdentity();
   app.locals.snapshots.stop();
   app.locals.ssh.close();
