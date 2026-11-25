@@ -1,5 +1,5 @@
 import { Form } from "../../components/ui/Form";
-import { Bell, Settings as SettingsIcon } from "lucide-react";
+import { Bell, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import type {
   NotificationRecord,
@@ -80,7 +80,7 @@ export default function Settings({
     <div className="settings-page">
       <div className="page-heading">
         <h1>
-          <SettingsIcon size={23} />
+          <SlidersHorizontal size={20} />
           系统设置
         </h1>
       </div>

@@ -92,7 +92,7 @@ export default function StaticIps() {
       <div className="page-heading">
         <div>
           <h1>
-            <Globe size={23} />
+            <Globe size={20} />
             静态 IP
           </h1>
         </div>

@@ -9,7 +9,7 @@ import {
   Gauge,
   Network,
   Play,
-  Rocket,
+  Plus,
   RotateCw,
   ShieldCheck,
   Square,
@@ -153,7 +153,7 @@ export default function Instances() {
       <div className="page-heading instances-heading">
         <div>
           <h1>
-            <Server size={23} /> 实例管理
+            <Server size={20} /> 实例管理
           </h1>
         </div>
         <div className="row-actions">
@@ -162,7 +162,7 @@ export default function Instances() {
             className="button primary"
             onClick={() => navigate("/launch")}
           >
-            <Rocket size={16} />
+            <Plus size={15} />
             创建实例
           </button>
         </div>

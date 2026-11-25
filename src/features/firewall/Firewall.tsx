@@ -21,7 +21,7 @@ export default function Firewall() {
       <div className="page-heading">
         <div>
           <h1>
-            <Shield size={23} />
+            <Shield size={20} />
             防火墙
           </h1>
         </div>

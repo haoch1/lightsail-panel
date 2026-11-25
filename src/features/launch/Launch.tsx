@@ -1,7 +1,7 @@
 import { Form } from "../../components/ui/Form";
 import { compareImages } from "../../../shared/images";
 import { regionLabel } from "../../../shared/regions";
-import { Rocket } from "lucide-react";
+import { CirclePlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Catalog, PortInfo } from "../../../shared/types";
 import { useApi, usePanel } from "../../app/context";
@@ -123,7 +123,7 @@ export default function Launch() {
       <div className="page-heading">
         <div>
           <h1>
-            <Rocket size={23} />
+            <CirclePlus size={20} />
             创建 Lightsail 实例
           </h1>
         </div>

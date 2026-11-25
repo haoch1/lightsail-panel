@@ -1,7 +1,8 @@
-import { ArrowUpRight, Cloud, FlaskConical } from "lucide-react";
+import { ArrowUpRight, Eye } from "lucide-react";
 import { useState } from "react";
 import { ThemeControl } from "../../app/theme";
 import { ErrorBox, Field, PendingButton } from "../../components/ui";
+import { BrandMark } from "../../components/ui/BrandMark";
 import { api, setCsrf } from "../../lib/api";
 import { Form } from "../../components/ui/Form";
 import { Input } from "../../components/ui/Input";
@@ -23,7 +24,7 @@ export default function Auth({
     <div className="auth-wrap">
       <div className="auth-card">
         <div className="auth-brand">
-          <Cloud size={27} />
+          <BrandMark variant="lightsail" size={34} />
           <strong>LightSail Panel</strong>
         </div>
         <h1>{initialized ? "登录" : "初始化"}</h1>
@@ -94,7 +95,7 @@ export default function Auth({
           </PendingButton>
         </Form>
         <a className="demo-entry" href="/instances?demo=1">
-          <FlaskConical size={15} />
+          <Eye size={15} />
           先预览演示面板
           <ArrowUpRight size={14} />
         </a>

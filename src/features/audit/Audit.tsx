@@ -1,4 +1,4 @@
-import { ScrollText, Trash2 } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { auditActionLabel } from "../../../shared/audit-actions";
 import type { AuditEntry } from "../../../shared/types";
@@ -43,13 +43,13 @@ export default function Audit() {
       <div className="page-heading">
         <div>
           <h1>
-            <ScrollText size={22} />
+            <FileText size={20} />
             操作日志
           </h1>
         </div>
         <div className="row-actions">
           <button
-            className="button danger"
+            className="button danger-text"
             disabled={loading || clearing || !data?.items.length}
             onClick={() => {
               setClearError("");

@@ -2,22 +2,22 @@ import { Sidebar } from "../components/ui/Sidebar";
 import { usePasswordManagerPolicy } from "../components/ui/usePasswordManagerPolicy";
 import { awsRegionOptions } from "../../shared/regions";
 import {
-  AlertCircle,
   ArrowDownUp,
   ArrowUpRight,
-  CheckCircle,
   ChevronRight,
-  Cloud,
+  CircleAlert,
+  CircleCheck,
+  CirclePlus,
+  FileText,
   Globe,
   LogOut,
   Menu,
-  Rocket,
-  ScrollText,
   Server,
   Shield,
-  Settings as SettingsIcon,
+  SlidersHorizontal,
   X,
 } from "lucide-react";
+import { BrandMark } from "../components/ui/BrandMark";
 import { useEffect, useState } from "react";
 import type { Account, Region, ToastFn } from "../../shared/types";
 import { ErrorBox } from "../components/ui";
@@ -36,12 +36,12 @@ import { useResourceUpdates } from "../hooks/useResourceUpdates";
 import { bootstrap } from "../lib/bootstrap";
 const nav = [
   { path: "/instances", label: "实例管理", icon: Server },
-  { path: "/launch", label: "创建实例", icon: Rocket },
+  { path: "/launch", label: "创建实例", icon: CirclePlus },
   { path: "/ips", label: "静态 IP", icon: Globe },
   { path: "/firewall", label: "防火墙", icon: Shield },
   { path: "/traffic", label: "流量统计", icon: ArrowDownUp },
-  { path: "/audit", label: "操作日志", icon: ScrollText },
-  { path: "/settings", label: "系统设置", icon: SettingsIcon },
+  { path: "/audit", label: "操作日志", icon: FileText },
+  { path: "/settings", label: "系统设置", icon: SlidersHorizontal },
 ];
 const validPath = (path: string) =>
   nav.some((n) => n.path === path) ? path : "/instances";
@@ -144,7 +144,7 @@ export default function App() {
         <div className="page-heading">
           <div>
             <h1>
-              <current.icon size={23} />
+              <current.icon size={20} />
               {current.label}
             </h1>
           </div>
@@ -193,9 +193,7 @@ export default function App() {
               navigate("/instances");
             }}
           >
-            <span className="brand-mark" aria-hidden="true">
-              <Cloud size={18} />
-            </span>
+            <BrandMark variant="lightsail" />
             <span className="brand-text">
               <strong>LightSail Panel</strong>
             </span>
@@ -219,7 +217,7 @@ export default function App() {
                   navigate(n.path);
                 }}
               >
-                <n.icon size={17} />
+                <n.icon size={16} />
                 <span>{n.label}</span>
               </a>
             ))}
@@ -297,9 +295,9 @@ export default function App() {
           {notices.map((n) => (
             <div key={n.id} className={"toast " + n.type}>
               {n.type === "error" ? (
-                <AlertCircle size={17} />
+                <CircleAlert size={17} />
               ) : (
-                <CheckCircle size={17} />
+                <CircleCheck size={17} />
               )}
               <span>{n.message}</span>
               <button

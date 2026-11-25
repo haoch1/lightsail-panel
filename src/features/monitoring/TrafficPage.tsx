@@ -21,7 +21,7 @@ export default function TrafficPage() {
       <div className="page-heading">
         <div>
           <h1>
-            <ArrowDownUp size={23} />
+            <ArrowDownUp size={20} />
             流量统计
           </h1>
         </div>
