@@ -1,7 +1,7 @@
 import { FileText, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { auditActionLabel } from "../../../shared/audit-actions";
-import type { AuditEntry } from "../../../shared/types";
+import type { AuditPage } from "../../../shared/types";
 import { useApi, usePanel } from "../../app/context";
 import {
   TableLoading,
@@ -13,9 +13,13 @@ import { api } from "../../lib/api";
 
 export default function Audit() {
   const { toast } = usePanel();
-  const { data, error, loading, refresh } = useApi<{ items: AuditEntry[] }>(
-    "/audit",
+  const [page, setPage] = useState(0);
+  const { data, error, loading, refresh } = useApi<AuditPage>(
+    "/audit?page=" + page,
   );
+  const lastPage = data
+    ? Math.max(0, Math.ceil(data.total / data.size) - 1)
+    : 0;
   const [confirm, setConfirm] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [clearError, setClearError] = useState("");
@@ -29,7 +33,8 @@ export default function Audit() {
         undefined,
         "DELETE",
       );
-      refresh();
+      if (page === 0) refresh();
+      else setPage(0);
       setConfirm(false);
       toast(`已清空 ${deleted} 条操作日志`);
     } catch (e) {
@@ -115,6 +120,27 @@ export default function Audit() {
           <div className="empty">暂无操作记录</div>
         )}
       </div>
+      {data && data.total > 0 && (
+        <nav className="row-actions" aria-label="日志分页">
+          <span>
+            第 {data.page + 1} / {lastPage + 1} 页，共 {data.total} 条
+          </span>
+          <button
+            className="button small"
+            disabled={data.page === 0}
+            onClick={() => setPage(data.page - 1)}
+          >
+            上一页
+          </button>
+          <button
+            className="button small"
+            disabled={data.page >= lastPage}
+            onClick={() => setPage(data.page + 1)}
+          >
+            下一页
+          </button>
+        </nav>
+      )}
       {confirm && (
         <Modal
           title="清空操作日志"

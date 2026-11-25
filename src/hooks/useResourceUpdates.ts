@@ -106,6 +106,7 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
     };
     const events = demo ? undefined : new EventSource("/api/events");
     let streaming = false;
+    let connected = false;
     let lastEventAt = 0;
     const snapshotChanges = new Map<
       string,
@@ -156,13 +157,20 @@ export function useResourceUpdates(enabled: boolean, demo: boolean) {
       events.onmessage = ({ data }) => {
         streaming = true;
         lastEventAt = Date.now();
-        if (data === "audit" || data === "ready") invalidateAudit();
-        if (data === "notifications" || data === "ready")
-          invalidateNotifications();
-        if (data === "operations" || data === "ready") void load();
+        if (data === "ready") {
+          if (connected) {
+            invalidateAudit();
+            invalidateNotifications();
+            revalidateSnapshots();
+            void load();
+          }
+          connected = true;
+        }
+        if (data === "audit") invalidateAudit();
+        if (data === "notifications") invalidateNotifications();
+        if (data === "operations") void load();
         if (data.startsWith("snapshot:"))
           snapshotChanged(decodeURIComponent(data.slice(9)));
-        if (data === "ready") revalidateSnapshots();
       };
       events.onerror = () => {
         streaming = false;

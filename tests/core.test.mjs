@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { gzipSync } from "node:zlib";
 import {
   mkdirSync,
   mkdtempSync,
@@ -403,6 +404,10 @@ test("HTML is never cached and missing versioned scripts are not replaced by HTM
     join(dist, "assets", "index-current.js"),
     "console.log('current')",
   );
+  writeFileSync(
+    join(dist, "assets", "index-current.js.gz"),
+    gzipSync("console.log('current')"),
+  );
   const server = createApp(store, {}, { dist }).listen(0, "127.0.0.1");
   await new Promise((r) => server.once("listening", r));
   t.after(() => new Promise((r) => server.close(r)));
@@ -412,7 +417,17 @@ test("HTML is never cached and missing versioned scripts are not replaced by HTM
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("cache-control"), "no-store");
   }
-  const current = await fetch(origin + "/assets/index-current.js");
+  const current = await fetch(origin + "/assets/index-current.js", {
+    headers: { "Accept-Encoding": "gzip" },
+  });
+  assert.equal(current.headers.get("content-encoding"), "gzip");
+  assert.match(current.headers.get("vary"), /Accept-Encoding/i);
+  assert.equal(await current.text(), "console.log('current')");
+  const plain = await fetch(origin + "/assets/index-current.js", {
+    headers: { "Accept-Encoding": "identity" },
+  });
+  assert.equal(plain.headers.get("content-encoding"), null);
+  assert.equal(await plain.text(), "console.log('current')");
   assert.equal(current.status, 200);
   assert.match(current.headers.get("cache-control"), /immutable/);
   assert.match(current.headers.get("content-type"), /javascript/);
@@ -496,8 +511,12 @@ test("entry bootstraps only verified session metadata, escapes HTML, and never c
     assert.equal(signedIn.data.accounts[0].name, name);
     assert.ok(!signedIn.html.includes(name));
     assert.equal(signedIn.data.accounts[0].credentials, undefined);
-    assert.equal(signedIn.data.resources[0][1].items[0].id, "known-instance");
-    assert.equal(signedIn.data.resources[0][1].items[0].name, name);
+    if (["/launch", "/ips", "/settings", "/audit"].includes(path))
+      assert.deepEqual(signedIn.data.resources, []);
+    else {
+      assert.equal(signedIn.data.resources[0][1].items[0].id, "known-instance");
+      assert.equal(signedIn.data.resources[0][1].items[0].name, name);
+    }
     assert.equal(
       signedIn.data.audit?.items.length,
       path === "/audit" ? 1 : undefined,

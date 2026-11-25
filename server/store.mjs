@@ -271,6 +271,22 @@ export class Store {
       .prepare("SELECT * FROM audit ORDER BY at DESC LIMIT 200")
       .all();
   }
+  logPage(requestedPage) {
+    const size = 30;
+    const total = this.db
+      .prepare("SELECT count(*) AS total FROM audit")
+      .get().total;
+    const page = Math.min(
+      requestedPage,
+      Math.max(0, Math.ceil(total / size) - 1),
+    );
+    const items = this.db
+      .prepare(
+        "SELECT * FROM audit ORDER BY at DESC, rowid DESC LIMIT ? OFFSET ?",
+      )
+      .all(size, page * size);
+    return { items, total, page, size };
+  }
   clearLogs() {
     const deleted = Number(this.db.prepare("DELETE FROM audit").run().changes);
     this.emit("audit");

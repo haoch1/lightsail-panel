@@ -130,6 +130,12 @@ export interface LaunchNetworkJob {
     staticIpName?: string;
   }[];
 }
+export interface AuditPage {
+  items: AuditEntry[];
+  total: number;
+  page: number;
+  size: number;
+}
 export interface AuditEntry {
   id: string | number;
   at: string;

@@ -18,22 +18,23 @@ import {
   X,
 } from "lucide-react";
 import { BrandMark } from "../components/ui/BrandMark";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import type { Account, Region, ToastFn } from "../../shared/types";
 import { ErrorBox } from "../components/ui";
-import Settings from "../features/settings/Settings";
 import Audit from "../features/audit/Audit";
 import Auth from "../features/auth/Auth";
-import Firewall from "../features/firewall/Firewall";
 import Instances from "../features/instances/Instances";
-import Launch from "../features/launch/Launch";
-import TrafficPage from "../features/monitoring/TrafficPage";
-import StaticIps from "../features/networking/StaticIps";
 import { api, isDemo, setCsrf } from "../lib/api";
 import { PanelContext, useApi } from "./context";
 import { ThemeControl } from "./theme";
 import { useResourceUpdates } from "../hooks/useResourceUpdates";
 import { bootstrap } from "../lib/bootstrap";
+const Settings = lazy(() => import("../features/settings/Settings"));
+const Firewall = lazy(() => import("../features/firewall/Firewall"));
+const Launch = lazy(() => import("../features/launch/Launch"));
+const TrafficPage = lazy(() => import("../features/monitoring/TrafficPage"));
+const StaticIps = lazy(() => import("../features/networking/StaticIps"));
+
 const nav = [
   { path: "/instances", label: "实例管理", icon: Server },
   { path: "/launch", label: "创建实例", icon: CirclePlus },
@@ -309,7 +310,9 @@ export default function App() {
                 retry={regionData.refresh}
               />
             )}{" "}
-            {page}
+            <Suspense fallback={<div role="status">正在载入页面…</div>}>
+              {page}
+            </Suspense>
           </main>
         </div>
         <div className="toasts" aria-live="polite">

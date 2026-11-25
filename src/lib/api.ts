@@ -4,7 +4,9 @@ import { ApiError } from "./api-error";
 import { bootstrap } from "./bootstrap";
 import { entryResources } from "./entry-resources";
 export function invalidateAudit() {
-  resourceCache.invalidate((key) => key === "/audit");
+  resourceCache.invalidate(
+    (key) => key === "/audit" || key.startsWith("/audit?"),
+  );
   window.dispatchEvent(new Event("panel:audit-updated"));
 }
 export function invalidateNotifications(settings = false) {
@@ -80,7 +82,7 @@ if (!demo && bootstrap?.authenticated) {
       -new Date().getTimezoneOffset(),
     ),
     ...(bootstrap.audit
-      ? [["/audit", bootstrap.audit] as [string, unknown]]
+      ? [["/audit?page=0", bootstrap.audit] as [string, unknown]]
       : []),
   ]);
 }

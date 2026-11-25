@@ -15,7 +15,7 @@
     "dev": "node scripts/dev.mjs",
     "dev:web": "vite --host 127.0.0.1 --port 4173 --strictPort",
     "dev:api": "node --watch bin/lightsail-panel.mjs",
-    "build": "vite build",
+    "build": "vite build && node scripts/compress-assets.mjs",
     "start": "node bin/lightsail-panel.mjs",
     "test": "node --test tests/*.test.mjs",
     "check": "tsc --noEmit",

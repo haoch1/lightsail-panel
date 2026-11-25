@@ -1,4 +1,4 @@
-import type { Account } from "../../shared/types";
+import type { Account, AuditPage } from "../../shared/types";
 
 export type Bootstrap = {
   initialized: boolean;
@@ -7,7 +7,7 @@ export type Bootstrap = {
   expires?: number;
   accounts?: Account[];
   resources?: [string, unknown][];
-  audit?: { items: import("../../shared/types").AuditEntry[] };
+  audit?: AuditPage;
 };
 
 /** Server-verified entry data. Development/static hosting falls back to /api/auth. */

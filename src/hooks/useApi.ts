@@ -31,7 +31,7 @@ export function useApi<T>(
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     const auditUpdated = () => {
-      if (path !== "/audit") return;
+      if (path !== "/audit" && !path?.startsWith("/audit?")) return;
       clearTimeout(timer);
       timer = setTimeout(
         () => revise((r) => ({ version: r.version + 1, manual: false })),

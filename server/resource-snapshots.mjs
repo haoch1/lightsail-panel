@@ -16,6 +16,16 @@ export function snapshotKey(path, query) {
   return path + "?" + params;
 }
 
+const entryResources = {
+  "/": ["/instances", "/regions", "/bundles", "/traffic"],
+  "/index.html": ["/instances", "/regions", "/bundles", "/traffic"],
+  "/instances": ["/instances", "/regions", "/bundles", "/traffic"],
+  "/launch": ["/regions", "/catalog"],
+  "/ips": ["/regions", "/static-ips"],
+  "/firewall": ["/instances", "/regions", "/ports"],
+  "/traffic": ["/instances", "/regions", "/traffic"],
+};
+
 /** Durable successful reads; stale snapshots are served while bounded workers refresh them. */
 export class ResourceSnapshots {
   constructor(store, gateway, { now = Date.now } = {}) {
@@ -87,6 +97,10 @@ export class ResourceSnapshots {
     };
   }
   initial(path, budget = 512 * 1024) {
+    const allowed = Object.hasOwn(entryResources, path)
+      ? entryResources[path]
+      : [];
+    if (!allowed.length) return [];
     const accounts = new Set(this.store.accounts().map((a) => a.id));
     const resources = [];
     let size = 0;
@@ -107,16 +121,7 @@ export class ResourceSnapshots {
       if (
         !accounts.has(q.get("accountId")) ||
         !this.usable(key, entry) ||
-        ![
-          "/instances",
-          "/regions",
-          "/bundles",
-          "/static-ips",
-          "/ports",
-          "/traffic",
-          "/catalog",
-        ].includes(resource) ||
-        (resource === "/catalog" && path !== "/launch") ||
+        !allowed.includes(resource) ||
         (resource === "/traffic" &&
           q.get("range") !== "month" &&
           path !== "/traffic")

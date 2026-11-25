@@ -1,5 +1,6 @@
 import express from "express";
 import helmet from "helmet";
+import { compressedAssets } from "./compressed-assets.mjs";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { z } from "zod";
@@ -261,7 +262,7 @@ export function createApp(
           expires: session.expires,
           accounts: store.accounts(),
           resources: reads.initial(req.path),
-          ...(req.path === "/audit" && { audit: { items: store.logs() } }),
+          ...(req.path === "/audit" && { audit: store.logPage(0) }),
         }),
       };
       const json = JSON.stringify(bootstrap).replace(/</g, "\\u003c");
@@ -279,6 +280,7 @@ export function createApp(
     app.get("/index.html", entry);
     app.use(
       "/assets",
+      compressedAssets(resolve(dist, "assets")),
       express.static(resolve(dist, "assets"), {
         maxAge: "1y",
         immutable: true,

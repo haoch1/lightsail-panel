@@ -124,6 +124,14 @@ test("audit deletion requires session, CSRF and trusted origin without invalidat
   const remove = (headers = {}) =>
     fetch(base + "/api/audit", { method: "DELETE", headers });
   assert.equal((await fetch(base + "/api/audit")).status, 401);
+  assert.equal((await fetch(base + "/api/audit?page=0")).status, 401);
+  assert.equal((await get("/api/audit?page=-1")).status, 400);
+  const first = await (await get("/api/audit?page=0")).json();
+  const next = await (await get("/api/audit?page=1")).json();
+  assert.equal(first.total, 230);
+  assert.equal(first.items.length, 30);
+  assert.equal(next.items.length, 30);
+  assert.ok(!next.items.some((r) => first.items.some((x) => x.id === r.id)));
   assert.equal((await remove()).status, 401);
   assert.equal((await remove(cookie)).status, 403);
   assert.equal(

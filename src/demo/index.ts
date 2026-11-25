@@ -512,7 +512,18 @@ export async function demoApi(
       logs.length = 0;
       return { deleted };
     }
-    return { items: [...logs] };
+    if (!q.has("page")) return { items: [...logs] };
+    const size = 30;
+    const page = Math.min(
+      Number(q.get("page")),
+      Math.max(0, Math.ceil(logs.length / size) - 1),
+    );
+    return {
+      items: logs.slice(page * size, (page + 1) * size),
+      total: logs.length,
+      page,
+      size,
+    };
   }
   throw new Error("此演示仅支持 Lightsail 相关操作");
 }
