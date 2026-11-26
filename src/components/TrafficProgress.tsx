@@ -1,5 +1,6 @@
 import type { InstanceUsage } from "../hooks/useInstanceUsage";
 import { bytes } from "../lib/format";
+import { LoadingRegion, Skeleton } from "./ui/Skeleton";
 
 const percentage = new Intl.NumberFormat("zh-CN", {
   maximumFractionDigits: 2,
@@ -22,12 +23,26 @@ export default function TrafficProgress({
       ? (used / allowance) * 100
       : undefined;
   const percent = ratio === undefined ? "—" : percentage.format(ratio) + "%";
-  const usedLabel = hasUsed ? bytes(used) : used === undefined ? "…" : "—";
+  const loadingUsed = used === undefined && !usage?.trafficError;
+  const loadingAllowance = allowance === undefined && !usage?.priceError;
+  const usedLabel = hasUsed ? bytes(used) : "—";
   const allowanceLabel = hasAllowance
     ? bytes(allowance).replace(".00 ", " ")
-    : allowance === undefined
-      ? "…"
-      : "—";
+    : "—";
+  const usedValue = loadingUsed ? (
+    <LoadingRegion inline label="正在读取用量">
+      <Skeleton className="skeleton-value" />
+    </LoadingRegion>
+  ) : (
+    usedLabel
+  );
+  const allowanceValue = loadingAllowance ? (
+    <LoadingRegion inline label="正在读取流量额度">
+      <Skeleton className="skeleton-value" />
+    </LoadingRegion>
+  ) : (
+    allowanceLabel
+  );
   const tone =
     ratio !== undefined && ratio >= 100
       ? "danger"
@@ -40,13 +55,13 @@ export default function TrafficProgress({
       data-tone={tone}
     >
       <span className="traffic-progress-heading">
-        <span>{compact ? usedLabel : "流量使用进度"}</span>
+        <span>{compact ? usedValue : "流量使用进度"}</span>
         <span className="traffic-progress-percent">{percent}</span>
       </span>
       {!compact ? (
         <span className="traffic-progress-amount">
-          <strong>{usedLabel}</strong>
-          <span>/ {allowanceLabel}</span>
+          <strong>{usedValue}</strong>
+          <span>/ {allowanceValue}</span>
         </span>
       ) : null}
       <span
@@ -70,7 +85,7 @@ export default function TrafficProgress({
         />
       </span>
       <span className="traffic-progress-caption">
-        {compact ? `${allowanceLabel} / 月` : "本月入站＋出站 / 套餐月额度"}
+        {compact ? <>{allowanceValue} / 月</> : "本月入站＋出站 / 套餐月额度"}
         {usage?.trafficError ? <span> · 数据不完整</span> : null}
       </span>
     </span>

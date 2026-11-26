@@ -52,6 +52,7 @@
   color: var(--muted);
 }
 .ssh-terminal-frame {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
@@ -62,6 +63,11 @@
   padding: 12px;
   overflow: hidden;
   text-align: left;
+}
+.ssh-terminal-frame .ssh-loading-placeholder {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 .ssh-terminal {
   flex: 1;

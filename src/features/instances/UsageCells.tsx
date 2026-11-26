@@ -3,15 +3,20 @@ import { bundlePrice } from "../../lib/bundle";
 import { bytes } from "../../lib/format";
 import TrafficProgress from "../../components/TrafficProgress";
 import { when } from "../../components/ui";
+import { LoadingRegion, Skeleton } from "../../components/ui/Skeleton";
 
 export function InstanceRate({ usage }: { usage?: InstanceUsage }) {
   return (
     <div className="instance-price">
-      {usage?.price === undefined
-        ? "…"
-        : usage.price === null
-          ? "—"
-          : bundlePrice({ id: "", name: "", price: usage.price })}
+      {usage?.price === undefined && !usage?.priceError ? (
+        <LoadingRegion inline label="正在读取套餐价格">
+          <Skeleton className="skeleton-value" />
+        </LoadingRegion>
+      ) : usage?.price == null ? (
+        "—"
+      ) : (
+        bundlePrice({ id: "", name: "", price: usage.price })
+      )}
     </div>
   );
 }

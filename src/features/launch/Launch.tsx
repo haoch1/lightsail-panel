@@ -14,6 +14,7 @@ import {
   RefreshButton,
 } from "../../components/ui";
 import Select from "../../components/ui/Select";
+import { ControlSkeleton } from "../../components/ui/Skeleton";
 import { api, query } from "../../lib/api";
 import { bundleLabel, isGeneralBundle } from "../../lib/bundle";
 import BundlePicker from "./BundlePicker";
@@ -54,6 +55,7 @@ export default function Launch() {
   }, [network]);
   const [chosenZone, setZone] = useState("");
   const zones = catalog.data?.zones || [];
+  const loadingCatalog = catalog.loading && !catalog.data;
   const zone = zones.includes(chosenZone) ? chosenZone : zones[0] || "";
   const submission = useRef({ fingerprint: "", token: crypto.randomUUID() });
   const submitting = useRef(false);
@@ -203,25 +205,25 @@ export default function Launch() {
                 </Select>
               </Field>
               <Field label="可用区">
-                <Select
-                  searchable
-                  aria-label="可用区"
-                  required
-                  value={zone}
-                  disabled={!zones.length}
-                  onChange={(e) => setZone(e.target.value)}
-                >
-                  {!zones.length && (
-                    <option value="">
-                      {catalog.loading ? "加载可用区…" : "暂无可用区"}
-                    </option>
-                  )}
-                  {zones.map((id) => (
-                    <option key={id} value={id}>
-                      {id}
-                    </option>
-                  ))}
-                </Select>
+                {loadingCatalog ? (
+                  <ControlSkeleton label="正在读取可用区" />
+                ) : (
+                  <Select
+                    searchable
+                    aria-label="可用区"
+                    required
+                    value={zone}
+                    disabled={!zones.length}
+                    onChange={(e) => setZone(e.target.value)}
+                  >
+                    {!zones.length && <option value="">暂无可用区</option>}
+                    {zones.map((id) => (
+                      <option key={id} value={id}>
+                        {id}
+                      </option>
+                    ))}
+                  </Select>
+                )}
               </Field>
             </div>
           </section>
@@ -270,28 +272,30 @@ export default function Launch() {
               </label>
             </fieldset>
             <Field label="系统镜像">
-              <Select
-                searchable
-                aria-label="系统镜像"
-                required
-                value={imageId}
-                disabled={!catalog.data}
-                onChange={(e) => setImage(e.target.value)}
-              >
-                <option value="" disabled>
-                  {catalog.loading && !catalog.data
-                    ? "加载系统镜像…"
-                    : "选择系统镜像"}
-                </option>
-                {images.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.name}
-                    {i.version && !i.name.includes(i.version)
-                      ? " · " + i.version
-                      : ""}
+              {loadingCatalog ? (
+                <ControlSkeleton label="正在读取系统镜像" />
+              ) : (
+                <Select
+                  searchable
+                  aria-label="系统镜像"
+                  required
+                  value={imageId}
+                  disabled={!catalog.data}
+                  onChange={(e) => setImage(e.target.value)}
+                >
+                  <option value="" disabled>
+                    选择系统镜像
                   </option>
-                ))}
-              </Select>
+                  {images.map((i) => (
+                    <option key={i.id} value={i.id}>
+                      {i.name}
+                      {i.version && !i.name.includes(i.version)
+                        ? " · " + i.version
+                        : ""}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </Field>
             <Field label="实例套餐">
               <BundlePicker

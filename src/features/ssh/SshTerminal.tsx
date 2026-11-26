@@ -8,6 +8,7 @@ import {
   Unplug,
 } from "lucide-react";
 import { Terminal } from "@xterm/xterm";
+import { LoadingRegion, Skeleton } from "../../components/ui/Skeleton";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import "./terminal.css";
@@ -387,6 +388,16 @@ export default function SshTerminal({
           }}
           onKeyDown={(e) => e.stopPropagation()}
         />
+        {status === "connecting" && (
+          <LoadingRegion
+            label="正在连接 SSH"
+            className="ssh-loading-placeholder"
+          >
+            <Skeleton />
+            <Skeleton />
+            <Skeleton />
+          </LoadingRegion>
+        )}
       </div>
       <div className="ssh-quick-keys" role="toolbar" aria-label="终端快捷键">
         {(

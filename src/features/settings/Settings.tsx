@@ -1,4 +1,6 @@
 import { Form } from "../../components/ui/Form";
+import { FormSkeleton } from "../../components/ui/PageLoading";
+import { LoadingRegion } from "../../components/ui/Skeleton";
 import { Bell, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import type {
@@ -114,9 +116,11 @@ export default function Settings({
           <ErrorBox message={settings.error} retry={settings.refresh} />
         )}
         {!n ? (
-          <div className="settings-loading" role="status">
-            正在读取通知设置…
-          </div>
+          settings.loading && (
+            <LoadingRegion label="正在读取通知设置">
+              <FormSkeleton />
+            </LoadingRegion>
+          )
         ) : (
           <Form onSubmit={save}>
             <div className="form-grid">

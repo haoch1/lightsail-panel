@@ -1,5 +1,6 @@
 import type { Catalog } from "../../../shared/types";
 import Select from "../../components/ui/Select";
+import { ControlSkeleton } from "../../components/ui/Skeleton";
 import { compactBundleLabel } from "../../lib/bundle";
 
 type Props = {
@@ -15,6 +16,7 @@ export default function BundlePicker({
   onChange,
   loading,
 }: Props) {
+  if (loading) return <ControlSkeleton label="正在读取实例套餐" />;
   return (
     <Select
       searchable
@@ -28,7 +30,7 @@ export default function BundlePicker({
       onChange={(event) => onChange(event.target.value)}
     >
       <option value="" disabled>
-        {loading ? "加载实例套餐…" : "选择套餐"}
+        选择套餐
       </option>
       {bundles.map((bundle) => (
         <option key={bundle.id} value={bundle.id}>

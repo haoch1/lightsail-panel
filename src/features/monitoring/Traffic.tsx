@@ -14,22 +14,31 @@ import {
 } from "../../components/ui";
 import { query } from "../../lib/api";
 import DailyTrafficChart from "./DailyTrafficChart";
+import { Skeleton } from "../../components/ui/Skeleton";
 
 const size = (n: number | null) => (n === null ? "—" : bytes(n));
 function TrafficTotal({
   label,
   value,
+  loading,
 }: {
   label: string;
   value: number | null;
+  loading: boolean;
 }) {
   const [amount, unit] = size(value).split(" ");
   return (
     <div>
       <span>{label}</span>
       <strong>
-        <span className="traffic-amount">{amount}</span>
-        <span className="traffic-unit">{unit || "\u00a0"}</span>
+        {loading ? (
+          <Skeleton className="skeleton-title" />
+        ) : (
+          <>
+            <span className="traffic-amount">{amount}</span>
+            <span className="traffic-unit">{unit || "\u00a0"}</span>
+          </>
+        )}
       </strong>
     </div>
   );
@@ -89,13 +98,31 @@ export default function Traffic({ instance }: { instance?: Instance }) {
         <ErrorBox key={n} message={w} retry={refresh} />
       ))}
       <section className="traffic-overview" aria-label="流量汇总">
-        <TrafficTotal label="入站流量" value={data?.totals.inbound ?? null} />
-        <TrafficTotal label="出站流量" value={data?.totals.outbound ?? null} />
-        <TrafficTotal label="合计流量" value={data?.totals.combined ?? null} />
+        <TrafficTotal
+          label="入站流量"
+          value={data?.totals.inbound ?? null}
+          loading={initialLoading}
+        />
+        <TrafficTotal
+          label="出站流量"
+          value={data?.totals.outbound ?? null}
+          loading={initialLoading}
+        />
+        <TrafficTotal
+          label="合计流量"
+          value={data?.totals.combined ?? null}
+          loading={initialLoading}
+        />
       </section>
       <div className="traffic-range">
         <span title={data ? `上次查询：${when(data.at)}` : undefined}>
-          {data ? `${startTime} → ${rangeEnd}（${timezone}）` : "—"}
+          {initialLoading ? (
+            <Skeleton />
+          ) : data ? (
+            `${startTime} → ${rangeEnd}（${timezone}）`
+          ) : (
+            "—"
+          )}
         </span>
         <span className="sr-only" role="status">
           {previousData ? "正在更新查询结果…" : ""}

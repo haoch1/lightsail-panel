@@ -3,6 +3,7 @@ import type { TrafficData } from "../../../shared/types";
 import { bytes } from "../../components/ui";
 import { dailyTrafficChart } from "../../lib/daily-traffic";
 import { chartTooltipPosition } from "../../lib/chart-tooltip";
+import { ChartSkeleton, LoadingRegion } from "../../components/ui/Skeleton";
 
 const amount = (value: number | null) =>
   value === null ? "暂无数据" : bytes(value);
@@ -154,9 +155,13 @@ export default function DailyTrafficChart({
             ))}
           </div>
         </div>
+      ) : loading ? (
+        <LoadingRegion label="正在读取流量">
+          <ChartSkeleton />
+        </LoadingRegion>
       ) : (
         <div className="daily-chart-empty" role="status">
-          {loading ? "正在读取流量…" : "暂无流量数据"}
+          暂无流量数据
         </div>
       )}
       <div

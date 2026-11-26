@@ -5,6 +5,7 @@ import type { Region } from "../../../shared/types";
 import { useApi, usePanel } from "../../app/context";
 import { ErrorBox, Field, Modal, PendingButton } from "../../components/ui";
 import Select from "../../components/ui/Select";
+import { ControlSkeleton } from "../../components/ui/Skeleton";
 import { api, query } from "../../lib/api";
 
 export default function AllocateStaticIp({
@@ -77,27 +78,27 @@ export default function AllocateStaticIp({
             </Select>
           </Field>
           <Field label="区域">
-            <Select
-              required
-              pending={busy}
-              disabled={!accountId || regions.loading}
-              aria-label="分配区域"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-            >
-              <option value="">
-                {!accountId
-                  ? "先选择账户"
-                  : regions.loading
-                    ? "加载区域…"
-                    : "选择区域"}
-              </option>
-              {regions.data?.items.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {regionLabel(r.id)}
+            {accountId && regions.loading && !regions.data ? (
+              <ControlSkeleton label="正在读取区域" />
+            ) : (
+              <Select
+                required
+                pending={busy}
+                disabled={!accountId || regions.loading}
+                aria-label="分配区域"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+              >
+                <option value="">
+                  {accountId ? "选择区域" : "先选择账户"}
                 </option>
-              ))}
-            </Select>
+                {regions.data?.items.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {regionLabel(r.id)}
+                  </option>
+                ))}
+              </Select>
+            )}
           </Field>
         </div>
         {regions.error && (

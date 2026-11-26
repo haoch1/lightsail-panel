@@ -29,6 +29,7 @@ import { PanelContext, useApi } from "./context";
 import { ThemeControl } from "./theme";
 import { useResourceUpdates } from "../hooks/useResourceUpdates";
 import { bootstrap } from "../lib/bootstrap";
+import PageLoading from "../components/ui/PageLoading";
 const Settings = lazy(() => import("../features/settings/Settings"));
 const Firewall = lazy(() => import("../features/firewall/Firewall"));
 const Launch = lazy(() => import("../features/launch/Launch"));
@@ -140,22 +141,19 @@ export default function App() {
     );
   let page;
   const entering = !auth || (!accountData.data && !accountData.error);
+  const current = nav.find((n) => n.path === path)!;
+  const placeholder = (
+    <PageLoading
+      path={path}
+      title={current.label}
+      icon={<current.icon size={20} />}
+    />
+  );
   if (entering) {
-    const current = nav.find((n) => n.path === path)!;
-    page = (
-      <div className="entry-content" aria-busy={!authError}>
-        <div className="page-heading">
-          <div>
-            <h1>
-              <current.icon size={20} />
-              {current.label}
-            </h1>
-          </div>
-        </div>
-        {authError && (
-          <ErrorBox message={authError} retry={() => location.reload()} />
-        )}
-      </div>
+    page = authError ? (
+      <ErrorBox message={authError} retry={() => location.reload()} />
+    ) : (
+      placeholder
     );
   } else if (path === "/launch") page = <Launch />;
   else if (path === "/ips") page = <StaticIps />;
@@ -310,9 +308,7 @@ export default function App() {
                 retry={regionData.refresh}
               />
             )}{" "}
-            <Suspense fallback={<div role="status">正在载入页面…</div>}>
-              {page}
-            </Suspense>
+            <Suspense fallback={placeholder}>{page}</Suspense>
           </main>
         </div>
         <div className="toasts" aria-live="polite">

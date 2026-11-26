@@ -1,4 +1,5 @@
 import { InventoryTable } from "../../components/ui/InventoryTable";
+import { LoadingRegion, Skeleton } from "../../components/ui/Skeleton";
 import ScanNotices from "../../components/ScanNotices";
 import { regionLabel, regionNames } from "../../../shared/regions";
 import {
@@ -536,7 +537,20 @@ export default function Instances() {
         />
       )}
       {dialog?.kind === "ssh" && (
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <Modal title="SSH 终端" wide onClose={() => setDialog(null)}>
+              <LoadingRegion
+                label="正在加载 SSH 终端"
+                className="ssh-loading-placeholder"
+              >
+                <Skeleton />
+                <Skeleton />
+                <Skeleton />
+              </LoadingRegion>
+            </Modal>
+          }
+        >
           <SshTerminal
             instance={dialog.instance}
             onClose={() => setDialog(null)}
